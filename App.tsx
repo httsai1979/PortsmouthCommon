@@ -12,34 +12,34 @@ const ICONS = {
     food: <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></>,
     bed: <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />,
     warm: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.246-3.64-3.418-5.418A9 9 0 0 1 21 12a9 9 0 0 1-9 9 9 9 0 0 1-6-5.3L6 14z" />,
-    support: <><circle cx="12" cy="12" r="10"/><path d="M12 2a4.5 4.5 0 0 0 0 9 4.5 4.5 0 0 1 0 9"/><path d="M12 12v.01" /></>,
-    family: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
-    mapPin: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>,
-    clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
-    phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>,
-    alert: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></>,
+    support: <><circle cx="12" cy="12" r="10" /><path d="M12 2a4.5 4.5 0 0 0 0 9 4.5 4.5 0 0 1 0 9" /><path d="M12 12v.01" /></>,
+    family: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+    mapPin: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>,
+    clock: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+    phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
+    alert: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" x2="12" y1="9" y2="13" /><line x1="12" x2="12.01" y1="17" y2="17" /></>,
     check: <polyline points="20 6 9 17 4 12" />,
-    x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
-    calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
-    filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>,
-    nav: <polygon points="3 11 22 2 13 21 11 13 3 11"/>,
-    search: <circle cx="11" cy="11" r="8"/>,
-    home: <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>,
-    utensils: <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></>,
-    lifebuoy: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" x2="9.17" y1="4.93" y2="9.17"/><line x1="14.83" x2="19.07" y1="14.83" y2="19.07"/><line x1="14.83" x2="19.07" y1="9.17" y2="4.93"/><line x1="14.83" x2="9.17" y1="9.17" y2="14.83"/><line x1="4.93" x2="9.17" y1="19.07" y2="14.83"/></>,
-    moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>,
-    walk: <><path d="M13 4v6"/><path d="M8 12v3"/><path d="M10 17v4"/><path d="M14 17v4"/><path d="M13 10a2 2 0 0 1-2 2H8"/><circle cx="13" cy="4" r="2"/></>,
-    printer: <><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></>,
-    smartphone: <><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></>,
-    monitor: <><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></>,
-    paw: <><path d="M11 17a2.99 2.99 0 0 1-2.913.263L8 17H5c-1.105 0-2 .9-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2c0-1.1-.895-2-2-2h-3l-.087.263A2.99 2.99 0 0 1 13 17h-2Z"/><path d="M8 4a3 3 0 0 0-3 3v2a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8Z"/></>,
-    zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
-    award: <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>,
-    fileText: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
-    check_circle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
-    x_circle: <><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></>,
-    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></>,
-    soup: <><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/><path d="M7 21h10"/><path d="M12 2v6"/><path d="m19 5-2.5 3"/><path d="m5 5 2.5 3"/></>
+    x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>,
+    filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />,
+    nav: <polygon points="3 11 22 2 13 21 11 13 3 11" />,
+    search: <circle cx="11" cy="11" r="8" />,
+    home: <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+    utensils: <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></>,
+    lifebuoy: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><line x1="4.93" x2="9.17" y1="4.93" y2="9.17" /><line x1="14.83" x2="19.07" y1="14.83" y2="19.07" /><line x1="14.83" x2="19.07" y1="9.17" y2="4.93" /><line x1="14.83" x2="9.17" y1="9.17" y2="14.83" /><line x1="4.93" x2="9.17" y1="19.07" y2="14.83" /></>,
+    moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+    walk: <><path d="M13 4v6" /><path d="M8 12v3" /><path d="M10 17v4" /><path d="M14 17v4" /><path d="M13 10a2 2 0 0 1-2 2H8" /><circle cx="13" cy="4" r="2" /></>,
+    printer: <><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect width="12" height="8" x="6" y="14" /></>,
+    smartphone: <><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><line x1="12" x2="12.01" y1="18" y2="18" /></>,
+    monitor: <><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></>,
+    paw: <><path d="M11 17a2.99 2.99 0 0 1-2.913.263L8 17H5c-1.105 0-2 .9-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2c0-1.1-.895-2-2-2h-3l-.087.263A2.99 2.99 0 0 1 13 17h-2Z" /><path d="M8 4a3 3 0 0 0-3 3v2a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8Z" /></>,
+    zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+    award: <><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></>,
+    fileText: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></>,
+    check_circle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
+    x_circle: <><circle cx="12" cy="12" r="10" /><line x1="15" x2="9" y1="9" y2="15" /><line x1="9" x2="15" y1="9" y2="15" /></>,
+    sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></>,
+    soup: <><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z" /><path d="M7 21h10" /><path d="M12 2v6" /><path d="m19 5-2.5 3" /><path d="m5 5 2.5 3" /></>
 };
 
 // Configuration linking categories to icons/colors
@@ -209,6 +209,69 @@ const REAL_DATA = [
     { id: 'fa21', name: "Barnardo's", category: "family", type: "Support", area: "PO1", address: "Commercial Rd", transport: "City", description: "Child support.", tags: ["family", "advice"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.802, lng: -1.090 },
 ];
 
+const generateMockData = () => {
+    const areas = ['PO1', 'PO2', 'PO3', 'PO4', 'PO5', 'PO6'];
+    const types = {
+        food: ['Community Pantry', 'Soup Kitchen', 'Food Bank', 'Breakfast Club'],
+        shelter: ['Emergency Bed', 'Night Shelter', 'Day Centre', 'Housing Hub'],
+        warmth: ['Warm Space', 'Community Hall', 'Library Hub', 'Coffee Morning'],
+        support: ['Advice Clinic', 'Health Hub', 'Support Group', 'Drop-in'],
+        family: ['Play Group', 'Youth Zone', 'Family Centre', 'After School']
+    };
+
+    // Deterministic random for consistency (simple LCG)
+    let seed = 12345;
+    const random = () => {
+        const x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    };
+
+    const newItems = [];
+
+    // Generate ~150 items
+    for (let i = 0; i < 150; i++) {
+        const catKeys = Object.keys(types);
+        const category = catKeys[Math.floor(random() * catKeys.length)];
+        const type = types[category][Math.floor(random() * types[category].length)];
+        const area = areas[Math.floor(random() * areas.length)];
+
+        // Random Schedule
+        const schedule = {};
+        for (let d = 0; d < 7; d++) {
+            if (random() > 0.3) {
+                const start = 8 + Math.floor(random() * 4);
+                const end = 13 + Math.floor(random() * 8);
+                schedule[d] = `${start.toString().padStart(2, '0')}:00-${end.toString().padStart(2, '0')}:00`;
+            } else {
+                schedule[d] = 'Closed';
+            }
+        }
+
+        // Random Location (Portsmouth approx bounds)
+        const lat = 50.78 + (random() * 0.08);
+        const lng = -1.11 + (random() * 0.07);
+
+        newItems.push({
+            id: `gen_${i}`,
+            name: `${area} ${type} ${i + 1}`,
+            category,
+            type,
+            area,
+            address: `${Math.floor(random() * 100) + 1} London Road`,
+            transport: `Bus ${Math.floor(random() * 20) + 1}`,
+            description: `A generated resource for ${category} support in ${area}.`,
+            requirements: "Open access",
+            tags: [category, "generated", random() > 0.5 ? "free" : "membership", random() > 0.7 ? "wheelchair" : "wifi"],
+            schedule,
+            lat,
+            lng
+        });
+    }
+    return newItems;
+};
+
+const ALL_DATA = [...REAL_DATA, ...generateMockData()];
+
 // ==========================================
 // 3. UTILS & ICONS
 // ==========================================
@@ -216,49 +279,223 @@ const REAL_DATA = [
 const Icon = ({ name, size = 18, className }) => {
     // Standard icon set
     const icons = {
-        search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>,
-        home: <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>,
-        utensils: <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>,
-        bed: <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>,
-        flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.246-3.64-3.418-5.418A9 9 0 0 1 21 12a9 9 0 0 1-9 9 9 9 0 0 1-6-5.3L6 14z"/>,
-        lifebuoy: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" x2="9.17" y1="4.93" y2="9.17"/><line x1="14.83" x2="19.07" y1="14.83" y2="19.07"/><line x1="14.83" x2="19.07" y1="9.17" y2="4.93"/><line x1="14.83" x2="9.17" y1="9.17" y2="14.83"/><line x1="4.93" x2="9.17" y1="19.07" y2="14.83"/></>,
-        users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
-        mapPin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>,
-        calendar: <><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></>,
-        phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>,
-        info: <><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></>,
-        x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
-        check: <polyline points="20 6 9 17 4 12"/>,
-        clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
-        tag: <><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l5 5a2 2 0 0 0 2.828 0l7.172-7.172a2 2 0 0 0 0-2.828l-5-5z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></>,
-        navigation: <polygon points="3 11 22 2 13 21 11 13 3 11"/>,
-        wifi: <><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
-        zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
-        droplets: <><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.8-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></>,
-        'washing-machine': <><path d="M3 6h3"/><path d="M17 6h.01"/><rect width="18" height="20" x="3" y="2" rx="2"/><circle cx="12" cy="13" r="5"/><path d="M12 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 1 0-5"/></>,
-        bath: <><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.68 3 4 3.68 4 4.5V11"/><path d="M10 11V4.5a1.5 1.5 0 0 1 1.5-1.5c.41 0 .8.16 1.1.45L15 6"/><path d="M2 12h20"/><path d="M7 19v-3.26C7 13.9 8.79 12 11 12v0c2.21 0 4 1.9 4 3.74V19"/><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/></>,
-        'check_circle': <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
-        'id-card': <><path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="9" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/></>,
-        'file-text': <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
-        soup: <><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/><path d="M7 21h10"/><path d="M12 2v6"/><path d="m19 5-2.5 3"/><path d="m5 5 2.5 3"/></>,
-        apple: <><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></>,
-        brain: <><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></>,
-        activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
-        award: <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>,
-        sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></>,
-        printer: <><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></>,
-        smartphone: <><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></>,
-        monitor: <><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></>
+        search: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
+        home: <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+        utensils: <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />,
+        bed: <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />,
+        flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.246-3.64-3.418-5.418A9 9 0 0 1 21 12a9 9 0 0 1-9 9 9 9 0 0 1-6-5.3L6 14z" />,
+        lifebuoy: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><line x1="4.93" x2="9.17" y1="4.93" y2="9.17" /><line x1="14.83" x2="19.07" y1="14.83" y2="19.07" /><line x1="14.83" x2="19.07" y1="9.17" y2="4.93" /><line x1="14.83" x2="9.17" y1="9.17" y2="14.83" /><line x1="4.93" x2="9.17" y1="19.07" y2="14.83" /></>,
+        users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+        mapPin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
+        calendar: <><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></>,
+        phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
+        info: <><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></>,
+        x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+        check: <polyline points="20 6 9 17 4 12" />,
+        clock: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+        tag: <><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l5 5a2 2 0 0 0 2.828 0l7.172-7.172a2 2 0 0 0 0-2.828l-5-5z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></>,
+        navigation: <polygon points="3 11 22 2 13 21 11 13 3 11" />,
+        wifi: <><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" /></>,
+        zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+        droplets: <><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.8-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" /><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97" /></>,
+        'washing-machine': <><path d="M3 6h3" /><path d="M17 6h.01" /><rect width="18" height="20" x="3" y="2" rx="2" /><circle cx="12" cy="13" r="5" /><path d="M12 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 1 0-5" /></>,
+        bath: <><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.68 3 4 3.68 4 4.5V11" /><path d="M10 11V4.5a1.5 1.5 0 0 1 1.5-1.5c.41 0 .8.16 1.1.45L15 6" /><path d="M2 12h20" /><path d="M7 19v-3.26C7 13.9 8.79 12 11 12v0c2.21 0 4 1.9 4 3.74V19" /><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" /></>,
+        'check_circle': <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
+        'id-card': <><path d="M16 10h2" /><path d="M16 14h2" /><path d="M6.17 15a3 3 0 0 1 5.66 0" /><circle cx="9" cy="9" r="2" /><rect x="2" y="5" width="20" height="14" rx="2" /></>,
+        'file-text': <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></>,
+        soup: <><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z" /><path d="M7 21h10" /><path d="M12 2v6" /><path d="m19 5-2.5 3" /><path d="m5 5 2.5 3" /></>,
+        apple: <><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z" /><path d="M10 2c1 .5 2 2 2 5" /></>,
+        brain: <><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" /></>,
+        activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2" />,
+        award: <><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></>,
+        sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></>,
+        printer: <><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect width="12" height="8" x="6" y="14" /></>,
+        smartphone: <><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><line x1="12" x2="12.01" y1="18" y2="18" /></>,
+        monitor: <><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></>
     };
     return <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icons[name] || icons.info}</svg>;
 };
+return <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icons[name] || icons.info}</svg>;
+};
 
 // ==========================================
-// 4. FEATURE COMPONENTS
+// 4. NEW FEATURES (BOOKING & CALENDAR)
 // ==========================================
+
+const BookingBar = ({ onSearch, currentFilters }) => {
+    const [active, setActive] = useState(false);
+    const [localFilters, setLocalFilters] = useState(currentFilters);
+
+    // Sync when filters change externally
+    useEffect(() => {
+        setLocalFilters(currentFilters);
+    }, [currentFilters]);
+
+    const handleApply = () => {
+        onSearch(localFilters);
+        setActive(false);
+    };
+
+    return (
+        <div className={`sticky top-0 z-50 px-4 pt-2 pb-2 transition-all duration-300 ${active ? 'bg-slate-900/95 backdrop-blur-xl h-screen top-0 left-0 right-0 fixed' : ''}`}>
+            {!active ? (
+                <button
+                    onClick={() => setActive(true)}
+                    className="w-full bg-white rounded-full shadow-lg border border-slate-200 p-3 flex items-center gap-4 hover:scale-[1.02] transition-transform"
+                >
+                    <div className="bg-emerald-500 text-white p-2 rounded-full">
+                        <Icon name="search" size={18} />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <div className="text-xs font-bold text-slate-800">
+                            {localFilters.area === 'All' ? 'Anywhere' : localFilters.area} • {localFilters.date === 'today' ? 'Today' : 'Anytime'}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">Click to search food, shelter...</div>
+                    </div>
+                    <div className="border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center">
+                        <Icon name="filter" size={12} />
+                    </div>
+                </button>
+            ) : (
+                <div className="animate-fade-in-up md:max-w-md mx-auto mt-10">
+                    <div className="flex justify-between items-center mb-6 text-white">
+                        <h2 className="text-2xl font-black">Find Help</h2>
+                        <button onClick={() => setActive(false)} className="bg-white/10 p-2 rounded-full hover:bg-white/20"><Icon name="x" size={20} /></button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                            <label className="block text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">Where?</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {AREAS.map(a => (
+                                    <button
+                                        key={a}
+                                        onClick={() => setLocalFilters({ ...localFilters, area: a })}
+                                        className={`py-2 rounded-lg text-xs font-bold transition ${localFilters.area === a ? 'bg-emerald-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
+                                    >
+                                        {a}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                            <label className="block text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2">What?</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {['food', 'shelter', 'warmth', 'support', 'family'].map(c => (
+                                    <button
+                                        key={c}
+                                        onClick={() => setLocalFilters({ ...localFilters, category: localFilters.category === c ? 'all' : c })}
+                                        className={`py-3 rounded-lg text-xs font-bold capitalize transition flex items-center justify-center gap-2 ${localFilters.category === c ? 'bg-indigo-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
+                                    >
+                                        <Icon name={TAG_ICONS[c]?.icon || 'info'} size={14} /> {c}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                            <label className="block text-orange-400 text-xs font-bold uppercase tracking-wider mb-2">When?</label>
+                            <div className="flex rounded-lg bg-black/20 p-1">
+                                {['today', 'tomorrow', 'any'].map(d => (
+                                    <button
+                                        key={d}
+                                        onClick={() => setLocalFilters({ ...localFilters, date: d })}
+                                        className={`flex-1 py-2 rounded-md text-xs font-bold capitalize transition ${localFilters.date === d ? 'bg-white text-slate-900' : 'text-slate-400'}`}
+                                    >
+                                        {d}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <button onClick={handleApply} className="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 mt-4 transition-all active:scale-95">
+                            Show Results
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const AreaScheduleView = ({ data, area }) => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const todayIdx = new Date().getDay();
+    const [selectedDay, setSelectedDay] = useState(todayIdx);
+
+    const filtered = useMemo(() => {
+        return data.filter(item => (area === 'All' || item.area === area) && item.schedule[selectedDay] !== 'Closed');
+    }, [data, area, selectedDay]);
+
+    // Group by time for a timeline feel
+    const timeSlots = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 to 22:00
+
+    return (
+        <div className="p-4 pb-24 animate-fade-in-up">
+            <div className="bg-slate-900 text-white p-6 rounded-3xl mb-6 shadow-xl">
+                <div className="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 className="text-3xl font-black">Schedule</h2>
+                        <p className="text-slate-400 font-bold">{area === 'All' ? 'All Areas' : `${area} Region`}</p>
+                    </div>
+                    <div className="bg-white/10 px-3 py-1 rounded-full text-xs font-bold text-emerald-400 border border-white/10">{filtered.length} Open</div>
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                    {days.map((d, i) => (
+                        <button
+                            key={d}
+                            onClick={() => setSelectedDay(i)}
+                            className={`flex flex-col items-center min-w-[3.5rem] py-2 rounded-xl text-xs font-bold transition-all ${selectedDay === i ? 'bg-white text-slate-900' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}
+                        >
+                            <span>{d}</span>
+                            {i === todayIdx && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span>}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-6 relative border-l-2 border-slate-200 ml-3 pl-6">
+                {timeSlots.map(hour => {
+                    const hourStr = hour.toString().padStart(2, '0');
+                    const itemsStarting = filtered.filter(item => item.schedule[selectedDay].startsWith(hourStr));
+
+                    if (itemsStarting.length === 0) return null;
+
+                    return (
+                        <div key={hour} className="relative">
+                            <span className="absolute -left-[3.25rem] top-0 text-xs font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{hourStr}:00</span>
+                            <div className="absolute -left-[1.6rem] top-2 w-3 h-3 bg-slate-200 rounded-full border-2 border-white"></div>
+
+                            <div className="grid gap-3">
+                                {itemsStarting.map(item => (
+                                    <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:border-slate-300 transition-all group">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 px-2 py-0.5 rounded w-fit ${TAG_ICONS[item.category]?.bg || 'bg-slate-100'} ${TAG_ICONS[item.category]?.color || 'text-slate-600'}`}>{item.category}</div>
+                                                <h4 className="font-bold text-slate-800 text-sm group-hover:text-emerald-700 transition">{item.name}</h4>
+                                                <p className="text-xs text-slate-400 mt-0.5">{item.address}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs font-black text-slate-800">{item.schedule[selectedDay]}</div>
+                                                <div className="text-[10px] text-slate-400 font-medium">{item.type}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+                {filtered.length === 0 && <div className="text-center py-10 text-slate-400">No resources open this day.</div>}
+            </div>
+        </div>
+    );
+};
 
 const CategoryButton = ({ label, icon, active, onClick, color }) => (
-    <button 
+    <button
         onClick={onClick}
         className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all duration-200 w-full h-20 shadow-sm border
         ${active ? 'bg-slate-800 text-white border-slate-800 scale-105 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
@@ -276,11 +513,10 @@ const AreaFilter = ({ selectedArea, onSelectArea }) => (
             <button
                 key={area}
                 onClick={() => onSelectArea(area)}
-                className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition border shadow-sm ${
-                    selectedArea === area
+                className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition border shadow-sm ${selectedArea === area
                     ? 'bg-slate-800 text-white border-slate-800 shadow-md'
                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                }`}
+                    }`}
             >
                 {area}
             </button>
@@ -294,7 +530,7 @@ const checkStatus = (schedule) => {
     const day = now.getDay();
     const hoursStr = schedule[day];
     if (!hoursStr || hoursStr === 'Closed') return { status: 'closed', color: 'bg-slate-100 text-slate-500', label: 'Closed Today' };
-    
+
     // Handle 24/7 or full day
     if (hoursStr === "00:00-23:59") return { status: 'open', color: 'bg-green-100 text-green-800', label: 'Open 24/7' };
 
@@ -326,16 +562,16 @@ const ResourceCard = ({ item }) => {
                         {status.label}
                     </span>
                 </div>
-                
+
                 <h3 className="text-xl font-black text-slate-800 leading-tight mb-2">{item.name}</h3>
-                
+
                 <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-3 font-medium">
-                    <Icon name="mapPin" size={14} className="text-red-500"/> {item.address}
+                    <Icon name="mapPin" size={14} className="text-red-500" /> {item.address}
                 </div>
 
                 {item.transport && (
                     <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-bold mb-3">
-                        <Icon name="bus" size={12}/> {item.transport}
+                        <Icon name="bus" size={12} /> {item.transport}
                     </div>
                 )}
 
@@ -346,7 +582,7 @@ const ResourceCard = ({ item }) => {
                     {item.tags.map(tag => {
                         const conf = TAG_ICONS[tag] || TAG_ICONS.default;
                         return (
-                             <span key={tag} className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold border ${conf.bg} ${conf.color} border-transparent`}>
+                            <span key={tag} className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold border ${conf.bg} ${conf.color} border-transparent`}>
                                 <Icon name={conf.icon} size={10} /> {conf.label}
                             </span>
                         );
@@ -368,11 +604,11 @@ const ResourceCard = ({ item }) => {
                         {expanded ? 'Less' : 'Hours'}
                     </button>
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`} target="_blank" className="flex-1 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold flex justify-center items-center gap-1 hover:bg-blue-100">
-                        <Icon name="navigation" size={14}/> Map
+                        <Icon name="navigation" size={14} /> Map
                     </a>
                     {item.phone && (
                         <a href={`tel:${item.phone}`} className="w-10 py-2 bg-slate-800 text-white rounded-lg flex justify-center items-center hover:bg-black">
-                            <Icon name="phone" size={14}/>
+                            <Icon name="phone" size={14} />
                         </a>
                     )}
                 </div>
@@ -385,13 +621,13 @@ const Dashboard = ({ data, onNavigate }) => {
     const [now, setNow] = useState(new Date());
 
     useEffect(() => {
-        const timer = setInterval(() => setNow(new Date()), 60000); 
+        const timer = setInterval(() => setNow(new Date()), 60000);
         return () => clearInterval(timer);
     }, []);
 
     const day = now.getDay();
     const currentHour = now.getHours();
-    
+
     // Smart Logic
     let greeting = "Good Morning";
     let subtext = "Find breakfast & warmth.";
@@ -407,7 +643,7 @@ const Dashboard = ({ data, onNavigate }) => {
         const [sH, sM] = start.split(':').map(Number);
         const [eH, eM] = end.split(':').map(Number);
         const cur = now.getHours() * 60 + now.getMinutes();
-        return cur >= (sH*60 + sM) && cur < (eH*60 + eM);
+        return cur >= (sH * 60 + sM) && cur < (eH * 60 + eM);
     };
 
     const openFood = data.filter(i => i.category === 'food' && isOpen(i.schedule)).length;
@@ -424,7 +660,7 @@ const Dashboard = ({ data, onNavigate }) => {
                 <div className="grid grid-cols-2 gap-4">
                     <button onClick={() => onNavigate('food')} className="bg-slate-700/50 p-4 rounded-2xl border border-slate-600 hover:bg-slate-700 transition text-left group">
                         <div className="flex items-center gap-2 text-emerald-400 mb-2">
-                            <div className="p-1.5 bg-emerald-500/20 rounded-lg"><Icon name="utensils" size={14}/></div>
+                            <div className="p-1.5 bg-emerald-500/20 rounded-lg"><Icon name="utensils" size={14} /></div>
                             <span className="text-xs font-bold uppercase tracking-wider">Food</span>
                         </div>
                         <div>
@@ -434,7 +670,7 @@ const Dashboard = ({ data, onNavigate }) => {
                     </button>
                     <button onClick={() => onNavigate('shelter')} className="bg-slate-700/50 p-4 rounded-2xl border border-slate-600 hover:bg-slate-700 transition text-left group">
                         <div className="flex items-center gap-2 text-indigo-400 mb-2">
-                            <div className="p-1.5 bg-indigo-500/20 rounded-lg"><Icon name="bed" size={14}/></div>
+                            <div className="p-1.5 bg-indigo-500/20 rounded-lg"><Icon name="bed" size={14} /></div>
                             <span className="text-xs font-bold uppercase tracking-wider">Shelter</span>
                         </div>
                         <div>
@@ -476,12 +712,12 @@ const SimpleMap = ({ data, category, statusFilter }) => {
     return (
         <div className="relative w-full h-[65vh] bg-[#e2e8f0] rounded-3xl overflow-hidden shadow-inner border border-slate-300 mt-2">
             <div className="absolute inset-0 pointer-events-none opacity-40">
-               <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <path d="M45,5 L60,5 L80,20 L85,40 L70,85 L40,95 L20,80 L15,50 L25,20 Z" fill="#ffffff" stroke="#94a3b8" strokeWidth="0.5" />
                     <text x="50" y="10" fontSize="4" textAnchor="middle" fill="#94a3b8" fontWeight="bold">NORTH (Cosham)</text>
                     <text x="50" y="50" fontSize="4" textAnchor="middle" fill="#94a3b8" fontWeight="bold">FRATTON</text>
                     <text x="50" y="90" fontSize="4" textAnchor="middle" fill="#94a3b8" fontWeight="bold">SOUTH (Southsea)</text>
-               </svg>
+                </svg>
             </div>
             {mapPoints.map(item => {
                 const pos = project(item.lat, item.lng);
@@ -502,11 +738,11 @@ const SimpleMap = ({ data, category, statusFilter }) => {
                             <h4 className="font-bold text-slate-800 text-lg leading-none">{selectedItem.name}</h4>
                             <p className="text-xs text-slate-500 mt-1">{selectedItem.address}</p>
                         </div>
-                        <button onClick={() => setSelectedItem(null)} className="bg-slate-100 p-1.5 rounded-full text-slate-500 hover:bg-slate-200"><Icon name="x" size={16}/></button>
+                        <button onClick={() => setSelectedItem(null)} className="bg-slate-100 p-1.5 rounded-full text-slate-500 hover:bg-slate-200"><Icon name="x" size={16} /></button>
                     </div>
                     <div className="flex gap-2 mt-3">
                         <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedItem.lat},${selectedItem.lng}`} target="_blank" className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-xs font-bold flex justify-center items-center gap-2 hover:bg-black">
-                            <Icon name="navigation" size={14}/> Directions
+                            <Icon name="navigation" size={14} /> Directions
                         </a>
                     </div>
                 </div>
@@ -521,8 +757,8 @@ const TipsModal = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden animate-bounce-in shadow-2xl">
                 <div className="bg-yellow-400 p-5 text-yellow-900 flex justify-between items-center">
-                    <h2 className="text-xl font-black flex items-center gap-2"><Icon name="tag" size={24}/> Yellow Labels</h2>
-                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/40"><Icon name="x" size={20}/></button>
+                    <h2 className="text-xl font-black flex items-center gap-2"><Icon name="tag" size={24} /> Yellow Labels</h2>
+                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/40"><Icon name="x" size={20} /></button>
                 </div>
                 <div className="p-6 bg-yellow-50">
                     <p className="text-sm text-yellow-800 mb-4 font-bold uppercase tracking-wide">Reduction Times Guide</p>
@@ -588,7 +824,7 @@ const PrintView = ({ data, onClose }) => {
                     </div>
                     <button onClick={onClose} className="bg-black text-white px-6 py-3 font-bold no-print">CLOSE</button>
                 </div>
-                
+
                 <div className="mb-8">
                     <h2 className="text-2xl font-black bg-black text-white inline-block px-3 py-1 mb-6">OPEN TODAY ({days[today]})</h2>
                     <div className="grid grid-cols-1 gap-6">
@@ -616,96 +852,52 @@ const PrintView = ({ data, onClose }) => {
     );
 };
 
-const WeeklyPlanner = ({ data, selectedArea, onSelectArea }) => {
-    const [selectedDay, setSelectedDay] = useState(new Date().getDay()); 
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-    const getDailySchedule = (dayIndex) => {
-        return data.filter(item => {
-            const hours = item.schedule[dayIndex];
-            const isOpen = hours && hours !== "Closed";
-            // Sleep items always show. Food/Support respect Area.
-            const isSleep = item.category === 'shelter';
-            const matchArea = selectedArea === 'All' || item.area === selectedArea;
-            return isOpen && (isSleep || matchArea); 
-        }).map(item => {
-            const hours = item.schedule[dayIndex];
-            const startTime = parseInt(hours.split(':')[0]);
-            return { ...item, todayHours: hours, sortTime: startTime };
-        }).sort((a, b) => a.sortTime - b.sortTime);
-    };
-
-    const dailyItems = getDailySchedule(selectedDay);
-    const essentials = dailyItems.filter(item => ['food', 'shelter'].includes(item.category));
-    const community = dailyItems.filter(item => !essentials.includes(item));
-
-    const renderItem = (item) => (
-        <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm mb-3 flex gap-4">
-            <div className="flex flex-col items-center justify-center w-14 bg-slate-50 rounded-lg border border-slate-200 shrink-0 h-14">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Open</span>
-                <span className="text-sm font-black text-slate-800">{item.todayHours.split('-')[0]}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-slate-800 truncate">{item.name}</h4>
-                </div>
-                <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 truncate"><Icon name="mapPin" size={10}/> {item.address}</p>
-            </div>
-        </div>
-    );
-
-    return (
-        <div className="animate-fade-in pb-20">
-            <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar -mx-5 px-5">
-                {days.map((day, idx) => (
-                    <button key={day} onClick={() => setSelectedDay(idx)} className={`flex flex-col items-center justify-center min-w-[3.5rem] h-14 rounded-xl text-sm font-bold transition-all border ${selectedDay === idx ? 'bg-slate-800 text-white border-slate-800 shadow-lg transform scale-105' : 'bg-white text-slate-400 border-slate-200'}`}>
-                        <span>{day}</span>
-                        {idx === new Date().getDay() && <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1"></span>}
-                    </button>
-                ))}
-            </div>
-            <div className="px-1 mb-6"><AreaFilter selectedArea={selectedArea} onSelectArea={onSelectArea} /></div>
-            <div className="relative border-l-2 border-slate-100 ml-3 pl-6 space-y-8">
-                <div>
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-3">Eat & Sleep</h3>
-                    {essentials.length > 0 ? essentials.map(renderItem) : <div className="text-xs text-slate-400 italic">No essential services listed.</div>}
-                </div>
-                <div>
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-3">Community & Support</h3>
-                    {community.length > 0 ? community.map(renderItem) : <div className="text-xs text-slate-400 italic">No community services listed.</div>}
-                </div>
-            </div>
-        </div>
-    );
 };
 
 const App = () => {
-    const [view, setView] = useState('home'); 
-    const [category, setCategory] = useState('food');
-    const [selectedArea, setSelectedArea] = useState('All');
-    const [mapFilter, setMapFilter] = useState('all'); 
+    const [view, setView] = useState('home');
+    const [filters, setFilters] = useState({ area: 'All', category: 'all', date: 'today' });
+    const [mapFilter, setMapFilter] = useState('all');
     const [showTips, setShowTips] = useState(false);
     const [showCrisis, setShowCrisis] = useState(false);
-    const [search, setSearch] = useState('');
 
     const filteredData = useMemo(() => {
-        return REAL_DATA.filter(item => {
-            const matchCat = category === 'all' || item.category === category;
-            const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
-            const matchArea = selectedArea === 'All' || item.area === selectedArea;
-            return matchCat && matchSearch && matchArea;
-        }).sort((a, b) => {
+        let items = ALL_DATA;
+
+        // 1. Area Filter
+        if (filters.area !== 'All') {
+            items = items.filter(i => i.area === filters.area);
+        }
+
+        // 2. Category Filter
+        if (filters.category !== 'all') {
+            items = items.filter(i => i.category === filters.category);
+        }
+
+        // 3. Date Filter (Simple check if open today/tomorrow)
+        if (filters.date === 'today') {
+            const day = new Date().getDay();
+            items = items.filter(i => i.schedule[day] !== 'Closed');
+        } else if (filters.date === 'tomorrow') {
+            const day = (new Date().getDay() + 1) % 7;
+            items = items.filter(i => i.schedule[day] !== 'Closed');
+        }
+
+        return items.sort((a, b) => {
             const statusA = checkStatus(a.schedule).status;
             const statusB = checkStatus(b.schedule).status;
             if (statusA === 'open' && statusB !== 'open') return -1;
             if (statusA !== 'open' && statusB === 'open') return 1;
             return 0;
         });
-    }, [category, search, selectedArea]);
+    }, [filters]);
 
-    const handleNav = (cat) => { setCategory(cat); setView('list'); };
+    const handleSearch = (newFilters) => {
+        setFilters(newFilters);
+        setView('list');
+    };
 
-    if (view === 'print') return <PrintView data={REAL_DATA} onClose={() => setView('home')} />;
+    if (view === 'print') return <PrintView data={ALL_DATA} onClose={() => setView('home')} />;
 
     return (
         <div className="app-container">
@@ -715,89 +907,76 @@ const App = () => {
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 .app-container { max-width: 500px; margin: 0 auto; background-color: #f8fafc; min-height: 100vh; box-shadow: 0 0 50px rgba(0,0,0,0.08); position: relative; padding-bottom: 110px; }
-                .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
             `}</style>
-            
+
             <TipsModal isOpen={showTips} onClose={() => setShowTips(false)} />
             <CrisisModal isOpen={showCrisis} onClose={() => setShowCrisis(false)} />
 
-            {/* HEADER */}
-            <div className="header-bg p-6 pb-8 rounded-b-[2.5rem] text-white shadow-xl sticky top-0 z-20">
-                <div className="flex justify-between items-center mb-5">
-                    <div><h1 className="text-2xl font-black tracking-tighter">Pompey<span className="text-emerald-400">Commons</span></h1><p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Shared City Resources</p></div>
-                    <div className="flex gap-2">
-                        <button onClick={() => setView('print')} className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-white/10 flex items-center gap-1 hover:bg-white/30 transition"><Icon name="printer" size={12}/> Print</button>
-                        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-white/10">PO1-PO6</div>
-                    </div>
-                </div>
-                <div className="relative">
-                    <Icon name="search" className="absolute left-4 top-3.5 text-slate-400" />
-                    <input type="text" placeholder="Search..." className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-slate-500 font-bold text-sm focus:outline-none focus:bg-white/20 transition-all" value={search} onChange={e => { setSearch(e.target.value); if(view === 'home') setView('list'); }} />
-                </div>
-            </div>
+            {/* NEW: Booking Style Bar */}
+            <BookingBar onSearch={handleSearch} currentFilters={filters} />
 
-            <div className="px-5 -mt-4 relative z-20">
-                {view === 'home' && <Dashboard data={REAL_DATA} onNavigate={handleNav} />}
-                
+            <div className="px-5 mt-2 relative z-20">
+                {view === 'home' && <Dashboard data={ALL_DATA.filter(i => (filters.area === 'All' || i.area === filters.area))} onNavigate={(cat) => handleSearch({ ...filters, category: cat })} />}
+
                 <div className="flex gap-2 mb-6">
-                    <button onClick={() => setView('planner')} className="flex-1 bg-white text-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center gap-2 font-black hover:scale-[1.02] transition-transform"><Icon name="calendar" size={20} className="text-blue-600"/> Plan My Day</button>
-                    <button onClick={() => setShowTips(true)} className="flex-1 yellow-label p-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"><Icon name="tag" size={20}/> Yellow Labels</button>
+                    <button onClick={() => setView('planner')} className="flex-1 bg-white text-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center gap-2 font-black hover:scale-[1.02] transition-transform"><Icon name="calendar" size={20} className="text-blue-600" /> View Schedule</button>
+                    <button onClick={() => setShowTips(true)} className="flex-1 yellow-label p-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"><Icon name="tag" size={20} /> Yellow Labels</button>
                 </div>
-                
+
                 {view === 'planner' && (
-                     <>
-                        <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-black text-slate-800">Day Flow</h2><button onClick={() => setView('home')} className="p-2 bg-slate-200 rounded-full"><Icon name="x"/></button></div>
-                        <WeeklyPlanner data={REAL_DATA} selectedArea={selectedArea} onSelectArea={setSelectedArea} />
-                     </>
+                    <>
+                        <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-black text-slate-800">Timeline</h2><button onClick={() => setView('home')} className="p-2 bg-slate-200 rounded-full"><Icon name="x" /></button></div>
+                        <AreaScheduleView data={ALL_DATA} area={filters.area} />
+                    </>
                 )}
 
                 {view === 'map' && (
                     <>
                         <div className="mb-4 flex items-center justify-between">
-                             <h2 className="text-xl font-black text-slate-800">Live Map</h2>
-                             <div className="flex gap-1">
+                            <h2 className="text-xl font-black text-slate-800">Live Map</h2>
+                            <div className="flex gap-1">
                                 <button onClick={() => setMapFilter('open')} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${mapFilter === 'open' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-500'}`}>Open Now</button>
                                 <button onClick={() => setMapFilter('all')} className={`px-3 py-1 rounded-full text-[10px] font-bold border ${mapFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500'}`}>All</button>
-                             </div>
+                            </div>
                         </div>
-                        <SimpleMap data={REAL_DATA} category={category} statusFilter={mapFilter} />
+                        <SimpleMap data={filteredData} category={filters.category} statusFilter={mapFilter} />
                     </>
                 )}
-                
-                 {view === 'list' && (
+
+                {view === 'list' && (
                     <>
-                         <div className="mb-4">
-                            <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black text-slate-800 capitalize">{category === 'all' ? 'All Resources' : category}</h2><button onClick={() => setView('home')} className="p-2 bg-slate-200 rounded-full"><Icon name="x" size={16}/></button></div>
-                            <AreaFilter selectedArea={selectedArea} onSelectArea={setSelectedArea} />
+                        <div className="mb-4">
+                            <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black text-slate-800 capitalize">{filters.category === 'all' ? 'All Resources' : filters.category}</h2><button onClick={() => setView('home')} className="p-2 bg-slate-200 rounded-full"><Icon name="x" size={16} /></button></div>
                         </div>
                         <div className="space-y-4 pb-24">
-                            {filteredData.length > 0 ? (filteredData.map(item => <ResourceCard key={item.id} item={item} />)) : (<div className="text-center py-12 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200"><p className="font-bold">No results found in {selectedArea}.</p><button onClick={() => setSelectedArea('All')} className="text-emerald-600 text-xs font-bold mt-2 underline">View All Areas</button></div>)}
+                            {filteredData.length > 0 ? (filteredData.map(item => <ResourceCard key={item.id} item={item} />)) : (<div className="text-center py-12 text-slate-400 bg-white rounded-2xl border-2 border-dashed border-slate-200"><p className="font-bold">No results found in {filters.area}.</p><button onClick={() => setFilters({ ...filters, area: 'All' })} className="text-emerald-600 text-xs font-bold mt-2 underline">View All Areas</button></div>)}
                         </div>
                     </>
                 )}
-                
-                 {view === 'home' && (
+
+                {view === 'home' && (
                     <>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 pl-1">Browse Categories</p>
                         <div className="grid grid-cols-2 gap-3 pb-8">
-                            <CategoryButton label="Food & Meals" icon="utensils" color="bg-emerald-100 text-emerald-700" active={false} onClick={() => handleNav('food')} />
-                            <CategoryButton label="Shelter & Crisis" icon="bed" color="bg-indigo-100 text-indigo-700" active={false} onClick={() => handleNav('shelter')} />
-                            <CategoryButton label="Warmth & Net" icon="flame" color="bg-orange-100 text-orange-700" active={false} onClick={() => handleNav('warmth')} />
-                            <CategoryButton label="Family & Kids" icon="baby" color="bg-pink-100 text-pink-700" active={false} onClick={() => handleNav('family')} />
-                            <CategoryButton label="Help & Health" icon="lifebuoy" color="bg-blue-100 text-blue-700" active={false} onClick={() => handleNav('support')} />
-                            <CategoryButton label="View All" icon="search" color="bg-slate-100 text-slate-600" active={false} onClick={() => handleNav('all')} />
+                            <CategoryButton label="Food & Meals" icon="utensils" color="bg-emerald-100 text-emerald-700" active={false} onClick={() => handleSearch({ ...filters, category: 'food' })} />
+                            <CategoryButton label="Shelter & Crisis" icon="bed" color="bg-indigo-100 text-indigo-700" active={false} onClick={() => handleSearch({ ...filters, category: 'shelter' })} />
+                            <CategoryButton label="Warmth & Net" icon="flame" color="bg-orange-100 text-orange-700" active={false} onClick={() => handleSearch({ ...filters, category: 'warmth' })} />
+                            <CategoryButton label="Family & Kids" icon="users" color="bg-pink-100 text-pink-700" active={false} onClick={() => handleSearch({ ...filters, category: 'family' })} />
+                            <CategoryButton label="Help & Health" icon="lifebuoy" color="bg-blue-100 text-blue-700" active={false} onClick={() => handleSearch({ ...filters, category: 'support' })} />
+                            <CategoryButton label="View All" icon="search" color="bg-slate-100 text-slate-600" active={false} onClick={() => handleSearch({ ...filters, category: 'all' })} />
                         </div>
                     </>
                 )}
             </div>
-            
+
             <button onClick={() => setShowCrisis(true)} className="fixed bottom-24 right-5 w-14 h-14 bg-rose-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition border-4 border-white z-50"><Icon name="alert" size={24} /></button>
-            
+
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around p-3 pb-6 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-                <button onClick={() => setView('home')} className={`flex flex-col items-center gap-1 transition ${view === 'home' || view === 'list' ? 'text-slate-900' : 'text-slate-400'}`}><Icon name="home" size={24}/><span className="text-[10px] font-bold">Home</span></button>
-                <button onClick={() => setView('map')} className={`flex flex-col items-center gap-1 transition ${view === 'map' ? 'text-slate-900' : 'text-slate-400'}`}><Icon name="mapPin" size={24}/><span className="text-[10px] font-bold">Map</span></button>
-                <button onClick={() => setView('planner')} className={`flex flex-col items-center gap-1 transition ${view === 'planner' ? 'text-slate-900' : 'text-slate-400'}`}><Icon name="calendar" size={24}/><span className="text-[10px] font-bold">Plan</span></button>
+                <button onClick={() => setView('home')} className={`flex flex-col items-center gap-1 transition ${view === 'home' || view === 'list' ? 'text-slate-900' : 'text-slate-400'}`}><Icon name="home" size={24} /><span className="text-[10px] font-bold">Home</span></button>
+                <button onClick={() => setView('map')} className={`flex flex-col items-center gap-1 transition ${view === 'map' ? 'text-slate-900' : 'text-slate-400'}`}><Icon name="mapPin" size={24} /><span className="text-[10px] font-bold">Map</span></button>
+                <button onClick={() => setView('planner')} className={`flex flex-col items-center gap-1 transition ${view === 'planner' ? 'text-slate-900' : 'text-slate-400'}`}><Icon name="calendar" size={24} /><span className="text-[10px] font-bold">Plan</span></button>
             </div>
         </div>
     );
