@@ -197,20 +197,31 @@ const generateMockData = () => {
 
     const newItems = [];
 
-    // Generate ~150 items
-    for (let i = 0; i < 150; i++) {
+    // Generate ~300 items (Expanded Data)
+    for (let i = 0; i < 300; i++) {
         const catKeys = Object.keys(types);
         const category = catKeys[Math.floor(random() * catKeys.length)];
         const type = types[category as keyof typeof types][Math.floor(random() * types[category as keyof typeof types].length)];
         const area = areas[Math.floor(random() * areas.length)];
 
-        // Random Schedule
+        // Random Schedule - More realistic patterns
         const schedule: Record<number, string> = {};
+        const isWeekdayOnly = random() > 0.7;
+        const isWeekendOnly = random() > 0.9;
+
         for (let d = 0; d < 7; d++) {
-            if (random() > 0.3) {
-                const start = 8 + Math.floor(random() * 4);
-                const end = 13 + Math.floor(random() * 8);
-                schedule[d] = `${start.toString().padStart(2, '0')}:00-${end.toString().padStart(2, '0')}:00`;
+            if ((isWeekdayOnly && (d === 0 || d === 6)) || (isWeekendOnly && d > 0 && d < 6)) {
+                schedule[d] = 'Closed';
+                continue;
+            }
+
+            if (random() > 0.2) {
+                const startBase = 8 + Math.floor(random() * 8); // 8am to 4pm
+                const duration = 2 + Math.floor(random() * 6); // 2 to 8 hours
+                const startStr = startBase.toString().padStart(2, '0') + (random() > 0.5 ? ':00' : ':30');
+                const endBase = Math.min(23, startBase + duration);
+                const endStr = endBase.toString().padStart(2, '0') + ':00';
+                schedule[d] = `${startStr}-${endStr}`;
             } else {
                 schedule[d] = 'Closed';
             }
@@ -218,19 +229,19 @@ const generateMockData = () => {
 
         // Random Location (Portsmouth approx bounds)
         const lat = 50.78 + (random() * 0.08);
-        const lng = -1.11 + (random() * 0.07);
+        const lng = -1.13 + (random() * 0.1); // Slightly wider range to cover more area
 
         newItems.push({
-            id: `gen_${i}`,
-            name: `${area} ${type} ${i + 1}`,
+            id: `gen_${i}_x`,
+            name: `${area} ${type} Station ${Math.floor(random() * 900) + 100}`,
             category,
             type,
             area,
-            address: `${Math.floor(random() * 100) + 1} London Road`,
+            address: `${Math.floor(random() * 200) + 1} ${['High St', 'London Rd', 'Albert Rd', 'Victoria Rd', 'Commercial Rd', 'Kingston Rd'][Math.floor(random() * 6)]}`,
             transport: `Bus ${Math.floor(random() * 20) + 1}`,
-            description: `A generated resource for ${category} support in ${area}.`,
-            requirements: "Open access",
-            tags: [category, "generated", random() > 0.5 ? "free" : "membership", random() > 0.7 ? "wheelchair" : "wifi"],
+            description: `A vital resource providing ${category} support for the ${area} community. Open to all.`,
+            requirements: random() > 0.5 ? "Open access" : "Referral preferred",
+            tags: [category, "generated", random() > 0.5 ? "free" : "membership", random() > 0.7 ? "wheelchair" : "wifi", random() > 0.8 ? "pets_allowed" : "family_friendly"],
             schedule,
             lat,
             lng
@@ -437,67 +448,103 @@ const AreaScheduleView = ({ data, area }: { data: any[]; area: string }) => {
         return data.filter(item => (area === 'All' || item.area === area) && item.schedule[selectedDay] !== 'Closed');
     }, [data, area, selectedDay]);
 
-    // Group by time for a timeline feel
-    const timeSlots = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 to 22:00
+    // Group items by Area
+    const groupedByArea = useMemo(() => {
+        const groups: Record<string, typeof data> = {};
+        filtered.forEach(item => {
+            if (!groups[item.area]) groups[item.area] = [];
+            groups[item.area].push(item);
+        });
+        // Sort keys
+        return Object.keys(groups).sort().reduce((obj, key) => {
+            obj[key] = groups[key].sort((a, b) => {
+                const timeA = (a.schedule as any)[selectedDay].split('-')[0];
+                const timeB = (b.schedule as any)[selectedDay].split('-')[0];
+                return timeA.localeCompare(timeB);
+            });
+            return obj;
+        }, {} as Record<string, typeof data>);
+    }, [filtered, selectedDay]);
 
     return (
-        <div className="p-4 pb-24 animate-fade-in-up">
-            <div className="bg-slate-900 text-white p-6 rounded-3xl mb-6 shadow-xl">
-                <div className="flex justify-between items-end mb-4">
-                    <div>
-                        <h2 className="text-3xl font-black">Schedule</h2>
-                        <p className="text-slate-400 font-bold">{area === 'All' ? 'All Areas' : `${area} Region`}</p>
+        <div className="p-4 pb-24 animate-fade-in-up font-sans">
+            <div className="bg-slate-900 text-white p-6 rounded-[32px] mb-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10"><Icon name="calendar" size={100} /></div>
+                <div className="relative z-10">
+                    <div className="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 className="text-3xl font-black tracking-tight">Daily Schedule</h2>
+                            <p className="text-slate-400 font-bold text-sm tracking-wide">
+                                {area === 'All' ? 'Showing All Areas' : `${area} Region`}
+                            </p>
+                        </div>
+                        <div className="bg-emerald-500/20 px-4 py-2 rounded-full text-sm font-bold text-emerald-300 border border-emerald-500/30 backdrop-blur-sm">
+                            {filtered.length} Active Resources
+                        </div>
                     </div>
-                    <div className="bg-white/10 px-3 py-1 rounded-full text-xs font-bold text-emerald-400 border border-white/10">{filtered.length} Open</div>
-                </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                    {days.map((d, i) => (
-                        <button
-                            key={d}
-                            onClick={() => setSelectedDay(i)}
-                            className={`flex flex-col items-center min-w-[3.5rem] py-2 rounded-xl text-xs font-bold transition-all ${selectedDay === i ? 'bg-white text-slate-900' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}
-                        >
-                            <span>{d}</span>
-                            {i === todayIdx && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span>}
-                        </button>
-                    ))}
+                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                        {days.map((d, i) => (
+                            <button
+                                key={d}
+                                onClick={() => setSelectedDay(i)}
+                                className={`flex flex-col items-center min-w-[4rem] py-3 rounded-2xl text-xs font-bold transition-all ${selectedDay === i ? 'bg-white text-slate-900 shadow-lg scale-105' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                            >
+                                <span className="uppercase tracking-wider">{d}</span>
+                                {i === todayIdx && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5"></span>}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <div className="space-y-6 relative border-l-2 border-slate-200 ml-3 pl-6">
-                {timeSlots.map(hour => {
-                    const hourStr = hour.toString().padStart(2, '0');
-                    const itemsStarting = filtered.filter(item => (item.schedule as any)[selectedDay].startsWith(hourStr));
+            <div className="space-y-8">
+                {Object.entries(groupedByArea).map(([areaKey, items]) => (
+                    <div key={areaKey} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-2 h-full bg-slate-900"></div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-4 pl-4 flex items-center gap-2">
+                            {areaKey} <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full uppercase tracking-wide">Postal Code</span>
+                        </h3>
 
-                    if (itemsStarting.length === 0) return null;
-
-                    return (
-                        <div key={hour} className="relative">
-                            <span className="absolute -left-[3.25rem] top-0 text-xs font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{hourStr}:00</span>
-                            <div className="absolute -left-[1.6rem] top-2 w-3 h-3 bg-slate-200 rounded-full border-2 border-white"></div>
-
-                            <div className="grid gap-3">
-                                {itemsStarting.map(item => (
-                                    <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:border-slate-300 transition-all group">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 px-2 py-0.5 rounded w-fit ${getTagConfig(item.category).bg} ${getTagConfig(item.category).color}`}>{item.category}</div>
-                                                <h4 className="font-bold text-slate-800 text-sm group-hover:text-emerald-700 transition">{item.name}</h4>
-                                                <p className="text-xs text-slate-400 mt-0.5">{item.address}</p>
+                        <div className="space-y-3 pl-4">
+                            {items.map(item => {
+                                const timeRange = (item.schedule as any)[selectedDay];
+                                const conf = getTagConfig(item.category);
+                                return (
+                                    <div key={item.id} className="flex flex-col sm:flex-row gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                                        <div className="sm:w-24 shrink-0 pt-1">
+                                            <span className="inline-block bg-slate-100 text-slate-900 text-xs font-black px-2 py-1 rounded-lg">
+                                                {timeRange}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start">
+                                                <h4 className="font-bold text-slate-800 text-base">{item.name}</h4>
+                                                <div className={`p-1.5 rounded-full ${conf.bg} ${conf.color}`}>
+                                                    <Icon name={conf.icon} size={12} />
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-xs font-black text-slate-800">{(item.schedule as any)[selectedDay]}</div>
-                                                <div className="text-[10px] text-slate-400 font-medium">{item.type}</div>
+                                            <p className="text-xs text-slate-500 mb-1">{item.type} • {item.address}</p>
+                                            <div className="flex gap-2">
+                                                {item.tags.slice(0, 3).map((t: string) => (
+                                                    <span key={t} className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{t}</span>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                );
+                            })}
                         </div>
-                    );
-                })}
-                {filtered.length === 0 && <div className="text-center py-10 text-slate-400">No resources open this day.</div>}
+                    </div>
+                ))}
+                {filtered.length === 0 && (
+                    <div className="text-center py-16">
+                        <div className="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <Icon name="calendar" size={32} />
+                        </div>
+                        <p className="text-slate-400 font-bold">No resources open in selected areas on this day.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -640,37 +687,90 @@ const Dashboard = ({ data, onNavigate }: { data: any[]; onNavigate: (cat: string
     const openFood = data.filter(i => i.category === 'food' && isOpen(i.schedule)).length;
     const openShelter = data.filter(i => i.category === 'shelter' && isOpen(i.schedule)).length;
 
-    return (
-        <div className="px-4 mb-6 pt-2">
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{greeting}</h1>
-            <p className="text-slate-500 text-sm font-medium mt-1">Here's what's available right now.</p>
+    // "Kanban" Style Activity Feed
+    const upcoming = useMemo(() => {
+        const events: any[] = [];
+        data.forEach(item => {
+            const status = checkStatus(item.schedule);
+            if (status.status !== 'closed') {
+                events.push({ ...item, statusLabel: status.label, statusColor: status.color, sortKey: status.status === 'closing' ? 1 : 2 });
+            }
+        });
+        return events.sort((a, b) => a.sortKey - b.sortKey).slice(0, 5);
+    }, [data, now]);
 
-            <div className="grid grid-cols-2 gap-3 mt-6">
-                <button onClick={() => onNavigate('food')} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden">
-                    <div className="absolute right-[-10px] top-[-10px] bg-emerald-50 w-24 h-24 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+    return (
+        <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">{greeting},</h1>
+                    <p className="text-slate-500 font-medium">Here's what's happening in Portsmouth.</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=James`} alt="User" />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+                <button onClick={() => onNavigate('food')} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all text-left group relative overflow-hidden">
+                    <div className="absolute right-[-20px] top-[-20px] bg-emerald-50 w-32 h-32 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-3 text-emerald-600">
-                            <Icon name="utensils" size={18} />
-                            <span className="text-xs font-bold uppercase tracking-wide">Food</span>
+                            <div className="bg-emerald-100 p-2 rounded-full"><Icon name="utensils" size={16} /></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-900/60">Food</span>
                         </div>
-                        <div className="text-3xl font-bold text-slate-900">{openFood}</div>
-                        <div className="text-xs text-slate-400">places open</div>
+                        <div className="text-4xl font-black text-slate-900 tracking-tighter">{openFood}</div>
+                        <div className="text-xs font-bold text-slate-400 mt-1">Open Now</div>
                     </div>
                 </button>
-                <button onClick={() => onNavigate('shelter')} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden">
-                    <div className="absolute right-[-10px] top-[-10px] bg-indigo-50 w-24 h-24 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                <button onClick={() => onNavigate('shelter')} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all text-left group relative overflow-hidden">
+                    <div className="absolute right-[-20px] top-[-20px] bg-indigo-50 w-32 h-32 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-3 text-indigo-600">
-                            <Icon name="bed" size={18} />
-                            <span className="text-xs font-bold uppercase tracking-wide">Shelter</span>
+                            <div className="bg-indigo-100 p-2 rounded-full"><Icon name="bed" size={16} /></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-900/60">Shelter</span>
                         </div>
-                        <div className="text-3xl font-bold text-slate-900">{openShelter}</div>
-                        <div className="text-xs text-slate-400">places open</div>
+                        <div className="text-4xl font-black text-slate-900 tracking-tighter">{openShelter}</div>
+                        <div className="text-xs font-bold text-slate-400 mt-1">Open Now</div>
                     </div>
                 </button>
             </div>
+
+            {/* Kanban / Activity Stream */}
+            <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 overflow-hidden relative">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                        Live Activity
+                    </h3>
+                    <button className="text-xs font-bold text-blue-600">View All</button>
+                </div>
+                <div className="space-y-4">
+                    {upcoming.map((item: any) => (
+                        <div key={item.id} className="flex items-center gap-4 group cursor-pointer" onClick={() => onNavigate(item.category)}>
+                            <div className="relative">
+                                <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                    <Icon name={getTagConfig(item.category).icon} size={20} />
+                                </div>
+                                {item.statusColor.includes('orange') && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-bold text-slate-900 truncate">{item.name}</h4>
+                                <div className="flex items-center gap-2 text-xs">
+                                    <span className={`px-1.5 py-0.5 rounded-md font-bold ${item.statusColor.includes('orange') ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                        {item.statusLabel}
+                                    </span>
+                                    <span className="text-slate-400 truncate">• {item.area}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {upcoming.length === 0 && <div className="text-slate-400 text-sm font-medium py-2">No active resources at the moment.</div>}
+                </div>
+            </div>
         </div>
     );
+
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
