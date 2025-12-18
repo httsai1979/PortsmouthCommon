@@ -439,14 +439,21 @@ const BookingBar = ({ onSearch, currentFilters }: { onSearch: any; currentFilter
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AreaScheduleView = ({ data, area }: { data: any[]; area: string }) => {
+const AreaScheduleView = ({ data, area, category }: { data: any[]; area: string; category: string }) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const todayIdx = new Date().getDay();
     const [selectedDay, setSelectedDay] = useState(todayIdx);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
     const filtered = useMemo(() => {
-        return data.filter(item => (area === 'All' || item.area === area) && item.schedule[selectedDay] !== 'Closed');
-    }, [data, area, selectedDay]);
+        return data.filter(item => {
+            const matchesArea = area === 'All' || item.area === area;
+            const matchesCategory = category === 'all' || item.category === category;
+            const isOpenOnDay = item.schedule[selectedDay] !== 'Closed';
+            return matchesArea && matchesCategory && isOpenOnDay;
+        });
+    }, [data, area, category, selectedDay]);
 
     // Group items by Area
     const groupedByArea = useMemo(() => {
@@ -475,7 +482,7 @@ const AreaScheduleView = ({ data, area }: { data: any[]; area: string }) => {
                         <div>
                             <h2 className="text-3xl font-black tracking-tight">Daily Schedule</h2>
                             <p className="text-slate-400 font-bold text-sm tracking-wide">
-                                {area === 'All' ? 'Showing All Areas' : `${area} Region`}
+                                {area === 'All' ? 'Showing All Areas' : `${area} Region`} • {category === 'all' ? 'All Categories' : category}
                             </p>
                         </div>
                         <div className="bg-emerald-500/20 px-4 py-2 rounded-full text-sm font-bold text-emerald-300 border border-emerald-500/30 backdrop-blur-sm">
@@ -511,26 +518,46 @@ const AreaScheduleView = ({ data, area }: { data: any[]; area: string }) => {
                                 const timeRange = (item.schedule as any)[selectedDay];
                                 const conf = getTagConfig(item.category);
                                 return (
-                                    <div key={item.id} className="flex flex-col sm:flex-row gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                                        <div className="sm:w-24 shrink-0 pt-1">
-                                            <span className="inline-block bg-slate-100 text-slate-900 text-xs font-black px-2 py-1 rounded-lg">
-                                                {timeRange}
-                                            </span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <h4 className="font-bold text-slate-800 text-base">{item.name}</h4>
-                                                <div className={`p-1.5 rounded-full ${conf.bg} ${conf.color}`}>
-                                                    <Icon name={conf.icon} size={12} />
+                                    <div key={item.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                                        <div className="flex flex-col sm:flex-row gap-3 cursor-pointer" onClick={() => setExpandedItem(expandedItem === item.id ? null : item.id)}>
+                                            <div className="sm:w-24 shrink-0 pt-1">
+                                                <span className="inline-block bg-slate-100 text-slate-900 text-xs font-black px-2 py-1 rounded-lg">
+                                                    {timeRange}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-start">
+                                                    <h4 className="font-bold text-slate-800 text-base">{item.name}</h4>
+                                                    <div className={`p-1.5 rounded-full ${conf.bg} ${conf.color}`}>
+                                                        <Icon name={conf.icon} size={12} />
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-slate-500 mb-1">{item.type} • {item.address}</p>
+                                                <div className="flex gap-2">
+                                                    {item.tags.slice(0, 3).map((t: string) => (
+                                                        <span key={t} className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{t}</span>
+                                                    ))}
                                                 </div>
                                             </div>
-                                            <p className="text-xs text-slate-500 mb-1">{item.type} • {item.address}</p>
-                                            <div className="flex gap-2">
-                                                {item.tags.slice(0, 3).map((t: string) => (
-                                                    <span key={t} className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{t}</span>
-                                                ))}
-                                            </div>
                                         </div>
+                                        {expandedItem === item.id && (
+                                            <div className="mt-3 p-4 bg-slate-50 rounded-xl animate-fade-in text-xs space-y-2">
+                                                <p className="text-slate-600 italic">"{item.description}"</p>
+                                                {item.phone && (
+                                                    <div className="flex items-center gap-2 font-bold text-slate-700">
+                                                        <Icon name="phone" size={12} /> {item.phone}
+                                                    </div>
+                                                )}
+                                                <div className="border-t border-slate-200/50 pt-2 mt-2">
+                                                    <p className="font-bold text-slate-400 mb-1 uppercase tracking-widest text-[10px]">Weekly Hours</p>
+                                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+                                                        <div key={d} className={`flex justify-between py-0.5 ${i === new Date().getDay() ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>
+                                                            <span>{d}</span><span>{item.schedule[i]}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -1054,7 +1081,7 @@ const App = () => {
                 {view === 'planner' && (
                     <>
                         <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-black text-slate-800">Timeline</h2><button onClick={() => setView('home')} className="p-2 bg-slate-200 rounded-full"><Icon name="x" /></button></div>
-                        <AreaScheduleView data={ALL_DATA} area={filters.area} />
+                        <AreaScheduleView data={ALL_DATA} area={filters.area} category={filters.category} />
                     </>
                 )}
 
