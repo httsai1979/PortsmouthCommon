@@ -850,7 +850,7 @@ const PrintView = ({ data, onClose }) => {
     );
 };
 
-};
+
 
 const App = () => {
     const [view, setView] = useState('home');
