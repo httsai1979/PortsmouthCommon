@@ -15,6 +15,7 @@ interface SimpleMapProps {
     statusFilter: string;
     savedIds: string[];
     onToggleSave: (id: string) => void;
+    stealthMode?: boolean;
 }
 
 // Utility to create a custom marker icon
@@ -80,7 +81,7 @@ const MapController = ({ selectedPos, locateTrigger }: { selectedPos: [number, n
     return null;
 };
 
-const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave }: SimpleMapProps) => {
+const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode }: SimpleMapProps) => {
     const [selectedItem, setSelectedItem] = useState<Resource | null>(null);
     const [localCategory, setLocalCategory] = useState<string>(category);
     const [locateTrigger, setLocateTrigger] = useState(0);
@@ -153,7 +154,7 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave }: Sim
             </MapContainer>
 
             {/* Phase 17: Tactical HUD (Situational Awareness) */}
-            <div className="absolute top-20 left-4 z-[1000] pointer-events-none">
+            <div className={`absolute top-20 left-4 z-[1000] pointer-events-none transition-all ${stealthMode ? 'opacity-60 grayscale-[0.3]' : ''}`}>
                 <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-2xl flex flex-col gap-1 border border-white/10">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ALL_DATA, AREAS } from './data';
-import type { Resource } from './data';
 import { checkStatus, getDistance, playSuccessSound } from './utils';
 
 // Components
@@ -97,9 +96,8 @@ const App = () => {
 
             // Smart Tokens
             const status = checkStatus(item.schedule);
-            const res = item as Resource;
             const matchesOpenNow = !smartFilters.openNow || status.isOpen;
-            const matchesVerified = !smartFilters.verified || (res.trustScore && res.trustScore > 90);
+            const matchesVerified = !smartFilters.verified || (item.trustScore && item.trustScore > 90);
 
             let matchesNearMe = true;
             if (smartFilters.nearMe && userLocation) {
@@ -367,6 +365,7 @@ const App = () => {
                             statusFilter={mapFilter}
                             savedIds={savedIds}
                             onToggleSave={toggleSaved}
+                            stealthMode={stealthMode}
                         />
                     </div>
                 )}
@@ -454,6 +453,7 @@ const App = () => {
                                         item={item}
                                         isSaved={savedIds.includes(item.id)}
                                         onToggleSave={() => toggleSaved(item.id)}
+                                        highContrast={highContrast}
                                     />
                                 ))
                             ) : (

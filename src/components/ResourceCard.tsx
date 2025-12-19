@@ -7,9 +7,10 @@ interface ResourceCardProps {
     item: Resource;
     isSaved: boolean;
     onToggleSave: () => void;
+    highContrast?: boolean;
 }
 
-const ResourceCard = ({ item, isSaved, onToggleSave }: ResourceCardProps) => {
+const ResourceCard = ({ item, isSaved, onToggleSave, highContrast }: ResourceCardProps) => {
     const [expanded, setExpanded] = useState(false);
     const status = checkStatus(item.schedule);
 
@@ -21,7 +22,7 @@ const ResourceCard = ({ item, isSaved, onToggleSave }: ResourceCardProps) => {
     };
 
     return (
-        <div className={`bg-white rounded-[32px] mb-4 shadow-sm border-2 transition-all duration-300 relative group overflow-hidden flex ${isSaved ? 'border-indigo-100 shadow-indigo-100/50' : 'border-slate-50 hover:border-slate-100'}`}>
+        <div className={`bg-white rounded-[32px] mb-4 shadow-sm border-2 transition-all duration-300 relative group overflow-hidden flex ${highContrast ? 'border-slate-900 border-[3px]' : isSaved ? 'border-indigo-100 shadow-indigo-100/50' : 'border-slate-50 hover:border-slate-100'}`}>
             {/* Phase 9: Tactical Status Bar */}
             <div className={`w-3 shrink-0 ${getStatusColor()} transition-colors duration-500`} />
 

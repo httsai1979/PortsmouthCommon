@@ -48,6 +48,13 @@ export const TipsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         </div>
                     </section>
 
+                    <section className="pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-3 text-slate-400">
+                            <Icon name="check_circle" size={16} className="text-emerald-500" />
+                            <p className="text-[9px] font-bold uppercase tracking-widest leading-relaxed"> Verified Data • Source: PCC & Community Groups (Dec 2025)</p>
+                        </div>
+                    </section>
+
                     <div className="pt-4">
                         <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-95 transition-all">
                             Got it, Let's Cross
