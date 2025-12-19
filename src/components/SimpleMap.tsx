@@ -54,7 +54,7 @@ const createCustomIcon = (item: Resource, isSelected: boolean) => {
 };
 
 // Component to handle map center/zoom updates
-const MapController = ({ selectedPos, locateTrigger }: { selectedPos: [number, number] | null, locateTrigger: number }) => {
+const MapController = ({ selectedPos, locateTrigger, externalPos }: { selectedPos: [number, number] | null, locateTrigger: number, externalPos?: [number, number] | null }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -62,6 +62,12 @@ const MapController = ({ selectedPos, locateTrigger }: { selectedPos: [number, n
             map.setView(selectedPos, 16, { animate: true });
         }
     }, [selectedPos, map]);
+
+    useEffect(() => {
+        if (externalPos) {
+            map.setView(externalPos, 18, { animate: true });
+        }
+    }, [externalPos, map]);
 
     useEffect(() => {
         if (locateTrigger > 0) {
@@ -72,11 +78,23 @@ const MapController = ({ selectedPos, locateTrigger }: { selectedPos: [number, n
     return null;
 };
 
-const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode }: SimpleMapProps) => {
+interface SimpleMapProps {
+    data: Resource[];
+    category: string;
+    statusFilter: string;
+    savedIds: string[];
+    onToggleSave: (id: string) => void;
+    stealthMode?: boolean;
+    externalFocus?: { lat: number; lng: number; label?: string } | null;
+}
+
+const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode, externalFocus }: SimpleMapProps) => {
     const [selectedItem, setSelectedItem] = useState<Resource | null>(null);
     const [localCategory, setLocalCategory] = useState<string>(category);
     const [locateTrigger, setLocateTrigger] = useState(0);
     const [showHours, setShowHours] = useState(false);
+
+    // ... (filteredPoints useMemo remains same, not including it in replacement to save tokens if possible, but for safety I will include the start of the component to ensure props update works)
 
     const filteredPoints = useMemo(() => {
         return data.filter(item => {
@@ -86,6 +104,10 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
             return matchCat && matchStatus;
         });
     }, [data, localCategory, statusFilter]);
+
+    // ... categories array ...
+
+    // ... JSX ...
 
     const categories = [
         { id: 'all', label: 'All', icon: 'search' },
