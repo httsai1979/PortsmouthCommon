@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
-import { MAP_BOUNDS, TAG_ICONS, type Resource } from '../data';
+import { MAP_BOUNDS, TAG_ICONS } from '../data';
+import type { Resource } from '../data';
 
 interface SimpleMapProps {
     data: Resource[];

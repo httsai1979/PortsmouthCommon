@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
-import { TAG_ICONS, type Resource } from '../data';
+import { TAG_ICONS } from '../data';
+import type { Resource } from '../data';
 
 interface DashboardProps {
     data: Resource[];
