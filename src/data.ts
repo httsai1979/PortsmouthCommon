@@ -60,15 +60,15 @@ export const SUPERMARKET_TIPS = [
 ];
 
 export const COMMUNITY_DEALS = [
-    { store: "Tesco Extra (Fratton)", deal: "Final Reductions (75%+)", time: "Daily 19:30-21:00", info: "Look for the back corner chilled cabinet." },
-    { store: "Waitrose (Southsea)", deal: "Gourmet Reductions", time: "Daily 17:00-19:00", info: "Premium items often 90% off." },
-    { store: "Co-op (Albert Rd)", deal: "Bakery Waste-Free", time: "Weekdays 18:00", info: "Free/50p bread bags usually available." }
+    { id: 'deal1', store: "Tesco Extra (Fratton)", deal: "Final Reductions (75%+)", time: "Daily 19:30-21:00", info: "Look for the back corner chilled cabinet.", lat: 50.796, lng: -1.077 },
+    { id: 'deal2', store: "Waitrose (Southsea)", deal: "Gourmet Reductions", time: "Daily 17:00-19:00", info: "Premium items often 90% off.", lat: 50.784, lng: -1.091 },
+    { id: 'deal3', store: "Co-op (Albert Rd)", deal: "Bakery Waste-Free", time: "Weekdays 18:00", info: "Free/50p bread bags usually available.", lat: 50.787, lng: -1.082 }
 ];
 
 export const GIFT_EXCHANGE = [
-    { item: "Warm Winter Coats", location: "St Jude's Hub", date: "Every Friday", info: "Drop off or pick up, no questions asked." },
-    { item: "School Uniforms", location: "Somerstown Hub", date: "Daily", info: "Gently used uniforms for all city schools." },
-    { item: "Baby Furniture", location: "Northern Parade Hub", date: "First Sat/Month", info: "Cots and high chairs available for loan or keep." }
+    { id: 'gift1', item: "Warm Winter Coats", location: "St Jude's Hub", date: "Every Friday", info: "Drop off or pick up, no questions asked.", lat: 50.786, lng: -1.092 },
+    { id: 'gift2', item: "School Uniforms", location: "Somerstown Hub", date: "Daily", info: "Gently used uniforms for all city schools.", lat: 50.795, lng: -1.088 },
+    { id: 'gift3', item: "Baby Furniture", location: "Northern Parade Hub", date: "First Sat/Month", info: "Cots and high chairs available for loan or keep.", lat: 50.824, lng: -1.077 }
 ];
 
 export const PROGRESS_TIPS = [
