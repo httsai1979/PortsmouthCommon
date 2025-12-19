@@ -8,9 +8,13 @@ interface ResourceCardProps {
     isSaved: boolean;
     onToggleSave: () => void;
     highContrast?: boolean;
+    onAddToJourney?: () => void;
+    onAddToCompare?: () => void;
+    isInJourney?: boolean;
+    isInCompare?: boolean;
 }
 
-const ResourceCard = ({ item, isSaved, onToggleSave, highContrast }: ResourceCardProps) => {
+const ResourceCard = ({ item, isSaved, onToggleSave, highContrast, onAddToJourney, onAddToCompare, isInJourney, isInCompare }: ResourceCardProps) => {
     const [expanded, setExpanded] = useState(false);
     const status = checkStatus(item.schedule);
 
@@ -98,7 +102,33 @@ const ResourceCard = ({ item, isSaved, onToggleSave, highContrast }: ResourceCar
                     </div>
                 )}
 
-                <div className="flex gap-3">
+
+                <div className="flex gap-2">
+                    {onAddToJourney && (
+                        <button
+                            onClick={onAddToJourney}
+                            className={`p-3 rounded-xl transition-all active:scale-90 ${isInJourney ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600'}`}
+                            title={isInJourney ? "Remove from Journey" : "Add to Journey"}
+                        >
+                            <Icon name="mapPin" size={16} />
+                        </button>
+                    )}
+                    {onAddToCompare && (
+                        <button
+                            onClick={onAddToCompare}
+                            className={`p-3 rounded-xl transition-all active:scale-90 ${isInCompare ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600'}`}
+                            title={isInCompare ? "Remove from Compare" : "Add to Compare"}
+                        >
+                            <Icon name="shield" size={16} />
+                        </button>
+                    )}
+                    <button
+                        onClick={onToggleSave}
+                        className={`p-3 rounded-xl transition-all active:scale-90 ${isSaved ? 'bg-amber-500 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-amber-50 hover:text-amber-600'}`}
+                        title={isSaved ? "Unpin" : "Pin"}
+                    >
+                        <Icon name="star" size={16} />
+                    </button>
                     <button
                         onClick={() => setExpanded(!expanded)}
                         className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${expanded ? 'bg-slate-900 text-white border-slate-900 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 shadow-sm'}`}
@@ -125,7 +155,7 @@ const ResourceCard = ({ item, isSaved, onToggleSave, highContrast }: ResourceCar
                     </a>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

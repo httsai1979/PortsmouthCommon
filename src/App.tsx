@@ -11,6 +11,9 @@ import PrintView from './components/PrintView';
 import { AreaScheduleView, CategoryButton } from './components/Schedule';
 import AIAssistant from './components/AIAssistant';
 import PrivacyShield from './components/PrivacyShield';
+import JourneyPlanner from './components/JourneyPlanner';
+import SmartCompare from './components/SmartCompare';
+import SmartNotifications from './components/SmartNotifications';
 
 const App = () => {
     // Branding & Accessibility State
@@ -26,6 +29,12 @@ const App = () => {
     const [showPrint, setShowPrint] = useState(false);
     const [mapFilter, setMapFilter] = useState<'all' | 'open'>('open');
     const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number; label?: string } | null>(null);
+
+    // Phase 25: Empowerment & Intelligence
+    const [journeyItems, setJourneyItems] = useState<string[]>([]); // Resource IDs for multi-stop journey
+    const [compareItems, setCompareItems] = useState<string[]>([]); // Resource IDs for comparison (max 3)
+    const [notifications, setNotifications] = useState<Array<{ id: string; type: string; message: string; timestamp: number }>>([]);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     // Personalization (Phase 8: My Bridge Cart)
     const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -99,6 +108,99 @@ const App = () => {
             setMapFocus(null);
         }
     }, [view]);
+
+    // Phase 25: Smart Notifications Logic
+    useEffect(() => {
+        const checkForNotifications = () => {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const newNotifications: Array<{ id: string; type: string; message: string; timestamp: number; resourceId?: string }> = [];
+
+            // Check saved resources for opening soon
+            savedIds.forEach(id => {
+                const resource = ALL_DATA.find(r => r.id === id);
+                if (!resource) return;
+
+                const status = checkStatus(resource.schedule);
+                const daySchedule = resource.schedule[now.getDay()];
+
+                if (daySchedule && daySchedule !== 'Closed') {
+                    const [openTime] = daySchedule.split('-');
+                    const [openHour, openMin] = openTime.split(':').map(Number);
+
+                    // Notify 30 minutes before opening
+                    const minutesUntilOpen = (openHour * 60 + openMin) - (currentHour * 60 + currentMinutes);
+
+                    if (minutesUntilOpen > 0 && minutesUntilOpen <= 30 && status.status === 'closed') {
+                        newNotifications.push({
+                            id: `opening_${id}_${now.getTime()}`,
+                            type: 'opening_soon',
+                            message: `${resource.name} opens in ${minutesUntilOpen} minutes`,
+                            timestamp: now.getTime(),
+                            resourceId: id
+                        });
+                    }
+                }
+            });
+
+            // Weather alerts (example)
+            if (currentHour >= 18 && now.getMonth() >= 10 && newNotifications.length === 0) {
+                newNotifications.push({
+                    id: `weather_${now.getTime()}`,
+                    type: 'weather',
+                    message: 'Cold evening ahead - Emergency shelter beds available tonight',
+                    timestamp: now.getTime()
+                });
+            }
+
+            if (newNotifications.length > 0) {
+                setNotifications(prev => {
+                    const existing = prev.map(n => n.id);
+                    const unique = newNotifications.filter(n => !existing.includes(n.id));
+                    return [...prev, ...unique];
+                });
+            }
+        };
+
+        // Check every 5 minutes
+        const interval = setInterval(checkForNotifications, 5 * 60 * 1000);
+        checkForNotifications(); // Initial check
+
+        return () => clearInterval(interval);
+    }, [savedIds]);
+
+    // Phase 25: Helper Functions
+    const toggleJourneyItem = (id: string) => {
+        setJourneyItems(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const toggleCompareItem = (id: string) => {
+        setCompareItems(prev => {
+            if (prev.includes(id)) {
+                return prev.filter(i => i !== id);
+            }
+            if (prev.length >= 3) {
+                alert('Maximum 3 resources for comparison');
+                return prev;
+            }
+            return [...prev, id];
+        });
+    };
+
+    const handleNavigateJourney = () => {
+        if (journeyItems.length === 0) return;
+
+        const journeyResources = ALL_DATA.filter(r => journeyItems.includes(r.id));
+        if (journeyResources.length > 0) {
+            // Create Google Maps URL with multiple waypoints
+            const waypoints = journeyResources.map(r => `${r.lat},${r.lng}`).join('|');
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${journeyResources[journeyResources.length - 1].lat},${journeyResources[journeyResources.length - 1].lng}&waypoints=${waypoints}`;
+            window.open(url, '_blank');
+        }
+    };
 
     const handleSearch = (newFilters: any) => {
         setFilters(newFilters);
