@@ -47,6 +47,7 @@ export const TAG_ICONS: Record<string, { icon: string; label: string; color: str
     pets: { icon: 'paw', label: 'Dogs OK', color: 'text-stone-600', bg: 'bg-stone-100', hex: '#57534e' },
     "24_7": { icon: 'clock', label: '24/7', color: 'text-purple-600', bg: 'bg-purple-50', hex: '#9333ea' },
     charity: { icon: 'shopping-bag', label: 'Charity Shop', color: 'text-pink-500', bg: 'bg-pink-50', hex: '#ec4899' },
+    clothing: { icon: 'shopping-bag', label: 'Clothing', color: 'text-purple-500', bg: 'bg-purple-50', hex: '#a855f7' },
     default: { icon: 'info', label: 'Info', color: 'text-gray-500', bg: 'bg-gray-50', hex: '#6b7280' }
 };
 
@@ -119,13 +120,16 @@ export const REAL_DATA: Resource[] = [
     { id: 'f30', name: "Havelock Cafe", category: "food", type: "Lunch", area: "PO4", address: "Fawcett Rd", description: "Lunch club.", requirements: "Small fee.", tags: ["hot_meal"], schedule: { 1: "12:00-13:30", 2: "12:00-13:30", 3: "Closed", 4: "12:00-13:30", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.789, lng: -1.077, transport: "Bus 1, 18" },
     { id: 'f31', name: "Haven (Lake Rd)", category: "food", type: "Emergency", area: "PO1", address: "Lake Road, PO1 4HA", description: "Emergency food parcels. Proof of ID needed.", requirements: "PO1 Residents.", tags: ["free", "referral"], schedule: { 1: "10:00-12:00", 2: "Closed", 3: "10:00-12:00", 4: "Closed", 5: "10:00-12:00", 6: "Closed", 0: "Closed" }, lat: 50.805, lng: -1.088, phone: "023 9283 2344" },
     { id: 'f32', name: "All Saints Foodbank", category: "food", type: "Foodbank", area: "PO1", address: "334 Commercial Rd, PO1 4BT", description: "Trussell Trust food parcels & toiletries.", requirements: "Voucher required.", tags: ["referral", "free"], schedule: { 1: "13:00-15:00", 2: "Closed", 3: "13:00-15:00", 4: "Closed", 5: "13:00-15:00", 6: "Closed", 0: "Closed" }, lat: 50.803, lng: -1.089, phone: "023 9287 3114" },
-    // **NEW FOOD ITEMS**
     { id: 'f33', name: "St James' Church Food", category: "food", type: "Food Support", area: "PO4", address: "Milton Road, PO4 8PG", description: "Community pantry and support.", requirements: "Open access.", tags: ["free", "food"], schedule: { 1: "Closed", 2: "10:00-12:00", 3: "Closed", 4: "10:00-12:00", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.799, lng: -1.066, phone: "023 9273 2786" },
     { id: 'f34', name: "Spark Community Space", category: "food", type: "Cafe", area: "PO4", address: "Unit 12, The Pompey Centre, PO4 8BH", description: "Pay-what-you-can cafe aiming to tackle loneliness.", requirements: "Open to all.", tags: ["cafe", "warmth", "community"], schedule: { 1: "Closed", 2: "11:00-14:00", 3: "11:00-14:00", 4: "11:00-14:00", 5: "Closed", 6: "11:00-14:00", 0: "Closed" }, lat: 50.797, lng: -1.067, phone: "07519 762298", trustScore: 98 },
     { id: 'f35', name: "St Faith's Landport", category: "food", type: "Breakfast", area: "PO1", address: "Crasswell Street, PO1 1HT", description: "Community breakfast and support.", requirements: "Drop in.", tags: ["hot_meal", "free"], schedule: { 1: "Closed", 2: "Closed", 3: "Closed", 4: "Closed", 5: "Closed", 6: "09:30-11:00", 0: "Closed" }, lat: 50.801, lng: -1.091 },
     { id: 'f36', name: "Canvas Coffee", category: "food", type: "Social Cafe", area: "PO1", address: "Portsmouth & Southsea Station", description: "Social enterprise cafe supporting recovery.", requirements: "Paid.", tags: ["cafe", "community"], schedule: { 1: "07:00-16:00", 2: "07:00-16:00", 3: "07:00-16:00", 4: "07:00-16:00", 5: "07:00-16:00", 6: "08:00-16:00", 0: "09:00-15:00" }, lat: 50.798, lng: -1.091 },
     { id: 'f37', name: "The Lounge (Salvation Army)", category: "food", type: "Cafe", area: "PO1", address: "Lake Road, PO1 4HA", description: "Community cafe and warm space.", requirements: "Open to all.", tags: ["cafe", "warmth"], schedule: { 1: "10:00-15:00", 2: "10:00-15:00", 3: "10:00-15:00", 4: "10:00-15:00", 5: "10:00-15:00", 6: "Closed", 0: "Closed" }, lat: 50.805, lng: -1.088 },
     { id: 'f38', name: "Munch Community Pantry", category: "food", type: "Pantry (£)", area: "PO9", address: "Park Community School, PO9 4BU", description: "Community pantry for Leigh Park area.", requirements: "Member.", tags: ["membership", "fresh_food"], schedule: { 1: "11:00-14:00", 2: "11:00-14:00", 3: "11:00-14:00", 4: "11:00-14:00", 5: "11:00-14:00", 6: "Closed", 0: "Closed" }, lat: 50.865, lng: -1.000 },
+    // **NEW EXPANDED FOOD DATA (Real)**
+    { id: 'f39', name: "City Life Church Food Bank", category: "food", type: "Foodbank", area: "PO3", address: "85 Tangier Road, PO3 6JH", description: "Weekly food bank.", requirements: "Referral.", tags: ["referral", "free"], schedule: { 1: "Closed", 2: "10:00-11:00", 3: "Closed", 4: "Closed", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.806, lng: -1.053 },
+    { id: 'f40', name: "Hope Church Hall", category: "food", type: "Foodbank", area: "PO5", address: "Fraser Road, PO5 4QA", description: "Food bank distribution point.", requirements: "Referral.", tags: ["referral", "free"], schedule: { 1: "11:00-13:00", 2: "Closed", 3: "Closed", 4: "Closed", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.795, lng: -1.085 },
+    { id: 'f41', name: "Empower Centre", category: "food", type: "Food Support", area: "PO2", address: "83-87 Kingston Road, PO2 7DX", description: "Support for families with children.", requirements: "Referral.", tags: ["family", "referral"], schedule: { 1: "Closed", 2: "10:00-12:00", 3: "Closed", 4: "10:00-12:00", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.808, lng: -1.082 },
 
     // --- 🛌 SHELTER (STAY) ---
     { id: 's1', name: "Rough Sleeping Hub", category: "shelter", type: "Day Centre", area: "PO5", address: "Kingsway House, 130 Elm Grove", description: "PRIMARY HUB. Showers, food, advice. Direct aid.", requirements: "Walk-in.", tags: ["shower", "laundry", "breakfast", "no_referral", "shelter"], schedule: { 1: "08:00-16:00", 2: "08:00-16:00", 3: "08:00-16:00", 4: "08:00-16:00", 5: "08:00-16:00", 6: "08:00-16:00", 0: "08:00-16:00" }, lat: 50.792, lng: -1.088, transport: "Bus 2, 3, 23", phone: "023 9288 2689", trustScore: 100 },
@@ -139,14 +143,13 @@ export const REAL_DATA: Resource[] = [
     { id: 's9', name: "Two Saints Oakdene", category: "shelter", type: "Hostel", area: "PO4", address: "Oakdene Rd", description: "Mental health housing.", requirements: "Referral.", tags: ["shelter", "medical"], schedule: { 1: "00:00-23:59", 2: "00:00-23:59", 3: "00:00-23:59", 4: "00:00-23:59", 5: "00:00-23:59", 6: "00:00-23:59", 0: "00:00-23:59" }, lat: 50.795, lng: -1.060, transport: "Bus 1, 18", phone: "023 9229 6919" },
     { id: 's10', name: "StreetLink", category: "shelter", type: "Outreach", area: "All", address: "Online", description: "Report rough sleeping.", requirements: "Call.", tags: ["advice", "no_referral"], schedule: { 1: "00:00-23:59", 2: "00:00-23:59", 3: "00:00-23:59", 4: "00:00-23:59", 5: "00:00-23:59", 6: "00:00-23:59", 0: "00:00-23:59" }, lat: 50.800, lng: -1.090, transport: "Mobile App", phone: "0300 500 0914" },
     { id: 's11', name: "Hope into Action", category: "shelter", type: "Housing", area: "PO3", address: "Lichfield Rd", description: "Church housing.", requirements: "Referral.", tags: ["shelter"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.808, lng: -1.062, transport: "Bus 1", phone: "07511 633190" },
-    { id: 's12', name: "Advice Portsmouth", category: "shelter", type: "Advice", area: "PO2", address: "Kingston Cres", description: "Legal housing advice.", requirements: "Drop-in.", tags: ["advice", "free"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "13:00-19:30", 5: "09:00-16:30", 6: "Closed", 0: "Closed" }, lat: 50.815, lng: -1.088, transport: "Bus 2, 3", phone: "023 9279 4340" },
+    { id: 's12', name: "Advice Portsmouth", category: "shelter", type: "Advice", area: "PO2", address: "116 Kingston Cres", description: "Legal housing advice.", requirements: "Drop-in.", tags: ["advice", "free"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "13:00-19:30", 5: "09:00-16:30", 6: "Closed", 0: "Closed" }, lat: 50.815, lng: -1.088, transport: "Bus 2, 3", phone: "023 9279 4340" },
     { id: 's13', name: "Two Saints Locksway", category: "shelter", type: "Hostel", area: "PO4", address: "Locksway Rd", description: "Supported housing.", requirements: "Referral.", tags: ["shelter"], schedule: { 1: "00:00-23:59", 2: "00:00-23:59", 3: "00:00-23:59", 4: "00:00-23:59", 5: "00:00-23:59", 6: "00:00-23:59", 0: "00:00-23:59" }, lat: 50.795, lng: -1.060, transport: "Bus 1, 18", phone: "023 9229 6919" },
     { id: 's14', name: "Nile House", category: "shelter", type: "Hostel", area: "PO5", address: "Nile St", description: "Supported housing.", requirements: "Referral.", tags: ["shelter"], schedule: { 1: "00:00-23:59", 2: "00:00-23:59", 3: "00:00-23:59", 4: "00:00-23:59", 5: "00:00-23:59", 6: "00:00-23:59", 0: "00:00-23:59" }, lat: 50.793, lng: -1.088, transport: "Bus 2, 3, 23", phone: "023 9229 6919" },
     { id: 's15', name: "Hyde Housing", category: "shelter", type: "Assoc", area: "PO1", address: "Stanhope Rd", description: "Housing association.", requirements: "Apply.", tags: ["advice"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.800, lng: -1.090, transport: "Bus 1, 2, 3, 7, 8", phone: "0800 328 2282" },
     { id: 's16', name: "Somers Road Hostel", category: "shelter", type: "Female", area: "PO5", address: "99 Somers Road, PO5 4PS", description: "7-bed female-only hostel for vulnerable women.", requirements: "Referral.", tags: ["women", "shelter"], schedule: { 1: "00:00-23:59", 2: "00:00-23:59", 3: "00:00-23:59", 4: "00:00-23:59", 5: "00:00-23:59", 6: "00:00-23:59", 0: "00:00-23:59" }, lat: 50.794, lng: -1.086, phone: "023 9200 0420" },
     { id: 's17', name: "Agamemnon Association", category: "shelter", type: "Veterans", area: "PO6", address: "Lindisfarne Close, PO6 2SB", description: "Affordable sheltered housing for Armed Forces veterans (60+).", requirements: "Ex-Services.", tags: ["shelter", "seniors"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.844, lng: -1.064, phone: "023 9238 7086" },
     { id: 's18', name: "EC Roberts Centre", category: "shelter", type: "Family Hub", area: "PO1", address: "84 Crasswell St, PO1 1HT", description: "Supporting families and children struggling with homelessness.", requirements: "Families only.", tags: ["family", "shelter", "advice"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.801, lng: -1.091, phone: "023 9229 6919" },
-    // **NEW SHELTER ITEMS**
     { id: 's19', name: "Society of St James", category: "shelter", type: "Office", area: "PO1", address: "258 Fratton Rd, PO1 5HH", description: "Main office for local homelessness support charity.", requirements: "Call first.", tags: ["advice", "shelter"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-16:30", 6: "Closed", 0: "Closed" }, lat: 50.805, lng: -1.078, phone: "023 9288 2689" },
     { id: 's20', name: "Stop Domestic Abuse", category: "shelter", type: "Advice", area: "PO1", address: "PO Box Central", description: "Support for those fleeing domestic abuse.", requirements: "Call 24/7.", tags: ["advice", "women", "24_7"], schedule: { 1: "00:00-23:59", 2: "00:00-23:59", 3: "00:00-23:59", 4: "00:00-23:59", 5: "00:00-23:59", 6: "00:00-23:59", 0: "00:00-23:59" }, lat: 50.800, lng: -1.090, phone: "0330 016 5112" },
     { id: 's21', name: "Vivid Housing", category: "shelter", type: "Assoc", area: "PO1", address: "Peninsular House, Wharf Rd", description: "Affordable housing provider.", requirements: "Residents.", tags: ["advice", "shelter"], schedule: { 1: "08:30-17:00", 2: "08:30-17:00", 3: "08:30-17:00", 4: "08:30-17:00", 5: "08:30-17:00", 6: "Closed", 0: "Closed" }, lat: 50.802, lng: -1.095, phone: "0800 652 0898" },
@@ -158,10 +161,13 @@ export const REAL_DATA: Resource[] = [
     { id: 'fam3', name: "Paulsgrove Family Hub", category: "family", type: "Family Hub", area: "PO6", address: "Cheltenham Road, PO6 3PL", description: "North city family services. Parenting support.", requirements: "Free access.", tags: ["family", "advice"], schedule: { 1: "08:30-17:00", 2: "08:30-17:00", 3: "08:30-17:00", 4: "08:30-17:00", 5: "08:30-16:30", 6: "Closed", 0: "Closed" }, lat: 50.849, lng: -1.098, phone: "023 9238 5959", trustScore: 100 },
     { id: 'fam4', name: "Buckland Family Hub", category: "family", type: "Family Hub", area: "PO1", address: "Turner Road, PO1 4PN", description: "Family support for Buckland/Landport area.", requirements: "Open to families.", tags: ["family", "advice"], schedule: { 1: "08:30-17:00", 2: "08:30-17:00", 3: "08:30-17:00", 4: "08:30-17:00", 5: "08:30-16:30", 6: "Closed", 0: "Closed" }, lat: 50.807, lng: -1.083, phone: "023 9281 9422" },
     { id: 'fam5', name: "Hillside Youth Club", category: "family", type: "Youth Club", area: "PO6", address: "Cheltenham Road, PO6 3PY", description: "Free open-access youth sessions and activities.", requirements: "Ages 11-19.", tags: ["family", "free"], schedule: { 1: "18:00-21:00", 2: "Closed", 3: "18:00-21:00", 4: "Closed", 5: "18:00-21:00", 6: "Closed", 0: "Closed" }, lat: 50.848, lng: -1.097, phone: "023 9238 5959" },
-    // **NEW FAMILY ITEMS**
     { id: 'fam6', name: "Milton Park Family Hub", category: "family", type: "Family Hub", area: "PO4", address: "Perth Road, PO4 8EU", description: "Eastney/Milton family support.", requirements: "Open to families.", tags: ["family", "advice", "playgroup"], schedule: { 1: "08:30-17:00", 2: "08:30-17:00", 3: "08:30-17:00", 4: "08:30-17:00", 5: "08:30-16:30", 6: "Closed", 0: "Closed" }, lat: 50.795, lng: -1.060, phone: "023 9283 8273" },
     { id: 'fam7', name: "Charter Community Centre", category: "family", type: "Community", area: "PO1", address: "Greetham St, PO5 4LH", description: "Sports and youth activities.", requirements: "Varies.", tags: ["family", "community"], schedule: { 1: "09:00-21:00", 2: "09:00-21:00", 3: "09:00-21:00", 4: "09:00-21:00", 5: "09:00-21:00", 6: "09:00-17:00", 0: "Closed" }, lat: 50.797, lng: -1.093 },
     { id: 'fam8', name: "Portsmouth Carers Centre", category: "family", type: "Support", area: "PO4", address: "117 Orchard Rd, PO4 0AD", description: "Support for unpaid carers.", requirements: "Carers.", tags: ["support", "advice"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-16:30", 6: "Closed", 0: "Closed" }, lat: 50.790, lng: -1.070, phone: "023 9285 1864" },
+    // **NEW FAMILY/YOUTH ITEMS**
+    { id: 'fam9', name: "The Brook Club", category: "family", type: "Youth Club", area: "PO5", address: "Somerstown Community Centre", description: "Youth activities and support.", requirements: "11-19 years.", tags: ["family", "free"], schedule: { 1: "18:00-20:45", 2: "Closed", 3: "18:00-20:45", 4: "Closed", 5: "18:00-20:45", 6: "Closed", 0: "Closed" }, lat: 50.795, lng: -1.088 },
+    { id: 'fam10', name: "Portsea Youth Club", category: "family", type: "Youth Club", area: "PO1", address: "John Pounds Centre", description: "Safe space for young people.", requirements: "11-19 years.", tags: ["family", "free"], schedule: { 1: "Closed", 2: "18:30-20:30", 3: "Closed", 4: "18:30-20:30", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.798, lng: -1.096 },
+    { id: 'fam11', name: "Motiv8", category: "family", type: "Youth Support", area: "PO1", address: "Unit 20, Toronto Place, Gosport (HQ)", description: "Youth support services operating across Portsmouth.", requirements: "Referral.", tags: ["family", "support"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-16:30", 6: "Closed", 0: "Closed" }, lat: 50.795, lng: -1.115 }, // Using HQ/general location
 
     // --- 🌱 GROWTH & WELL-BEING (PROGRESS) ---
     { id: 'w1', name: "Portsmouth Recovery Hub", category: "support", type: "Addiction Support", area: "PO1", address: "Camp Road, PO1 2JJ", description: "Specialist support for alcohol & drug recovery. Walk-in clinic.", requirements: "Open to all needing support.", tags: ["addiction", "mental_health", "no_referral"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.798, lng: -1.092, phone: "023 9275 1617", trustScore: 100 },
@@ -174,7 +180,6 @@ export const REAL_DATA: Resource[] = [
     { id: 'L1', name: "Cosham Library", category: "learning", type: "Library", area: "PO6", address: "Spur Road, PO6 3EB", description: "WiFi, computer access, and book borrowing. Warm space.", requirements: "Open access.", tags: ["learning", "wifi", "warmth"], schedule: { 1: "09:30-17:00", 2: "09:30-18:00", 3: "09:30-17:00", 4: "09:30-18:00", 5: "09:30-17:00", 6: "10:00-15:30", 0: "Closed" }, lat: 50.844, lng: -1.066, phone: "023 9268 8031" },
     { id: 'L2', name: "Southsea Library", category: "learning", type: "Library", area: "PO5", address: "19-21 Palmerston Rd, PO5 3QQ", description: "Major central library. Quiet study spaces and events.", requirements: "Open access.", tags: ["learning", "wifi"], schedule: { 1: "09:30-17:30", 2: "09:30-17:30", 3: "09:30-17:30", 4: "09:30-17:30", 5: "09:30-17:30", 6: "10:00-16:00", 0: "Closed" }, lat: 50.785, lng: -1.091, phone: "023 9268 8999" },
     { id: 'L3', name: "Beddow Library", category: "learning", type: "Library", area: "PO4", address: "Milton Road, PO4 8PR", description: "Community library in Milton. Local history and workshops.", requirements: "Open access.", tags: ["learning", "wifi"], schedule: { 1: "10:00-18:00", 2: "10:00-18:00", 3: "10:00-18:00", 4: "10:00-18:00", 5: "10:00-18:00", 6: "10:00-15:30", 0: "Closed" }, lat: 50.795, lng: -1.065, phone: "023 9282 1813" },
-    // **NEW LEARNING & COMMUNITY ITEMS**
     { id: 'L4', name: "North End Library", category: "learning", type: "Library", area: "PO2", address: "Gladys Avenue, PO2 9AX", description: "Community hub, warm space, and computer access.", requirements: "Open access.", tags: ["learning", "wifi", "warmth"], schedule: { 1: "09:30-17:00", 2: "09:30-17:00", 3: "09:30-17:00", 4: "09:30-17:00", 5: "09:30-17:00", 6: "10:00-15:30", 0: "Closed" }, lat: 50.812, lng: -1.078, phone: "023 9268 8039" },
     { id: 'L5', name: "Alderman Lacey Library", category: "learning", type: "Library", area: "PO3", address: "98 Tangier Road, PO3 6HU", description: "Quiet reading area and local information.", requirements: "Open access.", tags: ["learning", "wifi"], schedule: { 1: "Closed", 2: "09:30-12:30", 3: "Closed", 4: "13:30-17:00", 5: "09:30-12:30", 6: "10:00-15:30", 0: "Closed" }, lat: 50.806, lng: -1.053, phone: "023 9268 8064" },
     { id: 'L6', name: "Paulsgrove Library", category: "learning", type: "Library", area: "PO6", address: "Marsden Road, PO6 3JB", description: "Part of the community centre. Books and digital access.", requirements: "Open access.", tags: ["learning", "wifi"], schedule: { 1: "09:30-17:00", 2: "09:30-17:00", 3: "09:30-17:00", 4: "09:30-17:00", 5: "09:30-17:00", 6: "10:00-13:00", 0: "Closed" }, lat: 50.851, lng: -1.102, phone: "023 9268 8037" },
@@ -188,6 +193,13 @@ export const REAL_DATA: Resource[] = [
     { id: 'Sup2', name: "Citizens Advice Portsmouth", category: "support", type: "Legal Advice", area: "PO6", address: "Cosham Library (Drop-in)", description: "Free, confidential advice on debt, benefits, housing.", requirements: "Drop-in.", tags: ["advice", "free"], schedule: { 1: "Closed", 2: "09:30-12:30", 3: "Closed", 4: "Closed", 5: "Closed", 6: "Closed", 0: "Closed" }, lat: 50.844, lng: -1.066, phone: "0800 144 8848" },
     { id: 'Sup3', name: "Age UK Portsmouth", category: "support", type: "Seniors", area: "PO1", address: "The Bradbury Centre, Kingston Rd", description: "Activities, advice and support for older people.", requirements: "Seniors.", tags: ["seniors", "support", "cafe"], schedule: { 1: "08:30-16:30", 2: "08:30-16:30", 3: "08:30-16:30", 4: "08:30-16:30", 5: "08:30-16:30", 6: "Closed", 0: "Closed" }, lat: 50.808, lng: -1.082, phone: "023 9286 2121" },
     { id: 'Sup4', name: "Solent Mind", category: "support", type: "Mental Health", area: "PO3", address: "St Mary's Campus, Milton Rd", description: "Mental health support and advice.", requirements: "Referral/Appt.", tags: ["mental_health", "support"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-16:30", 6: "Closed", 0: "Closed" }, lat: 50.796, lng: -1.065, phone: "023 9289 2000" },
+    // **NEW SUPPORT & COMMUNITY ITEMS**
+    { id: 'Sup5', name: "PositiveMinds", category: "support", type: "Mental Health", area: "PO5", address: "2235-2241 Melbourne Pl, PO5 4EW", description: "Emotional support for difficult times.", requirements: "Drop in or appt.", tags: ["mental_health", "advice"], schedule: { 1: "09:30-16:00", 2: "09:30-16:00", 3: "09:30-16:00", 4: "09:30-16:00", 5: "09:30-16:00", 6: "Closed", 0: "Closed" }, lat: 50.792, lng: -1.085, phone: "023 9282 4795" },
+    { id: 'Sup6', name: "Rethink Mental Illness", category: "support", type: "Advice", area: "All", address: "Phone Service", description: "Advice on mental health rights and services.", requirements: "Call.", tags: ["mental_health", "advice"], schedule: { 1: "09:30-16:00", 2: "09:30-16:00", 3: "09:30-16:00", 4: "09:30-16:00", 5: "09:30-16:00", 6: "Closed", 0: "Closed" }, lat: 50.798, lng: -1.091, phone: "0300 5000 927" },
+    { id: 'Sup7', name: "PARCS", category: "support", type: "Counselling", area: "PO4", address: "Family Action, PO4", description: "Abuse and rape counselling service.", requirements: "Appt only.", tags: ["mental_health", "women", "support"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "Closed", 0: "Closed" }, lat: 50.789, lng: -1.077, phone: "023 9266 9511" },
+    { id: 'C7', name: "Paulsgrove Community Centre", category: "warmth", type: "Community", area: "PO6", address: "Marsden Road, PO6 3JB", description: "Large centre with cafe, library and activities.", requirements: "Open.", tags: ["community", "warmth", "cafe"], schedule: { 1: "09:00-21:00", 2: "09:00-21:00", 3: "09:00-21:00", 4: "09:00-21:00", 5: "09:00-21:00", 6: "09:00-16:00", 0: "Closed" }, lat: 50.851, lng: -1.102, phone: "023 9237 0643" },
+    { id: 'C8', name: "Anchorage Lodge", category: "warmth", type: "Community", area: "PO3", address: "Sywell Crescent, PO3 5UB", description: "Community venue.", requirements: "Varies.", tags: ["community"], schedule: { 1: "Varies", 2: "Varies", 3: "Varies", 4: "Varies", 5: "Varies", 6: "Varies", 0: "Varies" }, lat: 50.835, lng: -1.055 },
+    { id: 'C9', name: "Portsmouth Friendship Centre", category: "warmth", type: "Community", area: "PO5", address: "Elm Grove, PO5 1JT", description: "Social centre for older people.", requirements: "Membership.", tags: ["seniors", "community"], schedule: { 1: "10:00-16:00", 2: "10:00-16:00", 3: "10:00-16:00", 4: "10:00-16:00", 5: "10:00-16:00", 6: "Closed", 0: "Closed" }, lat: 50.788, lng: -1.085 },
 
     // --- 🛍️ CHARITY SHOPS (EXTENDED) ---
     { id: 'ch1', name: "Rowans Hospice Shop", category: "charity", type: "Charity Shop", area: "PO4", address: "145 Fratton Road", description: "Support local hospice care.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:30-16:30", 2: "09:30-16:30", 3: "09:30-16:30", 4: "09:30-16:30", 5: "09:30-16:30", 6: "09:30-16:30", 0: "Closed" }, lat: 50.803, lng: -1.082 },
@@ -199,71 +211,19 @@ export const REAL_DATA: Resource[] = [
     { id: 'ch7', name: "Scope", category: "charity", type: "Charity Shop", area: "PO2", address: "London Road", description: "Disability equality charity.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "09:00-17:00", 0: "10:00-16:00" }, lat: 50.816, lng: -1.080 },
     { id: 'ch8', name: "Cancer Research UK", category: "charity", type: "Charity Shop", area: "PO6", address: "High Street, Cosham", description: "Supporting cancer research.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "09:00-17:00", 0: "Closed" }, lat: 50.845, lng: -1.065 },
     { id: 'ch9', name: "PDSA Charity Shop", category: "charity", type: "Charity Shop", area: "PO4", address: "Fawcett Road", description: "Supporting sick pets.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "09:00-17:00", 0: "Closed" }, lat: 50.790, lng: -1.077 },
-    { id: 'ch10', name: "Naomi House", category: "charity", type: "Charity Shop", area: "PO5", address: "Albert Road", description: "Children's hospice support.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "09:00-17:00", 0: "10:00-16:00" }, lat: 50.789, lng: -1.075 }
+    { id: 'ch10', name: "Naomi House", category: "charity", type: "Charity Shop", area: "PO5", address: "Albert Road", description: "Children's hospice support.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "09:00-17:00", 0: "10:00-16:00" }, lat: 50.789, lng: -1.075 },
+    // **NEW CHARITY SHOPS**
+    { id: 'ch11', name: "DEBRA", category: "charity", type: "Charity Shop", area: "PO5", address: "51 Elm Grove, PO5 1JF", description: "Furniture and clothing.", requirements: "Open.", tags: ["shopping", "furniture", "clothing"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-17:00", 6: "09:00-17:00", 0: "10:00-16:00" }, lat: 50.788, lng: -1.085 },
+    { id: 'ch12', name: "Salvation Army Shop", category: "charity", type: "Charity Shop", area: "PO1", address: "Lake Road", description: "Community shop.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-16:00", 2: "09:00-16:00", 3: "09:00-16:00", 4: "09:00-16:00", 5: "09:00-16:00", 6: "Closed", 0: "Closed" }, lat: 50.805, lng: -1.088 },
+    { id: 'ch13', name: "Portsmouth Hospitals Charity", category: "charity", type: "Charity Shop", area: "PO6", address: "QA Hospital, Level C", description: "Supports local hospital.", requirements: "Open.", tags: ["shopping", "charity"], schedule: { 1: "09:00-16:00", 2: "09:00-16:00", 3: "09:00-16:00", 4: "09:00-16:00", 5: "09:00-16:00", 6: "Closed", 0: "Closed" }, lat: 50.850, lng: -1.070 },
+    { id: 'ch14', name: "Rowans Hospice Warehouse", category: "charity", type: "Furniture", area: "PO6", address: "Farlington", description: "Large furniture warehouse.", requirements: "Open.", tags: ["shopping", "furniture"], schedule: { 1: "09:30-16:30", 2: "09:30-16:30", 3: "09:30-16:30", 4: "09:30-16:30", 5: "09:30-16:30", 6: "Closed", 0: "Closed" }, lat: 50.835, lng: -1.035 }
 ];
 
 export const generateMockData = () => {
-    // Phase 25: Reduced Reliance on Mock Data (Real Data is better!)
-    // But we keep this for "filler" to simulate a bustling city if needed.
-    // Reducing count to avoid cluttering real, verified results.
-    const areas = ['PO1', 'PO2', 'PO3', 'PO4', 'PO5', 'PO6'];
-    const types: Record<string, string[]> = {
-        food: ['Community Pantry', 'Breakfast Club'],
-        warmth: ['Warm Space'],
-        charity: ['Charity Shop', 'Thrift Store']
-    };
-
-    let seed = 12345;
-    const random = () => {
-        const x = Math.sin(seed++) * 10000;
-        return x - Math.floor(x);
-    };
-
+    // Only keeping a very small number of generic markers to fill gaps if absolutely needed,
+    // but the vast majority is now real data.
     const newItems: Resource[] = [];
-
-    // Reduced mock generation to 50 items (was 300) to prioritize real data quality
-    for (let i = 0; i < 50; i++) {
-        const catKeys = Object.keys(types);
-        const category = catKeys[Math.floor(random() * catKeys.length)];
-        const typeOptions = types[category];
-        const type = typeOptions[Math.floor(random() * typeOptions.length)];
-        const area = areas[Math.floor(random() * areas.length)];
-
-        const schedule: Record<number, string> = {};
-        const isWeekdayOnly = random() > 0.7;
-
-        for (let d = 0; d < 7; d++) {
-            if ((isWeekdayOnly && (d === 0 || d === 6))) {
-                schedule[d] = 'Closed';
-                continue;
-            }
-            if (random() > 0.2) {
-                schedule[d] = '10:00-16:00';
-            } else {
-                schedule[d] = 'Closed';
-            }
-        }
-
-        newItems.push({
-            id: `gen_${i}_x`,
-            name: `${area} ${type} (Community)`,
-            category,
-            type,
-            area,
-            address: `${Math.floor(random() * 200) + 1} Local Street`,
-            phone: `023 9200 ${Math.floor(random() * 8999) + 1000}`,
-            transport: `Bus ${Math.floor(random() * 20) + 1}`,
-            description: `A community resource providing ${category} support.`,
-            requirements: "Open access",
-            tags: [category, "generated", "community"],
-            schedule,
-            lat: 50.79 + (random() * 0.06),
-            lng: -1.09 + (random() * 0.05),
-            trustScore: 50, // Lower trust score for mock data
-            thanksCount: Math.floor(random() * 10)
-        });
-    }
-
+    // We can even return empty array now as we have ~80 real items.
     return newItems;
 };
 
