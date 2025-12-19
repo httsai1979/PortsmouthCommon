@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ALL_DATA, AREAS, PROGRESS_TIPS } from './data';
+import { ALL_DATA, AREAS, PROGRESS_TIPS, COMMUNITY_DEALS, GIFT_EXCHANGE } from './data';
 import { checkStatus, getDistance, playSuccessSound } from './utils';
 
 // Components
@@ -39,6 +39,22 @@ const App = () => {
             if (!prev.includes(id)) playSuccessSound(); // Play sound on Pin
             return next;
         });
+    };
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Portsmouth Bridge',
+                    text: 'Find food, shelter, and community support in Portsmouth. Check out Portsmouth Bridge!',
+                    url: window.location.href,
+                });
+            } catch (err) {
+                console.log('Error sharing:', err);
+            }
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link copied to clipboard! Share it with your friends.');
+        }
     };
 
     // Location State
@@ -243,16 +259,25 @@ const App = () => {
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <Icon name="search" size={18} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                             </div>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    if (view === 'home') setView('list');
-                                }}
-                                placeholder="Search by name, street, or service..."
-                                className="w-full py-5 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none text-sm font-bold text-slate-900 transition-all shadow-xl shadow-slate-200/50"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        if (view === 'home') setView('list');
+                                    }}
+                                    placeholder="Search services..."
+                                    className="flex-1 py-5 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none text-sm font-bold text-slate-900 transition-all shadow-xl shadow-slate-200/50"
+                                />
+                                <button
+                                    onClick={handleShare}
+                                    className="p-5 bg-white border-2 border-slate-100 rounded-[24px] text-indigo-600 hover:bg-slate-50 transition-all shadow-xl shadow-slate-200/50 flex items-center justify-center"
+                                    title="Share with Friend"
+                                >
+                                    <Icon name="share-2" size={20} />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex justify-between items-center mb-4 pl-1">
@@ -286,6 +311,41 @@ const App = () => {
                                         </>
                                     );
                                 })()}
+                            </div>
+                        </div>
+
+                        {/* Phase 23: Bridge Synergy - Market Deals & Gift Exchange */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                            <div className="p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 transition-colors"></div>
+                                <h3 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
+                                    <Icon name="tag" size={14} /> Portsmouth Market Deals
+                                </h3>
+                                <div className="space-y-4 relative z-10">
+                                    {COMMUNITY_DEALS.map((deal, idx) => (
+                                        <div key={idx} className="border-l-4 border-emerald-500 pl-4 py-1">
+                                            <p className="text-xs font-black text-slate-900">{deal.store}</p>
+                                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">{deal.deal} • {deal.time}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium">{deal.info}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-full -mr-12 -mt-12 transition-colors"></div>
+                                <h3 className="text-[10px] font-black text-rose-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
+                                    <Icon name="heart" size={14} /> City Gift Exchange
+                                </h3>
+                                <div className="space-y-4 relative z-10">
+                                    {GIFT_EXCHANGE.map((gift, idx) => (
+                                        <div key={idx} className="border-l-4 border-rose-500 pl-4 py-1">
+                                            <p className="text-xs font-black text-slate-900">{gift.item}</p>
+                                            <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wide">{gift.location} • {gift.date}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium">{gift.info}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 

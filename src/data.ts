@@ -59,6 +59,18 @@ export const SUPERMARKET_TIPS = [
     { store: "Waitrose", time: "Before closing", note: "High quality reductions often available." }
 ];
 
+export const COMMUNITY_DEALS = [
+    { store: "Tesco Extra (Fratton)", deal: "Final Reductions (75%+)", time: "Daily 19:30-21:00", info: "Look for the back corner chilled cabinet." },
+    { store: "Waitrose (Southsea)", deal: "Gourmet Reductions", time: "Daily 17:00-19:00", info: "Premium items often 90% off." },
+    { store: "Co-op (Albert Rd)", deal: "Bakery Waste-Free", time: "Weekdays 18:00", info: "Free/50p bread bags usually available." }
+];
+
+export const GIFT_EXCHANGE = [
+    { item: "Warm Winter Coats", location: "St Jude's Hub", date: "Every Friday", info: "Drop off or pick up, no questions asked." },
+    { item: "School Uniforms", location: "Somerstown Hub", date: "Daily", info: "Gently used uniforms for all city schools." },
+    { item: "Baby Furniture", location: "Northern Parade Hub", date: "First Sat/Month", info: "Cots and high chairs available for loan or keep." }
+];
+
 export const PROGRESS_TIPS = [
     { title: "Quit Smoking", note: "PCC offers free nicotine patches & support. Find in 'Health' (w5)." },
     { title: "Digital Skills", note: "Central Library (PO1) has free computer workshops every Wed 10am." },

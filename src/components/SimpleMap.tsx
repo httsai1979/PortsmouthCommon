@@ -21,26 +21,25 @@ interface SimpleMapProps {
 // Utility to create a custom marker icon
 const createCustomIcon = (item: Resource, isSelected: boolean) => {
     const status = checkStatus(item.schedule);
-    const hex = TAG_ICONS[item.category]?.hex || TAG_ICONS.default.hex;
-    const color = hex;
+    const config = TAG_ICONS[item.category] || TAG_ICONS.default;
+    const color = config.hex;
 
     return L.divIcon({
         className: 'custom-div-icon',
         html: `
             <div class="relative group">
-                <!-- Phase 10: Tactical Status Dot on Map -->
                 ${status.status === 'open' ? `
                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white z-50 animate-pulse shadow-lg"></div>
                 ` : status.status === 'closing' ? `
                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full border-2 border-white z-50 shadow-lg"></div>
                 ` : ''}
                 
-                <!-- Drop Shadow & Glow -->
                 <div class="absolute inset-0 bg-black/20 blur-md rounded-full translate-y-1"></div>
                 <div class="w-10 h-10 rounded-full border-[3px] border-white shadow-2xl flex items-center justify-center transition-all ${isSelected ? 'scale-125 z-50 ring-4 ring-indigo-500/40 translate-y-[-4px]' : 'hover:scale-110'}" style="background-color: ${color}">
                     <div class="text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 8v8M8 12h8" stroke-width="2"/>
                         </svg>
                     </div>
                 </div>
@@ -95,27 +94,29 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
         { id: 'warmth', label: 'Warmth', icon: 'flame' },
         { id: 'support', label: 'Health', icon: 'lifebuoy' },
         { id: 'family', label: 'Family', icon: 'family' },
-        { id: 'learning', label: 'Learning', icon: 'book-open' },
-        { id: 'skills', label: 'Work Skills', icon: 'briefcase' },
+        { id: 'learning', label: 'Learn', icon: 'book-open' },
+        { id: 'skills', label: 'Skills', icon: 'briefcase' },
     ];
 
     return (
         <div className="w-full h-[65vh] bg-slate-100 rounded-[32px] relative overflow-hidden shadow-2xl border-4 border-white">
-            {/* Map Overlay Filter */}
-            <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                {categories.map(cat => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setLocalCategory(cat.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all shadow-lg ${localCategory === cat.id
-                            ? 'bg-slate-900 text-white scale-105'
-                            : 'bg-white/90 backdrop-blur text-slate-600 hover:bg-white'
-                            }`}
-                    >
-                        <Icon name={cat.icon} size={12} />
-                        {cat.label}
-                    </button>
-                ))}
+            {/* Phase 23: High-Density Icon Grid (Non-Scrolling) */}
+            <div className="absolute top-4 left-4 right-4 z-[1000] bg-white/80 backdrop-blur-xl p-3 rounded-[24px] shadow-2xl border border-white/50">
+                <div className="grid grid-cols-4 gap-2">
+                    {categories.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setLocalCategory(cat.id)}
+                            className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all ${localCategory === cat.id
+                                ? 'bg-slate-900 text-white scale-100 shadow-lg'
+                                : 'text-slate-500 hover:bg-slate-50'
+                                }`}
+                        >
+                            <Icon name={cat.icon} size={14} />
+                            <span className="text-[7px] font-black uppercase tracking-tighter">{cat.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <MapContainer
