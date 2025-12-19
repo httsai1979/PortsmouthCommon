@@ -194,12 +194,21 @@ const App = () => {
             <div className={`px-5 mt-2 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.5]' : ''}`}>
                 {view === 'home' && (
                     <>
-                        {!stealthMode && <DailySpark />}
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 pl-1">Quick Compass</p>
+                        <div className="grid grid-cols-2 gap-4 pb-8">
+                            <CategoryButton label="Food" icon="utensils" color="text-emerald-700 bg-emerald-50" active={filters.category === 'food'} onClick={() => handleSearch({ ...filters, category: 'food' })} />
+                            <CategoryButton label="Shelter" icon="bed" color="text-indigo-700 bg-indigo-50" active={filters.category === 'shelter'} onClick={() => handleSearch({ ...filters, category: 'shelter' })} />
+                            <CategoryButton label="Warmth" icon="flame" color="text-orange-700 bg-orange-50" active={filters.category === 'warmth'} onClick={() => handleSearch({ ...filters, category: 'warmth' })} />
+                            <CategoryButton label="Family" icon="users" color="text-pink-700 bg-pink-50" active={filters.category === 'family'} onClick={() => handleSearch({ ...filters, category: 'family' })} />
+                            <CategoryButton label="Health" icon="lifebuoy" color="text-blue-700 bg-blue-50" active={filters.category === 'support'} onClick={() => handleSearch({ ...filters, category: 'support' })} />
+                            <CategoryButton label="Charity" icon="shopping-bag" color="text-rose-700 bg-rose-50" active={filters.category === 'charity'} onClick={() => handleSearch({ ...filters, category: 'charity' })} />
+                        </div>
                         {!stealthMode && <PulseMap />}
                         <Dashboard
                             data={ALL_DATA.filter(i => (filters.area === 'All' || i.area === filters.area))}
                             onNavigate={(cat) => handleSearch({ ...filters, category: cat })}
                         />
+                        {!stealthMode && <DailySpark />}
                     </>
                 )}
 
@@ -256,19 +265,7 @@ const App = () => {
                     </>
                 )}
 
-                {view === 'home' && (
-                    <>
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 pl-1">Quick Compass</p>
-                        <div className="grid grid-cols-2 gap-4 pb-8">
-                            <CategoryButton label="Food" icon="utensils" color="text-emerald-700 bg-emerald-50" active={filters.category === 'food'} onClick={() => handleSearch({ ...filters, category: 'food' })} />
-                            <CategoryButton label="Shelter" icon="bed" color="text-indigo-700 bg-indigo-50" active={filters.category === 'shelter'} onClick={() => handleSearch({ ...filters, category: 'shelter' })} />
-                            <CategoryButton label="Warmth" icon="flame" color="text-orange-700 bg-orange-50" active={filters.category === 'warmth'} onClick={() => handleSearch({ ...filters, category: 'warmth' })} />
-                            <CategoryButton label="Family" icon="users" color="text-pink-700 bg-pink-50" active={filters.category === 'family'} onClick={() => handleSearch({ ...filters, category: 'family' })} />
-                            <CategoryButton label="Health" icon="lifebuoy" color="text-blue-700 bg-blue-50" active={filters.category === 'support'} onClick={() => handleSearch({ ...filters, category: 'support' })} />
-                            <CategoryButton label="Charity" icon="shopping-bag" color="text-rose-700 bg-rose-50" active={filters.category === 'charity'} onClick={() => handleSearch({ ...filters, category: 'charity' })} />
-                        </div>
-                    </>
-                )}
+                {/* Content removed from here as it was moved up */}
             </div>
 
             <div className="h-28"></div>
