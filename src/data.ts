@@ -13,6 +13,8 @@ export interface Resource {
     lng: number;
     phone?: string;
     transport?: string;
+    trustScore?: number; // 0-100
+    thanksCount?: number;
 }
 
 export const MAP_BOUNDS = { minLat: 50.770, maxLat: 50.870, minLng: -1.120, maxLng: -1.040 };

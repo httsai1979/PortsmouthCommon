@@ -17,25 +17,37 @@ interface SimpleMapProps {
 
 // Utility to create a custom marker icon
 const createCustomIcon = (item: Resource, isSelected: boolean) => {
-    const config = getTagConfig(item.category, TAG_ICONS);
-    const color = config.bg.replace('100', '600').replace('50', '600').split(' ')[0];
+    // High-contrast vibrant colors for standard categories
+    const categoryColors: Record<string, string> = {
+        food: '#059669', // Emerald 600
+        shelter: '#4f46e5', // Indigo 600
+        warmth: '#ea580c', // Orange 600
+        support: '#2563eb', // Blue 600
+        family: '#db2777', // Pink 600
+        charity: '#e11d48'  // Rose 600
+    };
+    const color = categoryColors[item.category] || '#475569';
 
     return L.divIcon({
         className: 'custom-div-icon',
         html: `
             <div class="relative group">
-                <div class="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center transition-all ${isSelected ? 'scale-125 z-50 ring-4 ring-indigo-500/30' : 'hover:scale-110'}" style="background-color: ${color}">
-                    <div class="text-white">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Drop Shadow & Glow for visibility on any background -->
+                <div class="absolute inset-0 bg-black/20 blur-md rounded-full translate-y-1"></div>
+                <div class="w-10 h-10 rounded-full border-[3px] border-white shadow-2xl flex items-center justify-center transition-all ${isSelected ? 'scale-125 z-50 ring-4 ring-indigo-500/40 translate-y-[-4px]' : 'hover:scale-110'}" style="background-color: ${color}">
+                    <div class="text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                         </svg>
                     </div>
                 </div>
-                ${isSelected ? '<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-600 rotate-45 border-r border-b border-white"></div>' : ''}
+                <!-- Droplet stem for tactical precision -->
+                <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100 z-[-1] rounded-sm"></div>
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 z-[0]" style="background-color: ${color}"></div>
             </div>
         `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
+        iconSize: [40, 48],
+        iconAnchor: [20, 48],
     });
 };
 
