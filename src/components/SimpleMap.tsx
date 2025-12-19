@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
-import { MAP_BOUNDS, TAG_ICONS } from '../data';
+import { MAP_BOUNDS, TAG_ICONS, type Resource } from '../data';
 
 interface SimpleMapProps {
-    data: any[];
+    data: Resource[];
     category: string;
     statusFilter: string;
 }
 
 const SimpleMap = ({ data, category, statusFilter }: SimpleMapProps) => {
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<Resource | null>(null);
 
     const mapPoints = useMemo(() => {
         return data.filter(item => {
@@ -27,7 +27,7 @@ const SimpleMap = ({ data, category, statusFilter }: SimpleMapProps) => {
         return { x, y };
     };
 
-    const getPinColor = (item: any) => {
+    const getPinColor = (item: Resource) => {
         if (selectedItem?.id === item.id) return 'bg-slate-900 border-white scale-125 z-50';
         const config = getTagConfig(item.category, TAG_ICONS);
         return `${config.bg.replace('100', '500').replace('50', '500')} border-white`;

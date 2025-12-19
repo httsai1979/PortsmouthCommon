@@ -1,3 +1,20 @@
+export interface Resource {
+    id: string;
+    name: string;
+    category: string;
+    type: string;
+    area: string;
+    address: string;
+    description: string;
+    requirements: string;
+    tags: string[];
+    schedule: Record<number, string>;
+    lat: number;
+    lng: number;
+    phone?: string;
+    transport?: string;
+}
+
 export const MAP_BOUNDS = { minLat: 50.770, maxLat: 50.870, minLng: -1.120, maxLng: -1.040 };
 export const AREAS = ['All', 'PO1', 'PO2', 'PO3', 'PO4', 'PO5', 'PO6'];
 
@@ -104,7 +121,7 @@ export const generateMockData = () => {
         return x - Math.floor(x);
     };
 
-    const newItems: any[] = [];
+    const newItems: Resource[] = [];
 
     // Generate ~300 items (Expanded Data)
     for (let i = 0; i < 300; i++) {
@@ -174,7 +191,6 @@ export const generateMockData = () => {
             type: shop.type,
             area: shop.area,
             address: shop.address,
-            transport: "Local Bus",
             description: "Low cost clothing, furniture, and books. Supporting a good cause.",
             requirements: "Open to all",
             tags: ["charity", "shopping", "cheap", "clothing"],

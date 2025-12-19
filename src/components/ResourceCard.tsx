@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
-import { TAG_ICONS } from '../data';
+import { TAG_ICONS, type Resource } from '../data';
 
-const ResourceCard = ({ item }: { item: any }) => {
+const ResourceCard = ({ item }: { item: Resource }) => {
     const [expanded, setExpanded] = useState(false);
     const status = checkStatus(item.schedule);
 

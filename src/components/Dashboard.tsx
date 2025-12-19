@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
-import { TAG_ICONS } from '../data';
+import { TAG_ICONS, type Resource } from '../data';
 
 interface DashboardProps {
-    data: any[];
+    data: Resource[];
     onNavigate: (cat: string) => void;
 }
 
@@ -23,7 +23,7 @@ const Dashboard = ({ data, onNavigate }: DashboardProps) => {
     if (currentHour >= 12) greeting = "Good Afternoon";
     if (currentHour >= 17) greeting = "Good Evening";
 
-    const isOpen = (schedule: any) => {
+    const isOpen = (schedule: Record<number, string>) => {
         if (!schedule) return false;
         const hours = schedule[day];
         if (!hours || hours === 'Closed') return false;
@@ -39,7 +39,7 @@ const Dashboard = ({ data, onNavigate }: DashboardProps) => {
     const openShelter = data.filter(i => i.category === 'shelter' && isOpen(i.schedule)).length;
 
     const upcoming = useMemo(() => {
-        const events: any[] = [];
+        const events: (Resource & { statusLabel: string; statusColor: string; sortKey: number })[] = [];
         data.forEach(item => {
             const status = checkStatus(item.schedule);
             if (status.status !== 'closed') {
@@ -47,7 +47,7 @@ const Dashboard = ({ data, onNavigate }: DashboardProps) => {
             }
         });
         return events.sort((a, b) => a.sortKey - b.sortKey).slice(0, 5);
-    }, [data, now]);
+    }, [data]);
 
     return (
         <div className="mb-8">
@@ -95,7 +95,7 @@ const Dashboard = ({ data, onNavigate }: DashboardProps) => {
                     <button className="text-xs font-bold text-blue-600" onClick={() => onNavigate('all')}>View All</button>
                 </div>
                 <div className="space-y-4">
-                    {upcoming.map((item: any) => (
+                    {upcoming.map((item) => (
                         <div key={item.id} className="flex items-center gap-4 group cursor-pointer" onClick={() => onNavigate(item.category)}>
                             <div className="relative">
                                 <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">

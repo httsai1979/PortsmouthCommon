@@ -33,7 +33,6 @@ const Icon: React.FC<IconProps> = ({ name, size = 18, className = "" }) => {
         bath: <><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.68 3 4 3.68 4 4.5V11" /><path d="M10 11V4.5a1.5 1.5 0 0 1 1.5-1.5c.41 0 .8.16 1.1.45L15 6" /><path d="M2 12h20" /><path d="M7 19v-3.26C7 13.9 8.79 12 11 12v0c2.21 0 4 1.9 4 3.74V19" /><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" /></>,
         toilet: <><path d="M7 12h10" /><path d="M9 18h6" /><circle cx="12" cy="6" r="3" /><path d="M6 10v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4" /></>,
         check_circle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
-        'check_circle': <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
         'id-card': <><path d="M16 10h2" /><path d="M16 14h2" /><path d="M6.17 15a3 3 0 0 1 5.66 0" /><circle cx="9" cy="9" r="2" /><rect x="2" y="5" width="20" height="14" rx="2" /></>,
         id_card: <><path d="M16 10h2" /><path d="M16 14h2" /><path d="M6.17 15a3 3 0 0 1 5.66 0" /><circle cx="9" cy="9" r="2" /><rect x="2" y="5" width="20" height="14" rx="2" /></>,
         'file-text': <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></>,

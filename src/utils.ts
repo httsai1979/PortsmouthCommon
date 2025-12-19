@@ -1,4 +1,4 @@
-export const checkStatus = (schedule: any) => {
+export const checkStatus = (schedule: Record<number, string>) => {
     if (!schedule) return { isOpen: false, status: 'unknown', color: 'bg-slate-100 text-slate-500', label: 'Check Time' };
     const now = new Date();
     const day = now.getDay();
@@ -33,4 +33,4 @@ export const getDistance = (lat1: number, lon1: number, lat2: number, lon2: numb
     return R * c;
 };
 
-export const getTagConfig = (tag: string, tagIcons: any) => tagIcons[tag] || tagIcons.default;
+export const getTagConfig = (tag: string, tagIcons: Record<string, { icon: string; label: string; color: string; bg: string; border?: boolean }>) => tagIcons[tag] || tagIcons.default;

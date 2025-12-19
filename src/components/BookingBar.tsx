@@ -3,9 +3,15 @@ import Icon from './Icon';
 import { getTagConfig } from '../utils';
 import { AREAS, TAG_ICONS } from '../data';
 
+interface Filters {
+    area: string;
+    category: string;
+    date: string;
+}
+
 interface BookingBarProps {
-    onSearch: (filters: any) => void;
-    currentFilters: any;
+    onSearch: (filters: Filters) => void;
+    currentFilters: Filters;
 }
 
 const BookingBar = ({ onSearch, currentFilters }: BookingBarProps) => {

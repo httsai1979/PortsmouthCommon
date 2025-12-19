@@ -1,5 +1,7 @@
+import type { Resource } from '../data';
+
 interface PrintViewProps {
-    data: any[];
+    data: Resource[];
     onClose: () => void;
 }
 
@@ -8,7 +10,7 @@ const PrintView = ({ data, onClose }: PrintViewProps) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     const getOpenItems = (dayIdx: number) =>
-        data.filter((i: any) => i.schedule[dayIdx] !== "Closed" && (i.category === 'food' || i.category === 'shelter' || i.category === 'support' || i.category === 'warmth'));
+        data.filter((i: Resource) => i.schedule[dayIdx] !== "Closed" && (i.category === 'food' || i.category === 'shelter' || i.category === 'support' || i.category === 'warmth'));
 
     return (
         <div className="fixed inset-0 bg-white z-[100] overflow-y-auto p-8 text-black font-mono">

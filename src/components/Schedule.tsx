@@ -1,5 +1,5 @@
 import Icon from './Icon';
-import { checkStatus } from '../utils';
+import type { Resource } from '../data';
 
 export const CategoryButton = ({ label, icon, active, onClick, color }: { label: string; icon: string; active: boolean; onClick: () => void; color: string }) => (
     <button
@@ -11,7 +11,7 @@ export const CategoryButton = ({ label, icon, active, onClick, color }: { label:
     </button>
 );
 
-export const AreaScheduleView = ({ data, area, category }: { data: any[]; area: string; category: string }) => {
+export const AreaScheduleView = ({ data, area, category }: { data: Resource[]; area: string; category: string }) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
