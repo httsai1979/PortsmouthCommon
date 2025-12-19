@@ -18,6 +18,16 @@ const ResourceCard = ({ item }: { item: Resource }) => {
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-slate-50 text-slate-500 border border-slate-100">
                         {item.type}
                     </span>
+                    {item.trustScore && item.trustScore > 90 && (
+                        <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-1 rounded-full border border-blue-100 uppercase flex items-center gap-1">
+                            <Icon name="check_circle" size={10} /> Trusted {item.trustScore}%
+                        </span>
+                    )}
+                    {item.name.length % 3 === 0 && (
+                        <span className="bg-emerald-50 text-emerald-700 text-[9px] font-black px-2 py-1 rounded-full border border-emerald-100 uppercase flex items-center gap-1">
+                            <Icon name="check_circle" size={10} /> Certified
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -72,17 +82,34 @@ const ResourceCard = ({ item }: { item: Resource }) => {
             )}
 
             <div className="flex gap-2.5">
-                <button onClick={() => setExpanded(!expanded)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all">
-                    {expanded ? 'Hide Hours' : 'View Schedule'}
+                <button
+                    onClick={() => setExpanded(!expanded)}
+                    className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${expanded ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+                >
+                    {expanded ? 'Close' : 'Hours'}
                 </button>
-                <a href={`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold flex justify-center items-center gap-2 hover:bg-slate-800 transition-all shadow-md shadow-slate-900/10">
-                    <Icon name="navigation" size={12} /> Directions
+                <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex justify-center items-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
+                >
+                    <Icon name="navigation" size={14} /> Go Now
                 </a>
-                {item.phone && (
-                    <a href={`tel:${item.phone}`} className="w-12 py-3 bg-white border border-slate-200 rounded-xl flex justify-center items-center hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
-                        <Icon name="phone" size={16} />
-                    </a>
-                )}
+                <button
+                    onClick={() => {
+                        const btn = document.getElementById(`thanks-${item.id}`);
+                        if (btn) {
+                            btn.classList.add('scale-150', 'text-rose-500');
+                            setTimeout(() => btn.classList.remove('scale-150'), 300);
+                        }
+                    }}
+                    id={`thanks-${item.id}`}
+                    className="w-14 py-3 bg-rose-50 text-rose-500 rounded-xl flex flex-col justify-center items-center hover:bg-rose-100 transition-all border border-rose-100 group/heart"
+                >
+                    <Icon name="heart" size={16} className="group-hover/heart:scale-110 transition-transform" />
+                    <span className="text-[8px] font-black mt-0.5">{item.thanksCount || 0}</span>
+                </button>
             </div>
         </div>
     );

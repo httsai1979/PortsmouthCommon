@@ -168,7 +168,9 @@ export const generateMockData = () => {
             tags: [category, "generated", random() > 0.5 ? "free" : "membership", random() > 0.7 ? "wheelchair" : "wifi", random() > 0.8 ? "pets_allowed" : "family_friendly"],
             schedule,
             lat: 50.78 + (random() * 0.08),
-            lng: -1.13 + (random() * 0.1)
+            lng: -1.13 + (random() * 0.1),
+            trustScore: 80 + Math.floor(random() * 20),
+            thanksCount: Math.floor(random() * 60)
         });
     }
 
