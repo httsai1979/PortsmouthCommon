@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ALL_DATA, AREAS } from './data';
+import type { Resource } from './data';
 import { checkStatus, getDistance, playSuccessSound } from './utils';
 
 // Components
@@ -44,6 +45,14 @@ const App = () => {
     // Location State
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
 
+    // Discovery State (Phase 16: Extreme Intuition)
+    const [searchQuery, setSearchQuery] = useState('');
+    const [smartFilters, setSmartFilters] = useState({
+        openNow: false,
+        nearMe: false,
+        verified: false
+    });
+
     // Filter State
     const [filters, setFilters] = useState({
         area: 'All',
@@ -77,7 +86,28 @@ const App = () => {
         const data = ALL_DATA.filter(item => {
             const matchesArea = filters.area === 'All' || item.area === filters.area;
             const matchesCategory = filters.category === 'all' || item.category === filters.category;
-            return matchesArea && matchesCategory;
+
+            // Universal Search (Name, Address, Tags)
+            const searchLower = searchQuery.toLowerCase();
+            const matchesSearch = !searchQuery ||
+                item.name.toLowerCase().includes(searchLower) ||
+                item.address.toLowerCase().includes(searchLower) ||
+                item.description.toLowerCase().includes(searchLower) ||
+                item.tags.some(t => t.toLowerCase().includes(searchLower));
+
+            // Smart Tokens
+            const status = checkStatus(item.schedule);
+            const res = item as Resource;
+            const matchesOpenNow = !smartFilters.openNow || status.isOpen;
+            const matchesVerified = !smartFilters.verified || (res.trustScore && res.trustScore > 90);
+
+            let matchesNearMe = true;
+            if (smartFilters.nearMe && userLocation) {
+                const dist = getDistance(userLocation.lat, userLocation.lng, item.lat, item.lng);
+                matchesNearMe = dist < 2; // Within 2km for walking hub
+            }
+
+            return matchesArea && matchesCategory && matchesSearch && matchesOpenNow && matchesVerified && matchesNearMe;
         });
         return data.sort((a, b) => {
             const statusA = checkStatus(a.schedule);
@@ -182,22 +212,42 @@ const App = () => {
                                 <p className="text-indigo-100 text-xs font-black uppercase tracking-[0.2em] mb-8 opacity-80">{greeting.sub}</p>
 
                                 <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
-                                    <div>
-                                        <p className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1">City-wide Support</p>
+                                    <div className="flex flex-col">
+                                        <p className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                                            Live Situation
+                                        </p>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xl font-black text-white">{ALL_DATA.length}</span>
-                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Resource<br />Hubs</span>
+                                            <span className="text-xl font-black text-white">{ALL_DATA.filter(p => checkStatus(p.schedule).status === 'open').length}</span>
+                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Hubs Open<br />Right Now</span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1">Community Action</p>
+                                    <div className="flex flex-col">
+                                        <p className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1">Total Support</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xl font-black text-white">320+</span>
-                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Bridge<br />Plans</span>
+                                            <span className="text-xl font-black text-white">{ALL_DATA.length}</span>
+                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Network<br />Resources</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Phase 16: Universal Search Bar */}
+                        <div className="mb-6 relative group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Icon name="search" size={18} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    if (view === 'home') setView('list');
+                                }}
+                                placeholder="Search by name, street, or service..."
+                                className="w-full py-5 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none text-sm font-bold text-slate-900 transition-all shadow-xl shadow-slate-200/50"
+                            />
                         </div>
 
                         <div className="flex justify-between items-center mb-4 pl-1">
@@ -331,8 +381,48 @@ const App = () => {
                             <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="home" size={20} /></button>
                         </div>
 
-                        {/* Directory Tactical Filters (New) */}
+                        {/* Directory Tactical Filters (Enhanced) */}
                         <div className="space-y-4 mb-8">
+                            {/* Search Field */}
+                            <div className="relative">
+                                <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search resources..."
+                                    className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold"
+                                />
+                                {searchQuery && (
+                                    <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600">
+                                        <Icon name="x" size={14} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Smart Action Tokens */}
+                            <div className="flex gap-2 items-center">
+                                <button
+                                    onClick={() => setSmartFilters({ ...smartFilters, openNow: !smartFilters.openNow })}
+                                    className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.openNow ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
+                                >
+                                    <div className={`w-1.5 h-1.5 rounded-full ${smartFilters.openNow ? 'bg-white animate-pulse' : 'bg-emerald-500'}`}></div>
+                                    Open Now
+                                </button>
+                                <button
+                                    onClick={() => setSmartFilters({ ...smartFilters, verified: !smartFilters.verified })}
+                                    className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.verified ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
+                                >
+                                    <Icon name="check_circle" size={10} /> Verified
+                                </button>
+                                <button
+                                    onClick={() => setSmartFilters({ ...smartFilters, nearMe: !smartFilters.nearMe })}
+                                    className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.nearMe ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
+                                >
+                                    <Icon name="navigation" size={10} /> Near Me
+                                </button>
+                            </div>
+
                             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                                 {AREAS.map(area => (
                                     <button
@@ -357,14 +447,25 @@ const App = () => {
                             </div>
                         </div>
                         <div className="space-y-4 pb-24">
-                            {filteredData.map(item => (
-                                <ResourceCard
-                                    key={item.id}
-                                    item={item}
-                                    isSaved={savedIds.includes(item.id)}
-                                    onToggleSave={() => toggleSaved(item.id)}
-                                />
-                            ))}
+                            {filteredData.length > 0 ? (
+                                filteredData.map(item => (
+                                    <ResourceCard
+                                        key={item.id}
+                                        item={item}
+                                        isSaved={savedIds.includes(item.id)}
+                                        onToggleSave={() => toggleSaved(item.id)}
+                                    />
+                                ))
+                            ) : (
+                                <div className="py-20 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200 p-8 shadow-sm">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Icon name="search" size={24} className="text-slate-200" />
+                                    </div>
+                                    <h3 className="text-lg font-black text-slate-800 mb-1">No Matches Found</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Try adjusting your filters or search terms.</p>
+                                    <button onClick={() => { setSearchQuery(''); setFilters({ ...filters, area: 'All', category: 'all' }); setSmartFilters({ openNow: false, nearMe: false, verified: false }); }} className="mt-6 text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b-2 border-indigo-100 pb-1">Reset All Filters</button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

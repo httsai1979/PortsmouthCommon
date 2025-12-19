@@ -152,13 +152,26 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave }: Sim
                 />
             </MapContainer>
 
+            {/* Phase 17: Tactical HUD (Situational Awareness) */}
+            <div className="absolute top-20 left-4 z-[1000] pointer-events-none">
+                <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-2xl flex flex-col gap-1 border border-white/10">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Live Status</span>
+                    </div>
+                    <div className="text-xl font-black tabular-nums">
+                        {filteredPoints.filter(p => checkStatus(p.schedule).status === 'open').length} <span className="text-[10px] text-slate-400">Hubs Open</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Locate Me Button */}
             <button
                 onClick={() => setLocateTrigger(prev => prev + 1)}
-                className="absolute top-20 right-4 z-[1000] bg-white p-3 rounded-2xl shadow-xl text-indigo-600 hover:bg-slate-50 transition-all border border-slate-100"
+                className="absolute top-20 right-4 z-[1000] bg-white p-4 rounded-2xl shadow-xl text-indigo-600 hover:bg-slate-50 transition-all border border-slate-100 flex items-center justify-center active:scale-90"
                 title="Locate Me"
             >
-                <Icon name="mapPin" size={20} />
+                <Icon name="mapPin" size={24} />
             </button>
 
             {selectedItem && (
