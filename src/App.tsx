@@ -244,7 +244,7 @@ const App = () => {
             }
             return 0;
         });
-    }, [filters, userLocation]);
+    }, [filters, userLocation, searchQuery, smartFilters]);
 
     const savedResources = useMemo(() => {
         return ALL_DATA.filter(item => savedIds.includes(item.id));
