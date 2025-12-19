@@ -149,14 +149,38 @@ const App = () => {
             <div className={`px-5 mt-4 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.5]' : ''}`}>
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
-                        {/* Daily Warmth (Phase 8) */}
-                        <div className="mb-8 p-6 bg-indigo-600 rounded-[32px] text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-xl"></div>
-                            <h2 className="text-2xl font-black tracking-tight mb-1">{greeting.msg}</h2>
-                            <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest">{greeting.sub}</p>
+                        {/* Phase 9: Warmer Daily Greeting with City Impact */}
+                        <div className="mb-8 p-8 bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 rounded-[40px] text-white shadow-2xl shadow-indigo-200/50 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+
+                            <div className="relative z-10">
+                                <h2 className="text-3xl font-black tracking-tighter mb-2 leading-tight">{greeting.msg}</h2>
+                                <p className="text-indigo-100 text-xs font-black uppercase tracking-[0.2em] mb-8 opacity-80">{greeting.sub}</p>
+
+                                <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
+                                    <div>
+                                        <p className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1">City-wide Support</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl font-black text-white">{ALL_DATA.length}</span>
+                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Resource<br />Hubs</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1">Community Action</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl font-black text-white">320+</span>
+                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Bridge<br />Plans</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 pl-1">Primary Services</p>
+                        <div className="flex justify-between items-center mb-4 pl-1">
+                            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">City Services</p>
+                            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg uppercase">Portsmouth Total</span>
+                        </div>
                         <div className="grid grid-cols-2 gap-4 pb-8">
                             <CategoryButton label="Food" icon="utensils" color="text-emerald-700 bg-emerald-50" active={filters.category === 'food'} onClick={() => handleSearch({ ...filters, category: 'food' })} />
                             <CategoryButton label="Shelter" icon="bed" color="text-indigo-700 bg-indigo-50" active={filters.category === 'shelter'} onClick={() => handleSearch({ ...filters, category: 'shelter' })} />
@@ -167,18 +191,19 @@ const App = () => {
                         </div>
 
                         {savedResources.length > 0 && (
-                            <div className="mb-8 p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <div className="mb-8 p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:bg-indigo-50 transition-colors"></div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
                                     <Icon name="star" size={16} className="text-amber-500" /> My Bridge Pins
                                 </h3>
-                                <div className="space-y-3">
+                                <div className="space-y-3 relative z-10">
                                     {savedResources.slice(0, 3).map(res => (
-                                        <div key={res.id} className="flex items-center justify-between group">
+                                        <div key={res.id} className="flex items-center justify-between">
                                             <div className="min-w-0">
-                                                <p className="text-xs font-bold text-slate-900 truncate">{res.name}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{res.area}</p>
+                                                <p className="text-xs font-black text-slate-900 truncate">{res.name}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{res.area} • {res.transport || 'Near You'}</p>
                                             </div>
-                                            <button onClick={() => setView('planner')} className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all"><Icon name="arrow-right" size={14} /></button>
+                                            <button onClick={() => setView('planner')} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all"><Icon name="arrow-right" size={14} /></button>
                                         </div>
                                     ))}
                                 </div>
