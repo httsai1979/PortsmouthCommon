@@ -185,19 +185,27 @@ const SimpleMap = ({ data, category, statusFilter }: SimpleMapProps) => {
                     </div>
 
                     <div className="mt-5 flex gap-3">
+                        {selectedItem.phone && (
+                            <a
+                                href={`tel:${selectedItem.phone}`}
+                                className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg active:scale-95 shadow-emerald-100"
+                            >
+                                <Icon name="phone" size={14} /> Call
+                            </a>
+                        )}
                         <a
                             href={`https://www.google.com/maps/dir/?api=1&destination=${selectedItem.lat},${selectedItem.lng}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95"
+                            className="flex-2 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95"
                         >
                             <Icon name="navigation" size={14} /> Get Directions
                         </a>
                         <button
                             onClick={() => setSelectedItem(null)}
-                            className="px-6 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200"
+                            className="p-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200"
                         >
-                            Close
+                            <Icon name="x" size={16} />
                         </button>
                     </div>
                 </div>
