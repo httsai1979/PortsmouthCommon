@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-// Lucide icons are generally available in this environment
 import { 
   Home, 
   Map as MapIcon, 
   Search, 
-  Heart, 
   Navigation, 
   AlertTriangle, 
   Utensils, 
@@ -12,17 +10,21 @@ import {
   Flame, 
   LifeBuoy, 
   BookOpen, 
-  X,
   Zap,
   Eye,
   Bookmark,
-  Share2
+  Share2,
+  Phone,
+  Clock,
+  MapPin,
+  CheckCircle,
+  ExternalLink
 } from 'lucide-react';
 
 /**
  * ============================================================
- * 1. REAL DATA INFRASTRUCTURE (PO1-PO6)
- * 100% Real English Data from HIVE Portsmouth & Official Sources
+ * 1. RESOURCE DATABASE (PO1-PO6)
+ * 100% Real English Data for Portsmouth Bridge
  * ============================================================
  */
 
@@ -40,7 +42,6 @@ interface Resource {
     lat: number;
     lng: number;
     phone?: string;
-    transport?: string;
     trustScore?: number;
 }
 
@@ -49,18 +50,18 @@ const AREAS = ['All', 'PO1', 'PO2', 'PO3', 'PO4', 'PO5', 'PO6'];
 const ALL_DATA: Resource[] = [
     // --- FOOD ---
     { id: 'f1', name: "Pompey Community Fridge", category: "food", type: "Surplus Food", area: "PO4", address: "Fratton Park, PO4 8SX", description: "Reducing food waste by providing free surplus food parcels. Open to all residents.", requirements: "Open to all, bring a bag.", tags: ["free", "fresh_food"], schedule: { 1: "13:00-15:00", 2: "13:00-15:00", 3: "13:00-15:00", 4: "13:00-15:00", 5: "13:00-15:00" }, lat: 50.7964, lng: -1.0642, phone: "023 9273 1141", trustScore: 98 },
-    { id: 'f2', name: "FoodCycle Portsmouth", category: "food", type: "Hot Meal", area: "PO1", address: "John Pounds Centre, Queen St, PO1 3HN", description: "Free three-course vegetarian community meal served every Wednesday.", requirements: "Just turn up.", tags: ["free", "hot_meal"], schedule: { 3: "18:00-19:30" }, lat: 50.7981, lng: -1.0965, trustScore: 100 },
+    { id: 'f2', name: "FoodCycle Portsmouth", category: "food", type: "Hot Meal", area: "PO1", address: "John Pounds Centre, Queen St, PO1 3HN", description: "Free three-course vegetarian community meal served every Wednesday evening.", requirements: "Just turn up.", tags: ["free", "hot_meal"], schedule: { 3: "18:00-19:30" }, lat: 50.7981, lng: -1.0965, trustScore: 100 },
     { id: 'f3', name: "LifeHouse Kitchen", category: "food", type: "Soup Kitchen", area: "PO5", address: "153 Albert Road, PO4 0JW", description: "Hot breakfast and dinner for the homeless and vulnerable.", requirements: "Drop-in.", tags: ["hot_meal", "shower"], schedule: { 3: "09:00-11:00", 4: "18:00-19:30" }, lat: 50.7892, lng: -1.0754, phone: "07800 933983" },
-    { id: 'f4', name: "All Saints Foodbank", category: "food", type: "Foodbank", area: "PO1", address: "334 Commercial Road, PO1 4BT", description: "Emergency food parcels for local people in crisis.", requirements: "Voucher required.", tags: ["referral", "food"], schedule: { 1: "13:00-15:00", 3: "13:00-15:00", 5: "13:00-15:00" }, lat: 50.8032, lng: -1.0891 },
+    { id: 'f4', name: "St Agatha's Food Support", category: "food", type: "Emergency Food", area: "PO1", address: "Market Way, PO1 4AD", description: "Saturday morning emergency food parcels.", requirements: "Walk-in.", tags: ["free", "food"], schedule: { 6: "10:00-11:30" }, lat: 50.8023, lng: -1.0911 },
     
     // --- SHELTER ---
     { id: 's1', name: "Rough Sleeping Hub", category: "shelter", type: "Day Centre", area: "PO5", address: "Kingsway House, 130 Elm Grove", description: "Primary contact for rough sleepers. Showers, laundry, and breakfast.", requirements: "Open access drop-in.", tags: ["shower", "laundry", "breakfast"], schedule: { 1: "08:00-16:00", 2: "08:00-16:00", 3: "08:00-16:00", 4: "08:00-16:00", 5: "08:00-16:00", 6: "08:00-16:00", 0: "08:00-16:00" }, lat: 50.7923, lng: -1.0882, phone: "023 9288 2689", trustScore: 100 },
     { id: 's2', name: "Housing Options (PCC)", category: "shelter", type: "Council Support", area: "PO1", address: "Civic Offices, Guildhall Sq", description: "Official city council help for homelessness assessment.", requirements: "Visit in office hours.", tags: ["advice"], schedule: { 1: "09:00-17:00", 2: "09:00-17:00", 3: "09:00-17:00", 4: "09:00-17:00", 5: "09:00-16:00" }, lat: 50.7991, lng: -1.0912, phone: "023 9283 4989" },
-    { id: 's3', name: "Becket Hall", category: "shelter", type: "Night Shelter", area: "PO1", address: "St Thomas Street, PO1 2EZ", description: "Emergency night-time shelter for rough sleepers. Referral required.", requirements: "Referral required.", tags: ["shelter", "seasonal"], schedule: { 0: "20:00-08:00", 1: "20:00-08:00", 2: "20:00-08:00", 3: "20:00-08:00", 4: "20:00-08:00", 5: "20:00-08:00", 6: "20:00-08:00" }, lat: 50.7905, lng: -1.1032 },
+    { id: 's3', name: "Becket Hall", category: "shelter", type: "Night Shelter", area: "PO1", address: "St Thomas Street, PO1 2EZ", description: "Emergency night-time shelter for rough sleepers. Referral required.", requirements: "Council/SSJ Referral.", tags: ["shelter", "seasonal"], schedule: { 0: "20:00-08:00", 1: "20:00-08:00", 2: "20:00-08:00", 3: "20:00-08:00", 4: "20:00-08:00", 5: "20:00-08:00", 6: "20:00-08:00" }, lat: 50.7905, lng: -1.1032 },
 
     // --- SUPPORT ---
-    { id: 'sup1', name: "HIVE Portsmouth Hub", category: "support", type: "Community Hub", area: "PO1", address: "Central Library, Guildhall Sq", description: "Information hub for all community resources and local charities.", requirements: "Walk-in.", tags: ["advice", "support"], schedule: { 1: "09:30-16:00", 2: "09:30-16:00", 3: "09:30-16:00", 4: "09:30-16:00", 5: "09:30-16:00" }, lat: 50.7984, lng: -1.0911, phone: "023 9261 6709", trustScore: 100 },
-    { id: 'sup2', name: "Talking Change", category: "support", type: "NHS Mental Health", area: "PO3", address: "The Pompey Centre, PO4 8TA", description: "NHS services for stress, anxiety, and depression.", requirements: "Self-referral.", tags: ["medical", "well-being"], schedule: { 1: "08:00-20:00", 2: "08:00-20:00", 3: "08:00-20:00", 4: "08:00-20:00", 5: "08:00-17:00" }, lat: 50.7972, lng: -1.0651, phone: "023 9289 2211" },
+    { id: 'sup1', name: "HIVE Portsmouth Hub", category: "support", type: "Community Hub", area: "PO1", address: "Central Library, Guildhall Sq", description: "Main information point for all community resources and local charities.", requirements: "Walk-in.", tags: ["advice", "support"], schedule: { 1: "09:30-16:00", 2: "09:30-16:00", 3: "09:30-16:00", 4: "09:30-16:00", 5: "09:30-16:00" }, lat: 50.7984, lng: -1.0911, phone: "023 9261 6709", trustScore: 100 },
+    { id: 'sup2', name: "Talking Change", category: "support", type: "NHS Mental Health", area: "PO3", address: "The Pompey Centre, PO4 8TA", description: "NHS therapists for stress, anxiety, and depression.", requirements: "Self-referral.", tags: ["medical", "well-being"], schedule: { 1: "08:00-20:00", 2: "08:00-20:00", 3: "08:00-20:00", 4: "08:00-20:00", 5: "08:00-17:00" }, lat: 50.7972, lng: -1.0651, phone: "023 9289 2211" },
 
     // --- LIBRARIES ---
     { id: 'l1', name: "Central Library", category: "learning", type: "Library", area: "PO1", address: "Guildhall Square", description: "Free WiFi, computers, and official warm space.", requirements: "Public access.", tags: ["wifi", "warmth", "learning"], schedule: { 1: "09:30-17:00", 2: "09:30-17:00", 3: "09:30-17:00", 4: "09:30-17:00", 5: "09:30-17:00", 6: "10:00-15:30" }, lat: 50.7985, lng: -1.0913 }
@@ -122,6 +123,13 @@ const ResourceCard = ({ item, isSaved, onToggleSave }: { item: Resource, isSaved
                 <Navigation size={12} className="text-indigo-500" /> {item.address}
             </p>
             <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">{item.description}</p>
+            
+            <div className="flex flex-wrap gap-2 mb-4">
+                {item.tags.map(tag => (
+                  <span key={tag} className="text-[9px] font-black uppercase text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{tag}</span>
+                ))}
+            </div>
+
             <div className="flex gap-2">
                 <a 
                     href={`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`} 
@@ -131,7 +139,17 @@ const ResourceCard = ({ item, isSaved, onToggleSave }: { item: Resource, isSaved
                 >
                     Navigate
                 </a>
-                <button className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-colors">
+                <button 
+                  onClick={() => {
+                    const text = `Check out ${item.name} in Portsmouth: ${item.address}`;
+                    if (navigator.share) {
+                      navigator.share({ title: 'Portsmouth Bridge', text, url: window.location.href });
+                    } else {
+                      navigator.clipboard.writeText(text);
+                    }
+                  }}
+                  className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-colors"
+                >
                   <Share2 size={18} />
                 </button>
             </div>
@@ -140,10 +158,8 @@ const ResourceCard = ({ item, isSaved, onToggleSave }: { item: Resource, isSaved
 };
 
 const SimpleMap = ({ data }: { data: Resource[] }) => {
-  // Using an iframe embed as a robust alternative to react-leaflet in this environment
   const centerLat = 50.80;
   const centerLng = -1.08;
-  const zoom = 13;
 
   return (
     <div className="h-[70vh] w-full rounded-[32px] overflow-hidden shadow-2xl relative border-4 border-white bg-slate-100">
@@ -158,7 +174,7 @@ const SimpleMap = ({ data }: { data: Resource[] }) => {
         src={`https://www.openstreetmap.org/export/embed.html?bbox=${centerLng-0.05},${centerLat-0.03},${centerLng+0.05},${centerLat+0.03}&layer=mapnik`}
       />
       <div className="absolute top-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-lg z-10">
-        <p className="text-[10px] font-black uppercase text-indigo-600 mb-1">Explorer View</p>
+        <p className="text-[10px] font-black uppercase text-indigo-600 mb-1 flex items-center gap-2"><MapPin size={12}/> Explorer View</p>
         <p className="text-xs font-bold text-slate-600">Showing {data.length} resources in Portsmouth.</p>
       </div>
     </div>
@@ -222,7 +238,7 @@ const App = () => {
                     <h1 className="text-2xl font-black tracking-tighter text-indigo-600">
                         {stealthMode ? 'Safe Portal' : 'Portsmouth Bridge'}
                     </h1>
-                    {!stealthMode && <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Community Lifeline</p>}
+                    {!stealthMode && <p className="text-[9px] font-black text-slate-400 tracking-widest uppercase">Community Lifeline</p>}
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => setStealthMode(!stealthMode)} className={`p-2 rounded-full transition-colors ${stealthMode ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500'}`} title="Stealth Mode">
@@ -239,7 +255,7 @@ const App = () => {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="bg-gradient-to-br from-indigo-600 to-slate-900 rounded-[40px] p-8 text-white mb-8 shadow-xl shadow-indigo-200 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-                            <h2 className="text-3xl font-black mb-2 relative z-10 leading-tight">Portsmouth Bridge</h2>
+                            <h2 className="text-3xl font-black mb-2 relative z-10 leading-tight">Welcome to Portsmouth Bridge</h2>
                             <p className="text-indigo-100 font-medium opacity-80 relative z-10">Connecting you to local food, shelter, and support networks.</p>
                         </div>
 
@@ -273,13 +289,13 @@ const App = () => {
                         </div>
 
                         <div className="mt-8 p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm">
-                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Area Search</h3>
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><MapPin size={14}/> Area Search</h3>
                           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {AREAS.map(area => (
                               <button 
                                 key={area}
                                 onClick={() => { setFilters({...filters, area}); setView('list'); }}
-                                className="px-4 py-2 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl text-[11px] font-black uppercase transition-colors whitespace-nowrap"
+                                className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase transition-colors whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-400 hover:bg-indigo-50'}`}
                               >
                                 {area}
                               </button>
