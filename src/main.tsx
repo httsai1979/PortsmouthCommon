@@ -4,18 +4,28 @@ import App from './App'
 import './index.css'
 
 /**
- * 修正說明：
- * 您的 index.html 裡面使用的是 <div id="app"></div>
- * 因此這裡必須精確尋找 'app' 而不是 'root'。
- * 這是解決「白畫面」與「Error #299」最關鍵的步驟。
+ * 解決 Error #299 的核心：
+ * 您的 index.html 中定義的是 <div id="app"></div>
+ * 因此這裡必須精確尋找 'app' 元素。
  */
-const rootElement = document.getElementById('app') || document.getElementById('root');
+const rootElement = document.getElementById('app');
 
-if (!rootElement) {
-  console.error("Critical: Could not find id='app' in index.html");
-} else {
+if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <App />
     </React.StrictMode>,
   )
+} else {
+  // 增加容錯檢查
+  const fallback = document.getElementById('root');
+  if (fallback) {
+    ReactDOM.createRoot(fallback).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+  } else {
+    console.error("Critical Error: No mounting point found (id='app' or 'root').");
+  }
+}
