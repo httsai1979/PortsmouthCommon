@@ -6,7 +6,7 @@ import {
   BookOpen, Briefcase, LifeBuoy, AlertTriangle, Phone, Bell
 } from 'lucide-react';
 
-// --- [SECTION 1: DATA - 僅更新 ALL_DATA 內容] ---
+// --- [SECTION 1: DATA - British English Content] ---
 const AREAS = ['All', 'Southsea', 'City Centre', 'Fratton', 'North End', 'Cosham'];
 
 const ALL_DATA = [
@@ -105,16 +105,16 @@ const ALL_DATA = [
 ];
 
 const PROGRESS_TIPS = [
-  { title: "今日成長小貼士", note: "記住，尋求幫助並非弱點，而是邁向成功的第一步。" },
-  { title: "數位足跡安全", note: "隱身模式能保護您在公共裝置上的瀏覽紀錄。" }
+  { title: "Today's Growth Tip", note: "Remember, seeking help is not a weakness, but the first step towards success." },
+  { title: "Digital Footprint Safety", note: "Stealth mode helps protect your browsing history on shared devices." }
 ];
 
 const COMMUNITY_DEALS = [
-  { id: 'd1', store: 'Victory Cafe', deal: '免費熱飲', time: '10am 前', info: '向店員出示此頁面即可', lat: 50.795, lng: -1.085 }
+  { id: 'd1', store: 'Victory Cafe', deal: 'Free Hot Drink', time: 'Before 10am', info: 'Show this page to staff', lat: 50.795, lng: -1.085 }
 ];
 
 const GIFT_EXCHANGE = [
-  { id: 'g1', item: '成人冬裝外套', location: 'St. Marys Church', date: '每週二', info: '多種尺寸提供', lat: 50.801, lng: -1.072 }
+  { id: 'g1', item: 'Adult Winter Coat', location: 'St Mary’s Church', date: 'Every Tuesday', info: 'Various sizes available', lat: 50.801, lng: -1.072 }
 ];
 
 // --- [SECTION 2: UTILS] ---
@@ -122,7 +122,7 @@ const checkStatus = (schedule) => {
   const now = new Date();
   const day = now.getDay();
   const timeStr = schedule[day];
-  if (!timeStr || timeStr === 'Closed') return { status: 'closed', isOpen: false, label: '已關閉' };
+  if (!timeStr || timeStr === 'Closed') return { status: 'closed', isOpen: false, label: 'Closed' };
   
   const [start, end] = timeStr.split('-');
   const [sh, sm] = start.split(':').map(Number);
@@ -133,9 +133,9 @@ const checkStatus = (schedule) => {
   const endMinutes = eh * 60 + em;
   
   if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
-    return { status: 'open', isOpen: true, label: `營業中至 ${end}` };
+    return { status: 'open', isOpen: true, label: `Open until ${end}` };
   }
-  return { status: 'closed', isOpen: false, label: '目前休息中' };
+  return { status: 'closed', isOpen: false, label: 'Currently Closed' };
 };
 
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -261,7 +261,7 @@ const App = () => {
         <div className="text-center animate-pulse">
           <Icon name="zap" size={48} className="text-indigo-600 mx-auto mb-4" />
           <h1 className="text-2xl font-black text-slate-800">Portsmouth Bridge</h1>
-          <p className="text-slate-400 font-medium">載入中... 建立您的社區連接</p>
+          <p className="text-slate-400 font-medium">Loading... establishing your community connections</p>
         </div>
       </div>
     );
@@ -278,9 +278,9 @@ const App = () => {
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 p-4 flex justify-between items-center">
         <div>
           <h1 className={`text-xl font-black ${stealthMode ? 'text-slate-300' : 'text-slate-900'}`}>
-            {stealthMode ? '隱身羅盤' : 'Portsmouth Bridge'}
+            {stealthMode ? 'Stealth Compass' : 'Portsmouth Bridge'}
           </h1>
-          <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">連接社區 • 重拾希望</p>
+          <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Connecting Community • Restoring Hope</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setStealthMode(!stealthMode)} className={`p-2 rounded-full ${stealthMode ? 'bg-emerald-600 text-white' : 'bg-slate-100'}`}><Icon name="eye" size={20} /></button>
@@ -293,19 +293,19 @@ const App = () => {
           <div className="space-y-6">
             {/* Stats Card */}
             <div className="bg-indigo-600 rounded-[32px] p-6 text-white shadow-xl shadow-indigo-200">
-              <h2 className="text-2xl font-bold mb-1">您好, Portsmouth</h2>
-              <p className="text-indigo-100 text-xs mb-6">今日有 {ALL_DATA.filter(d => checkStatus(d.schedule).isOpen).length} 個服務中心正在運作中</p>
+              <h2 className="text-2xl font-bold mb-1">Hello, Portsmouth</h2>
+              <p className="text-indigo-100 text-xs mb-6">There are {ALL_DATA.filter(d => checkStatus(d.schedule).isOpen).length} service centres operating today</p>
               
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => setView('planner')} className="bg-white/20 hover:bg-white/30 p-4 rounded-2xl text-left transition-all">
                   <Icon name="calendar" size={20} className="mb-2" />
-                  <div className="text-xs font-bold">路徑規劃</div>
-                  <div className="text-[10px] opacity-70">{journeyItems.length} 個站點</div>
+                  <div className="text-xs font-bold">Journey Planner</div>
+                  <div className="text-[10px] opacity-70">{journeyItems.length} stops</div>
                 </button>
                 <button onClick={() => setView('compare')} className="bg-white/20 hover:bg-white/30 p-4 rounded-2xl text-left transition-all">
                   <Icon name="shield" size={20} className="mb-2" />
-                  <div className="text-xs font-bold">智能比較</div>
-                  <div className="text-[10px] opacity-70">{compareItems.length}/3 已選</div>
+                  <div className="text-xs font-bold">Smart Compare</div>
+                  <div className="text-[10px] opacity-70">{compareItems.length}/3 selected</div>
                 </button>
               </div>
             </div>
@@ -313,10 +313,10 @@ const App = () => {
             {/* Quick Categories */}
             <div className="grid grid-cols-4 gap-3 text-center">
               {[
-                { label: '食物', icon: 'utensils', cat: 'food' },
-                { label: '住宿', icon: 'bed', cat: 'shelter' },
-                { label: '支援', icon: 'lifebuoy', cat: 'support' },
-                { label: '更多', icon: 'arrowRight', cat: 'all' }
+                { label: 'Food', icon: 'utensils', cat: 'food' },
+                { label: 'Shelter', icon: 'bed', cat: 'shelter' },
+                { label: 'Support', icon: 'lifebuoy', cat: 'support' },
+                { label: 'More', icon: 'arrowRight', cat: 'all' }
               ].map(c => (
                 <button key={c.label} onClick={() => { setFilters({...filters, category: c.cat}); setView('list'); }} className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 bg-white shadow-sm border border-slate-100 rounded-2xl flex items-center justify-center text-indigo-600"><Icon name={c.icon} size={20} /></div>
@@ -328,8 +328,8 @@ const App = () => {
             {/* Resource List (Preview) */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">推薦資源</h3>
-                <button onClick={() => setView('list')} className="text-indigo-600 text-[10px] font-bold">查看全部</button>
+                <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Recommended Resources</h3>
+                <button onClick={() => setView('list')} className="text-indigo-600 text-[10px] font-bold">View All</button>
               </div>
               
               {ALL_DATA.slice(0, 3).map(res => (
@@ -356,7 +356,7 @@ const App = () => {
           <div className="space-y-4">
              <div className="flex gap-2 items-center mb-4">
                 <button onClick={() => setView('home')} className="p-2 bg-slate-100 rounded-full"><Icon name="arrowRight" className="rotate-180" size={18} /></button>
-                <h2 className="text-xl font-black">資源目錄</h2>
+                <h2 className="text-xl font-black">Resource Directory</h2>
              </div>
              
              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
@@ -397,13 +397,13 @@ const App = () => {
                       onClick={() => toggleJourneyItem(item.id)}
                       className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${journeyItems.includes(item.id) ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-indigo-600'}`}
                      >
-                       <Icon name="navigation" size={14} /> {journeyItems.includes(item.id) ? '已加入路徑' : '加入路徑'}
+                       <Icon name="navigation" size={14} /> {journeyItems.includes(item.id) ? 'Added to Journey' : 'Add to Journey'}
                      </button>
                      <button 
                       onClick={() => toggleCompareItem(item.id)}
                       className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${compareItems.includes(item.id) ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-emerald-600'}`}
                      >
-                       <Icon name="shield" size={14} /> {compareItems.includes(item.id) ? '比較中' : '加入比較'}
+                       <Icon name="shield" size={14} /> {compareItems.includes(item.id) ? 'Comparing' : 'Add to Compare'}
                      </button>
                    </div>
                  </div>
@@ -412,19 +412,19 @@ const App = () => {
           </div>
         )}
 
-        {/* Journey Planner View (Phase 25 logic) */}
+        {/* Journey Planner View */}
         {view === 'planner' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black">您的行程路徑</h2>
+              <h2 className="text-2xl font-black">Your Journey Route</h2>
               <button onClick={() => setView('home')} className="p-2 bg-slate-100 rounded-full"><Icon name="x" size={20} /></button>
             </div>
             
             {journeyItems.length === 0 ? (
               <div className="py-20 text-center border-2 border-dashed border-slate-200 rounded-[40px]">
                 <Icon name="mapPin" size={48} className="text-slate-200 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">目前沒有規劃中的路徑</p>
-                <button onClick={() => setView('list')} className="mt-4 text-indigo-600 font-black text-xs border-b-2 border-indigo-100">前往目錄添加資源</button>
+                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No journeys planned at the moment</p>
+                <button onClick={() => setView('list')} className="mt-4 text-indigo-600 font-black text-xs border-b-2 border-indigo-100">Go to directory to add resources</button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -449,25 +449,25 @@ const App = () => {
                   }).join('/')}`, '_blank')}
                   className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black uppercase tracking-widest text-xs shadow-xl shadow-indigo-100 active:scale-95 transition-all"
                 >
-                  開始 Google 地圖導航
+                  Start Google Maps Navigation
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* Smart Compare View (Phase 25 logic) */}
+        {/* Smart Compare View */}
         {view === 'compare' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black">資源智能對比</h2>
+              <h2 className="text-2xl font-black">Smart Resource Comparison</h2>
               <button onClick={() => setView('home')} className="p-2 bg-slate-100 rounded-full"><Icon name="x" size={20} /></button>
             </div>
             
             {compareItems.length === 0 ? (
               <div className="py-20 text-center border-2 border-dashed border-slate-200 rounded-[40px]">
                 <Icon name="shield" size={48} className="text-slate-200 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">請至少選擇兩個資源進行比較</p>
+                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Please select at least two resources to compare</p>
               </div>
             ) : (
               <div className="overflow-x-auto no-scrollbar">
@@ -484,7 +484,7 @@ const App = () => {
                         
                         <div className="space-y-3 text-xs">
                           <div className="p-3 bg-slate-50 rounded-2xl">
-                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">信任分數</span>
+                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Trust Score</span>
                             <div className="flex items-center gap-2">
                                <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                                  <div className="h-full bg-emerald-500" style={{ width: `${item.trustScore}%` }}></div>
@@ -494,19 +494,19 @@ const App = () => {
                           </div>
                           
                           <div>
-                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">交通資訊</span>
+                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Transport Info</span>
                             <p className="font-bold text-slate-700">{item.transport}</p>
                           </div>
                           
                           <div>
-                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">今日開放</span>
+                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Opening Times Today</span>
                             <p className="font-bold text-slate-700">{item.schedule[new Date().getDay()]}</p>
                           </div>
                         </div>
                         
                         <div className="mt-auto pt-4 flex flex-col gap-2">
                           <a href={`tel:${item.phone}`} className="flex items-center justify-center gap-2 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-[10px] uppercase">
-                            <Icon name="phone" size={14} /> 撥打電話
+                            <Icon name="phone" size={14} /> Call Now
                           </a>
                         </div>
                       </div>
@@ -523,19 +523,19 @@ const App = () => {
       <nav className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto bg-white/90 backdrop-blur-md border-t border-slate-100 py-4 px-8 flex justify-between items-center z-50">
         <button onClick={() => setView('home')} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}>
           <Icon name="home" size={24} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">首頁</span>
+          <span className="text-[9px] font-black uppercase tracking-tighter">Home</span>
         </button>
         <button onClick={() => setView('list')} className={`flex flex-col items-center gap-1 transition-all ${view === 'list' ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}>
           <Icon name="search" size={24} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">目錄</span>
+          <span className="text-[9px] font-black uppercase tracking-tighter">Directory</span>
         </button>
         <button onClick={() => setView('planner')} className={`flex flex-col items-center gap-1 transition-all ${view === 'planner' ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}>
           <Icon name="navigation" size={24} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">路徑</span>
+          <span className="text-[9px] font-black uppercase tracking-tighter">Journey</span>
         </button>
         <button onClick={() => setView('compare')} className={`flex flex-col items-center gap-1 transition-all ${view === 'compare' ? 'text-indigo-600 scale-110' : 'text-slate-400'}`}>
           <Icon name="shield" size={24} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">比較</span>
+          <span className="text-[9px] font-black uppercase tracking-tighter">Compare</span>
         </button>
       </nav>
     </div>
