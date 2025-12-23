@@ -86,20 +86,28 @@ const FoodSchedule = ({ data }: FoodScheduleProps) => {
                             <div className="pl-14 space-y-2">
                                 {items.length > 0 ? (
                                     items.map(({ resource, time }) => {
+                                        // Stronger Visual Logic
                                         const isPantry = resource.type.toLowerCase().includes('pantry') || resource.tags.includes('membership');
+
                                         return (
-                                            <div key={resource.id} className={`p-3 rounded-xl border-l-4 shadow-sm transition-all hover:scale-[1.01] ${isPantry
-                                                    ? 'bg-orange-50 border-orange-400'
-                                                    : 'bg-emerald-50 border-emerald-400'
+                                            <div key={resource.id} className={`p-4 rounded-[20px] border-l-8 shadow-md transition-all hover:scale-[1.02] mb-3 ${isPantry
+                                                ? 'bg-orange-50/80 border-orange-500 shadow-orange-100'
+                                                : 'bg-emerald-50/80 border-emerald-500 shadow-emerald-100'
                                                 }`}>
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <h5 className="text-xs font-black text-slate-900 leading-snug">{resource.name}</h5>
-                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-                                                            {resource.area} • {resource.type}
-                                                        </p>
+                                                        <h5 className="text-sm font-black text-slate-900 leading-tight mb-1">{resource.name}</h5>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${isPantry ? 'bg-orange-200 text-orange-800' : 'bg-emerald-200 text-emerald-800'
+                                                                }`}>
+                                                                {isPantry ? 'Membership Pantry' : 'Free / Hot Meal'}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest self-center">
+                                                                {resource.area}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${isPantry ? 'bg-white text-orange-600' : 'bg-white text-emerald-600'
+                                                    <span className={`text-[11px] font-black px-3 py-1.5 rounded-xl shadow-sm ${isPantry ? 'bg-white text-orange-600 ring-1 ring-orange-200' : 'bg-white text-emerald-600 ring-1 ring-emerald-200'
                                                         }`}>
                                                         {time}
                                                     </span>

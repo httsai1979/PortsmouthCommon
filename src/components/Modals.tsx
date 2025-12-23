@@ -49,13 +49,29 @@ export const TipsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                         </div>
                     </section>
 
-                    <section className="bg-slate-50 p-5 rounded-[24px] border border-slate-100">
+                    <section className="bg-slate-50 p-5 rounded-[24px] border border-slate-100 mb-6">
                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                             <Icon name="wifi" size={12} /> Offline Intelligence
                         </h3>
                         <p className="text-[10px] text-slate-500 leading-relaxed">
                             No data? No problem. Install this app to your home screen. It remembers everything you've seen and works without internet.
                         </p>
+                    </section>
+
+                    <section className="bg-indigo-50 p-6 rounded-[24px] border border-indigo-100">
+                        <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                            Our Promise
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-xs font-black text-indigo-900">Dignity First</h4>
+                                <p className="text-[10px] text-indigo-700/80 leading-relaxed mt-1">We only list verified, 100% real services. No dead ends. You deserve respect and accuracy.</p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-black text-indigo-900">Warmth & Connection</h4>
+                                <p className="text-[10px] text-indigo-700/80 leading-relaxed mt-1">This tool is built with love to connect you to the community that cares about you.</p>
+                            </div>
+                        </div>
                     </section>
 
                     <div className="pt-2">
