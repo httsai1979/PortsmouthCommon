@@ -1,5 +1,4 @@
 import Icon from './Icon';
-import { SUPERMARKET_TIPS } from '../data';
 
 export const TipsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
     if (!isOpen) return null;
@@ -14,50 +13,54 @@ export const TipsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                     <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest leading-loose">How we help you cross the bridge to a better tomorrow.</p>
                 </div>
 
-                <div className="p-8 space-y-8">
-                    <section className="space-y-4">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Our Mission</h3>
-                        <p className="text-sm text-slate-700 leading-relaxed font-medium">
-                            Portsmouth Bridge isn't just a map. It's a connection between the struggle of today and the hope of tomorrow. We believe everyone deserves a path forward.
+                <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                    <section className="space-y-3">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Welcome to Portsmouth Bridge</h3>
+                        <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                            A live tool connecting you to verified support in Portsmouth. Everything you see is real, updated, and works offline.
                         </p>
                     </section>
 
                     <section className="space-y-4">
-                        <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">How to Use "My Bridge"</h3>
-                        <div className="flex gap-4">
-                            <div className="shrink-0 w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xs">1</div>
-                            <p className="text-xs text-slate-600 leading-relaxed"><span className="font-black text-slate-900">Pin:</span> Find a resource and tap the <Icon name="plus" size={12} className="inline mx-1" /> icon to pin it to your personal bridge.</p>
+                        <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Master Your Toolkit</h3>
+
+                        <div className="flex gap-4 items-start">
+                            <div className="shrink-0 w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><Icon name="plus" size={14} /></div>
+                            <div>
+                                <h4 className="text-xs font-black text-slate-900">Pin & Plan</h4>
+                                <p className="text-[10px] text-slate-500 leading-relaxed mt-1">Tap the plus icon to save resources. Use "Journey Planner" to see them on a timeline map.</p>
+                            </div>
                         </div>
-                        <div className="flex gap-4">
-                            <div className="shrink-0 w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xs">2</div>
-                            <p className="text-xs text-slate-600 leading-relaxed"><span className="font-black text-slate-900">Plan:</span> Tap <span className="font-black text-slate-900">"My Journey"</span> at the bottom to see your saved pins in a chronological timeline.</p>
+
+                        <div className="flex gap-4 items-start">
+                            <div className="shrink-0 w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><Icon name="calendar" size={14} /></div>
+                            <div>
+                                <h4 className="text-xs font-black text-slate-900">Food Calendar</h4>
+                                <p className="text-[10px] text-slate-500 leading-relaxed mt-1">Check the new weekly calendar to find free meals and open pantries by day and time.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 items-start">
+                            <div className="shrink-0 w-8 h-8 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center"><Icon name="shield" size={14} /></div>
+                            <div>
+                                <h4 className="text-xs font-black text-slate-900">Smart Compare</h4>
+                                <p className="text-[10px] text-slate-500 leading-relaxed mt-1">Select up to 3 resources to compare opening times, trust scores, and distance side-by-side.</p>
+                            </div>
                         </div>
                     </section>
 
-                    <section className="space-y-4 bg-yellow-50 p-6 rounded-[32px] border-2 border-yellow-100">
-                        <h3 className="text-[10px] font-black text-yellow-700 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Icon name="tag" size={14} /> Smart Saving Tips
+                    <section className="bg-slate-50 p-5 rounded-[24px] border border-slate-100">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                            <Icon name="wifi" size={12} /> Offline Intelligence
                         </h3>
-                        <div className="space-y-3 mt-4">
-                            {SUPERMARKET_TIPS.map((tip, idx) => (
-                                <div key={idx} className="flex justify-between items-center text-[11px]">
-                                    <span className="font-black text-slate-800">{tip.store}</span>
-                                    <span className="font-bold text-yellow-700 bg-yellow-400/20 px-2 py-0.5 rounded-lg">{tip.time}</span>
-                                </div>
-                            ))}
-                        </div>
+                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                            No data? No problem. Install this app to your home screen. It remembers everything you've seen and works without internet.
+                        </p>
                     </section>
 
-                    <section className="pt-4 border-t border-slate-100">
-                        <div className="flex items-center gap-3 text-slate-400">
-                            <Icon name="check_circle" size={16} className="text-emerald-500" />
-                            <p className="text-[9px] font-bold uppercase tracking-widest leading-relaxed"> Verified Data • Source: PCC & Community Groups (Dec 2025)</p>
-                        </div>
-                    </section>
-
-                    <div className="pt-4">
+                    <div className="pt-2">
                         <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-95 transition-all">
-                            Got it, Let's Cross
+                            Start Exploring
                         </button>
                     </div>
                 </div>
