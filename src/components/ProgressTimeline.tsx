@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+
 import Icon from './Icon';
 
 interface Step {
@@ -35,8 +35,8 @@ export const ProgressTimeline = ({ savedCount }: { savedCount: number }) => {
                         return (
                             <div key={step.id} className={`relative pl-16 transition-all ${isCompleted ? 'opacity-100' : isNext ? 'opacity-100' : 'opacity-40'}`}>
                                 <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center border-4 transition-all z-10 ${isCompleted ? 'bg-indigo-600 border-indigo-100 text-white' :
-                                        isNext ? 'bg-white border-indigo-600 text-indigo-600 animate-pulse' :
-                                            'bg-slate-50 border-white text-slate-300'
+                                    isNext ? 'bg-white border-indigo-600 text-indigo-600 animate-pulse' :
+                                        'bg-slate-50 border-white text-slate-300'
                                     }`}>
                                     <Icon name={step.icon} size={20} />
                                 </div>
