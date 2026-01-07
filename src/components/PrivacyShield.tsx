@@ -56,7 +56,7 @@ const PrivacyShield = ({ onAccept }: PrivacyShieldProps) => {
 
                     <section className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
                         <p className="text-xs text-slate-500">
-                            By using Pompey Haven, you agree to our 100% anonymous, local-first privacy policy. You can clear all cached data anytime in the settings.
+                            By using Portsmouth Bridge, you agree to our 100% anonymous, local-first privacy policy. You can clear all cached data anytime in the settings.
                         </p>
                     </section>
                 </div>
@@ -66,7 +66,7 @@ const PrivacyShield = ({ onAccept }: PrivacyShieldProps) => {
                         onClick={handleAccept}
                         className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-95 transition-all"
                     >
-                        I Trust Haven, Let's Go
+                        Enter Portsmouth Bridge
                     </button>
                     <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mt-4">
                         GDPR Compliant Architecture
