@@ -440,7 +440,7 @@ export const ALL_DATA: Resource[] = [
         tags: ["free", "community", "children", "medical"],
         schedule: { 0: "Closed", 1: "08:30-17:00", 2: "08:30-17:00", 3: "08:30-17:00", 4: "08:30-17:00", 5: "08:30-16:30", 6: "Closed" },
         lat: 50.8066,
-        lng: -1.0827,
+        lng: -1.0911,
         phone: "023 9273 3440",
         transport: "Bus 1, 3",
         trustScore: 100
@@ -473,8 +473,8 @@ export const ALL_DATA: Resource[] = [
         requirements: "Open to all.",
         tags: ["free", "learning", "children", "warmth", "wifi"],
         schedule: { 0: "Closed", 1: "09:30-17:00", 2: "09:30-18:00", 3: "09:30-18:00", 4: "09:30-18:00", 5: "09:30-17:00", 6: "10:00-15:30" },
-        lat: 50.799,
-        lng: -1.093,
+        lat: 50.7860,
+        lng: -1.0879,
         phone: "023 9268 8057",
         trustScore: 99
     },
@@ -568,8 +568,8 @@ export const ALL_DATA: Resource[] = [
         requirements: "Register on arrival.",
         tags: ["free", "children", "community"],
         schedule: { 0: "Closed", 1: "15:30-18:00", 2: "15:30-18:00", 3: "15:30-18:00", 4: "15:30-18:00", 5: "15:30-18:00", 6: "11:00-16:00" },
-        lat: 50.803,
-        lng: -1.087,
+        lat: 50.7997,
+        lng: -1.0833,
         phone: "023 9283 1756",
         trustScore: 98
     },
@@ -584,8 +584,8 @@ export const ALL_DATA: Resource[] = [
         requirements: "Register on arrival.",
         tags: ["free", "children", "community"],
         schedule: { 0: "Closed", 1: "15:30-18:00", 2: "15:30-18:00", 3: "15:30-18:00", 4: "15:30-18:00", 5: "15:30-18:00", 6: "11:00-16:00" },
-        lat: 50.8436,
-        lng: -1.0888,
+        lat: 50.8482,
+        lng: -1.0938,
         phone: "023 9237 0643",
         transport: "Bus 18, 3",
         trustScore: 98

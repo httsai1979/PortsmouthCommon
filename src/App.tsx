@@ -885,6 +885,7 @@ const App = () => {
                                     isInCompare={compareItems.includes(item.id)}
                                     isInJourney={journeyItems.includes(item.id)}
                                     highContrast={highContrast}
+                                    onTagClick={(tag) => setSearchQuery(tag)}
                                 />
                             ))}
                         </div>
