@@ -10,12 +10,16 @@ import { TipsModal, CrisisModal } from './components/Modals';
 import PrintView from './components/PrintView';
 import { AreaScheduleView } from './components/Schedule';
 import UnifiedSchedule from './components/UnifiedSchedule';
+import FAQSection from './components/FAQSection';
+import CommunityBulletin from './components/CommunityBulletin';
 import AIAssistant from './components/AIAssistant';
 import PrivacyShield from './components/PrivacyShield';
 import JourneyPlanner from './components/JourneyPlanner';
 import SmartCompare from './components/SmartCompare';
 import SmartNotifications from './components/SmartNotifications';
 import ProgressTimeline from './components/ProgressTimeline';
+
+import logo from './assets/images/logo.png';
 
 import CrisisWizard from './components/CrisisWizard'; // Phase 28: Decision Wizard
 import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
@@ -30,7 +34,7 @@ const App = () => {
     const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({});
 
     // Navigation & Modals
-    const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'community-plan' | 'safe-sleep-plan' | 'warm-spaces-plan'>('home');
+    const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'community-plan' | 'safe-sleep-plan' | 'warm-spaces-plan' | 'faq'>('home');
     const [showTips, setShowTips] = useState(false);
     const [showCrisis, setShowCrisis] = useState(false);
     const [showPrint, setShowPrint] = useState(false);
@@ -236,7 +240,10 @@ const App = () => {
 
     const handleSearch = (newFilters: any) => {
         setFilters(newFilters);
-        if (newFilters.category !== 'all' && view === 'home') setView('list');
+        // If clicking a specific category and on home, go to map directly for better visual context
+        if (newFilters.category !== 'all' && view === 'home') {
+            setView('map');
+        }
     };
 
     const filteredData = useMemo(() => {
@@ -283,32 +290,6 @@ const App = () => {
         return ALL_DATA.filter(item => savedIds.includes(item.id));
     }, [savedIds]);
 
-    const getGreeting = () => {
-        const hour = new Date().getHours();
-        const messages = {
-            morning: [
-                { msg: "Good Morning", sub: "We're here to support you today." },
-                { msg: "Welcome Back", sub: "Connecting you with city resources." },
-                { msg: "Hello Neighbor", sub: "You belong to our Portsmouth community." }
-            ],
-            afternoon: [
-                { msg: "Good Afternoon", sub: "Shared paths lead to shared strength." },
-                { msg: "City Support", sub: "Explore active community projects." },
-                { msg: "Here to Help", sub: "Finding the right support for you." }
-            ],
-            evening: [
-                { msg: "Good Evening", sub: "Rest well, Portsmouth cares for you." },
-                { msg: "Safe & Support", sub: "Night support is available near you." },
-                { msg: "Peaceful Night", sub: "A new day brings new opportunities." }
-            ]
-        };
-
-        const timeKey = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
-        const pool = messages[timeKey];
-        const dayOfMonth = new Date().getDate();
-        return pool[dayOfMonth % pool.length];
-    };
-
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -317,9 +298,7 @@ const App = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="text-center animate-pulse">
-                    <div className="w-16 h-16 bg-indigo-600 rounded-3xl rotate-12 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-200">
-                        <Icon name="zap" size={32} className="text-white -rotate-12" />
-                    </div>
+                    <img src={logo} alt="Portsmouth Bridge" className="w-24 h-24 mx-auto mb-6" />
                     <h1 className="text-2xl font-black text-slate-900 tracking-tighter">Portsmouth Bridge</h1>
                     <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Connecting Community Support</p>
                 </div>
@@ -328,8 +307,6 @@ const App = () => {
     }
 
     if (showPrint) return <PrintView data={ALL_DATA} onClose={() => setShowPrint(false)} />;
-
-    const greeting = getGreeting();
 
     return (
         <div className={`app-container min-h-screen font-sans text-slate-900 selection:bg-indigo-200 selection:text-indigo-900 ${highContrast ? 'high-contrast' : ''}`}>
@@ -354,11 +331,14 @@ const App = () => {
 
             <header className={`sticky top-0 z-50 ${stealthMode ? 'bg-slate-50 border-none' : 'bg-white/95 backdrop-blur-md border-b border-slate-100'} pt-4 pb-3 transition-all`}>
                 <div className="px-5 flex justify-between items-center max-w-lg mx-auto">
-                    <div>
-                        <h1 className={`text-2xl font-black ${stealthMode ? 'text-slate-400' : 'text-slate-900'} tracking-tighter`}>
-                            {stealthMode ? 'Safe Compass' : 'Portsmouth Bridge'}
-                        </h1>
-                        {!stealthMode && <p className="text-[9px] font-black text-slate-400 tracking-widest uppercase">Community Support Network</p>}
+                    <div className="flex items-center gap-3">
+                        <img src={logo} alt="Logo" className={`w-10 h-10 transition-all ${stealthMode ? 'grayscale opacity-50' : ''}`} />
+                        <div>
+                            <h1 className={`text-xl font-black ${stealthMode ? 'text-slate-400' : 'text-slate-900'} tracking-tighter leading-none mb-1`}>
+                                {stealthMode ? 'Safe Compass' : 'Portsmouth Bridge'}
+                            </h1>
+                            {!stealthMode && <p className="text-[8px] font-black text-slate-400 tracking-widest uppercase">Community Support Network</p>}
+                        </div>
                     </div>
                     <div className="flex gap-2">
                         <button onClick={() => setStealthMode(!stealthMode)} className={`p-2 rounded-xl transition-all ${stealthMode ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`} title="Stealth Mode"><Icon name="eye" size={20} /></button>
@@ -374,22 +354,18 @@ const App = () => {
 
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
+                        {/* Functional Welcome Section (Bulletin Carousel) */}
+                        <CommunityBulletin onCTAClick={(id) => {
+                            if (id === '4') setView('map');
+                            else if (id === '1') setView('list');
+                        }} />
+
                         {/* Progress Timeline Integration */}
                         {savedIds.length > 0 && (
                             <div className="mb-6">
                                 <ProgressTimeline savedCount={savedIds.length} />
                             </div>
                         )}
-
-                        {/* Phase 9: Warmer Daily Greeting with City Impact */}
-                        <div className="mb-6 p-8 bg-gradient-to-br from-indigo-600 via-indigo-800 to-slate-900 rounded-[40px] text-white shadow-2xl shadow-indigo-100/50 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-3xl"></div>
-
-                            <div className="relative z-10">
-                                <h2 className="text-3xl font-black tracking-tighter mb-2 leading-tight">{greeting.msg}</h2>
-                                <p className="text-indigo-100 text-xs font-bold uppercase tracking-[0.2em] mb-4 opacity-70">{greeting.sub}</p>
-                            </div>
-                        </div>
 
                         {/* Phase 16: Universal Search Bar */}
                         <div className="mb-8 relative group">
@@ -426,11 +402,14 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'all', label: 'More Hubs', icon: 'grid' }
+                                { id: 'faq', label: 'Common Q&A', icon: 'help-circle' }
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
-                                    onClick={() => handleSearch({ ...filters, category: cat.id || 'all' })}
+                                    onClick={() => {
+                                        if (cat.id === 'faq') setView('faq');
+                                        else handleSearch({ ...filters, category: cat.id || 'all' });
+                                    }}
                                     className="flex flex-col items-center gap-2 group"
                                 >
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-all group-active:scale-90 ${filters.category === cat.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 border-2 border-slate-50 group-hover:border-indigo-100'}`}>
@@ -578,6 +557,10 @@ const App = () => {
                 )}
 
                 {/* Community Food Plan */}
+                {view === 'faq' && (
+                    <FAQSection onClose={() => setView('home')} />
+                )}
+
                 {view === 'community-plan' && (
                     <div className="animate-fade-in-up">
                         <div className="mb-6 flex items-center justify-between">
@@ -720,7 +703,7 @@ const App = () => {
                 )}
 
                 {view === 'map' && (
-                    <div className="animate-fade-in-up">
+                    <div className="animate-fade-in-up pb-20">
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-black text-slate-800">Explorer</h2>
@@ -740,9 +723,10 @@ const App = () => {
                                 </div>
                             </div>
                         </div>
+
                         {filters.category !== 'all' && (
-                            <div className="mb-4 flex items-center justify-between bg-white px-4 py-3 rounded-2xl border-2 border-slate-100 shadow-sm">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase">Showing only: <span className="text-slate-900 font-black">{filters.category}</span></span>
+                            <div className="mb-4 flex items-center justify-between bg-white px-4 py-3 rounded-2xl border-2 border-slate-100 shadow-sm animate-pulse">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Showing only: <span className="text-slate-900 font-black">{TAG_ICONS[filters.category]?.label || filters.category}</span></span>
                                 <button
                                     onClick={() => setFilters({ ...filters, category: 'all' })}
                                     className="text-[10px] font-black text-indigo-600 uppercase tracking-wider hover:underline"
@@ -1108,7 +1092,7 @@ const App = () => {
                     />
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

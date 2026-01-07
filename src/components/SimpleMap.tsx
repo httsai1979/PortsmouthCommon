@@ -168,19 +168,30 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
     return (
         <div className="w-full h-[65vh] bg-slate-100 rounded-[32px] relative overflow-hidden shadow-2xl border-4 border-white">
             {/* Phase 23: High-Density Icon Grid (Non-Scrolling) */}
-            <div className="absolute top-4 left-4 right-4 z-[1000] bg-white/80 backdrop-blur-xl p-3 rounded-[24px] shadow-2xl border border-white/50">
+            <div className="absolute top-4 left-4 right-4 z-[1000] bg-white/90 backdrop-blur-xl p-4 rounded-[32px] shadow-2xl border border-white/50">
+                <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Find by Need</span>
+                    {category !== 'all' && (
+                        <button
+                            onClick={() => onCategoryChange('all')}
+                            className="text-[9px] font-bold text-indigo-600 uppercase hover:underline"
+                        >
+                            Reset
+                        </button>
+                    )}
+                </div>
                 <div className="grid grid-cols-4 gap-2">
                     {categories.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => onCategoryChange(cat.id)}
-                            className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all ${category === cat.id
-                                ? 'bg-slate-900 text-white scale-100 shadow-lg'
-                                : 'text-slate-500 hover:bg-slate-50'
+                            className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl transition-all active:scale-90 ${category === cat.id
+                                ? 'bg-slate-900 text-white scale-100 shadow-xl'
+                                : 'bg-slate-50 text-slate-400 border border-slate-100'
                                 }`}
                         >
-                            <Icon name={cat.icon} size={14} />
-                            <span className="text-[7px] font-black uppercase tracking-tighter">{cat.label}</span>
+                            <Icon name={cat.icon} size={18} />
+                            <span className={`text-[8px] font-black uppercase tracking-tight truncate w-full px-1 text-center ${category === cat.id ? 'text-white' : 'text-slate-400'}`}>{cat.label.split(' ')[0]}</span>
                         </button>
                     ))}
                 </div>
