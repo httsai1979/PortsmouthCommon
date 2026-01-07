@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
@@ -24,8 +24,6 @@ interface SimpleMapProps {
 // Utility to create a custom marker icon
 const createCustomIcon = (item: any, isSelected: boolean, stealthMode?: boolean, isSaved?: boolean) => {
     const service = item as ServiceDocument;
-    const lat = service.location?.lat || item.lat;
-    const lng = service.location?.lng || item.lng;
     const category = item.category || 'support';
 
     // Status Logic

@@ -610,8 +610,8 @@ const App = () => {
                                     ))}
                                 </div>
                             </div>
-                        </div >
-                    </div >
+                        </div>
+                    </div>
                 )}
 
                 {/* Community Food Plan */}
@@ -745,7 +745,7 @@ const App = () => {
                                             <button
                                                 key={area}
                                                 onClick={() => setFilters({ ...filters, area })}
-                                                className={`px - 4 py - 2 rounded - xl text - [10px] font - black uppercase tracking - widest border - 2 transition - all whitespace - nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'} `}
+                                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}
                                             >
                                                 {area}
                                             </button>
@@ -757,7 +757,7 @@ const App = () => {
                                             <button
                                                 key={cat}
                                                 onClick={() => setFilters({ ...filters, category: cat })}
-                                                className={`px - 4 py - 2 rounded - xl text - [10px] font - black uppercase tracking - widest border - 2 transition - all whitespace - nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'} `}
+                                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}
                                             >
                                                 {cat === 'all' ? 'All Needs' : cat}
                                             </button>
@@ -889,20 +889,20 @@ const App = () => {
                                 <div className="flex gap-2 items-center">
                                     <button
                                         onClick={() => setSmartFilters({ ...smartFilters, openNow: !smartFilters.openNow })}
-                                        className={`px - 3 py - 1.5 rounded - full text - [9px] font - black uppercase tracking - wider flex items - center gap - 1.5 transition - all border ${smartFilters.openNow ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-100 text-slate-400'} `}
+                                        className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.openNow ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                     >
-                                        <div className={`w - 1.5 h - 1.5 rounded - full ${smartFilters.openNow ? 'bg-white animate-pulse' : 'bg-emerald-500'} `}></div>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${smartFilters.openNow ? 'bg-white animate-pulse' : 'bg-emerald-500'}`}></div>
                                         Open Now
                                     </button>
                                     <button
                                         onClick={() => setSmartFilters({ ...smartFilters, verified: !smartFilters.verified })}
-                                        className={`px - 3 py - 1.5 rounded - full text - [9px] font - black uppercase tracking - wider flex items - center gap - 1.5 transition - all border ${smartFilters.verified ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'} `}
+                                        className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.verified ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                     >
                                         <Icon name="check_circle" size={10} /> Verified
                                     </button>
                                     <button
                                         onClick={() => setSmartFilters({ ...smartFilters, nearMe: !smartFilters.nearMe })}
-                                        className={`px - 3 py - 1.5 rounded - full text - [9px] font - black uppercase tracking - wider flex items - center gap - 1.5 transition - all border ${smartFilters.nearMe ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-400'} `}
+                                        className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.nearMe ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                     >
                                         <Icon name="navigation" size={10} /> Near Me
                                     </button>
@@ -911,7 +911,7 @@ const App = () => {
                                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                                     <button
                                         onClick={() => setFilters({ ...filters, area: 'All' })}
-                                        className={`px - 4 py - 2 rounded - xl text - [10px] font - black uppercase tracking - widest border - 2 transition - all whitespace - nowrap ${filters.area === 'All' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'} `}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === 'All' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                     >
                                         Whole City
                                     </button>
@@ -919,7 +919,7 @@ const App = () => {
                                         <button
                                             key={area}
                                             onClick={() => setFilters({ ...filters, area })}
-                                            className={`px - 4 py - 2 rounded - xl text - [10px] font - black uppercase tracking - widest border - 2 transition - all whitespace - nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'} `}
+                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}
                                         >
                                             {area}
                                         </button>
@@ -930,7 +930,7 @@ const App = () => {
                                         <button
                                             key={cat}
                                             onClick={() => setFilters({ ...filters, category: cat })}
-                                            className={`px - 4 py - 2 rounded - xl text - [10px] font - black uppercase tracking - widest border - 2 transition - all whitespace - nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'} `}
+                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}
                                         >
                                             {cat === 'all' ? 'All Needs' : cat === 'support' ? 'Health' : cat === 'skills' ? 'Work Skills' : cat}
                                         </button>
@@ -948,7 +948,7 @@ const App = () => {
                                             key={f.tag}
                                             onClick={() => setSearchQuery(searchQuery === f.tag ? '' : f.tag)}
                                             className={`
-                                            flex items - center gap - 2 px - 4 py - 2 rounded - full text - xs font - bold uppercase tracking - wider transition - all border
+                                            flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border
                                             ${searchQuery === f.tag
                                                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
                                                     : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
@@ -1194,8 +1194,8 @@ const App = () => {
                         />
                     )
                 }
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 
