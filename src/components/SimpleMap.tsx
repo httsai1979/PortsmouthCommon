@@ -6,6 +6,8 @@ import { checkStatus, getTagConfig } from '../utils';
 import { TAG_ICONS } from '../data';
 import type { Resource } from '../data';
 
+import { LiveStatus } from '../services/LiveStatusService';
+
 // Portsmouth Coordinates
 const PORTSMOUTH_CENTER: [number, number] = [50.805, -1.07];
 
@@ -121,9 +123,10 @@ interface SimpleMapProps {
     stealthMode?: boolean;
     externalFocus?: { lat: number; lng: number; label?: string } | null;
     onCategoryChange: (category: string) => void;
+    liveStatus?: Record<string, LiveStatus>;
 }
 
-const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode, externalFocus, onCategoryChange }: SimpleMapProps) => {
+const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode, externalFocus, onCategoryChange, liveStatus }: SimpleMapProps) => {
     const [selectedItem, setSelectedItem] = useState<Resource | null>(null);
     const [locateTrigger, setLocateTrigger] = useState(0);
     const [showHours, setShowHours] = useState(false);
@@ -277,6 +280,20 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
                     >
                         <Icon name="x" size={18} />
                     </button>
+
+                    {liveStatus?.[selectedItem.id] && (
+                        <div className={`mb-3 p-3 rounded-xl border flex gap-3 animate-pulse ${liveStatus[selectedItem.id].urgency === 'High' ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                            <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${liveStatus[selectedItem.id].urgency === 'High' ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
+                            <div>
+                                <h4 className={`text-[10px] font-black uppercase tracking-widest ${liveStatus[selectedItem.id].urgency === 'High' ? 'text-rose-700' : 'text-emerald-700'}`}>
+                                    Live Status • {liveStatus[selectedItem.id].lastUpdated}
+                                </h4>
+                                <p className="text-xs font-bold text-slate-800 leading-tight">
+                                    {liveStatus[selectedItem.id].message}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex gap-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${stealthMode ? 'bg-slate-100 text-slate-400' : getTagConfig(selectedItem.category, TAG_ICONS).bg}`}>

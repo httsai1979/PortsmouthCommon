@@ -18,6 +18,7 @@ import SmartNotifications from './components/SmartNotifications';
 import ProgressTimeline from './components/ProgressTimeline';
 
 import CrisisWizard from './components/CrisisWizard'; // Phase 28: Decision Wizard
+import { fetchLiveStatus, LiveStatus } from './services/LiveStatusService';
 
 const App = () => {
     // Branding & Accessibility State
@@ -26,7 +27,7 @@ const App = () => {
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
     const [loading, setLoading] = useState(true);
-
+    const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({});
 
     // Navigation & Modals
     const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'food-calendar'>('home');
@@ -103,6 +104,9 @@ const App = () => {
                 (err) => console.log("Location access denied", err)
             );
         }
+
+        fetchLiveStatus().then(setLiveStatus);
+
         const handleStatus = () => setIsOffline(!navigator.onLine);
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
@@ -693,6 +697,7 @@ const App = () => {
                                 setFilters(prev => ({ ...prev, category: cat, area: 'All' }));
                                 setSearchQuery('');
                             }}
+                            liveStatus={liveStatus}
                         />
                     </div>
                 )}
