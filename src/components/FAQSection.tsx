@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Icon from './Icon';
 
 interface FAQItem {
@@ -175,8 +175,8 @@ const FAQSection = ({ onClose }: FAQSectionProps) => {
                         <div key={idx} className="bg-white p-6 rounded-[28px] border-2 border-slate-100 shadow-sm hover:border-indigo-50 transition-all group">
                             <div className="flex gap-4 items-start mb-3">
                                 <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-black ${item.category === 'dignity' ? 'bg-rose-50 text-rose-600' :
-                                        item.category === 'privacy' ? 'bg-emerald-50 text-emerald-600' :
-                                            item.category === 'access' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+                                    item.category === 'privacy' ? 'bg-emerald-50 text-emerald-600' :
+                                        item.category === 'access' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
                                     }`}>
                                     Q
                                 </div>

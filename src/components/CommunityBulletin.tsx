@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from './Icon';
 
 interface Bulletin {
@@ -56,8 +56,8 @@ const CommunityBulletin = ({ onCTAClick }: { onCTAClick: (id: string) => void })
         <div className="relative mb-8 group overflow-hidden rounded-[40px] shadow-2xl shadow-indigo-100/50">
             {/* Background Layer with Animated Shift */}
             <div className={`absolute inset-0 transition-all duration-1000 ${active.type === 'urgent' ? 'bg-gradient-to-br from-rose-600 to-rose-900' :
-                    active.type === 'impact' ? 'bg-gradient-to-br from-emerald-600 to-emerald-900' :
-                        'bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900'
+                active.type === 'impact' ? 'bg-gradient-to-br from-emerald-600 to-emerald-900' :
+                    'bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900'
                 }`}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24 blur-2xl"></div>
