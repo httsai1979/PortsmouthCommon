@@ -18,7 +18,7 @@ import SmartNotifications from './components/SmartNotifications';
 import ProgressTimeline from './components/ProgressTimeline';
 
 import CrisisWizard from './components/CrisisWizard'; // Phase 28: Decision Wizard
-import { fetchLiveStatus, LiveStatus } from './services/LiveStatusService';
+import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
 
 const App = () => {
     // Branding & Accessibility State

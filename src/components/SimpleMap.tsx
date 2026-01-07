@@ -6,7 +6,7 @@ import { checkStatus, getTagConfig } from '../utils';
 import { TAG_ICONS } from '../data';
 import type { Resource } from '../data';
 
-import { LiveStatus } from '../services/LiveStatusService';
+import type { LiveStatus } from '../services/LiveStatusService';
 
 // Portsmouth Coordinates
 const PORTSMOUTH_CENTER: [number, number] = [50.805, -1.07];

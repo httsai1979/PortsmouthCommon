@@ -22,7 +22,7 @@ export interface LiveStatus {
 
 // Configuration: Replace this with the user's published Google Sheet CSV link
 // Example: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT..../pub?output=csv"
-const LIVE_SHEET_URL = "";
+// const LIVE_SHEET_URL = "";
 
 export const fetchLiveStatus = async (): Promise<Record<string, LiveStatus>> => {
     return new Promise((resolve) => {
@@ -37,7 +37,7 @@ export const fetchLiveStatus = async (): Promise<Record<string, LiveStatus>> => 
 
             Papa.parse(csvText, {
                 header: true,
-                complete: (results) => {
+                complete: (results: any) => {
                     const statusMap: Record<string, LiveStatus> = {};
                     results.data.forEach((row: any) => {
                         if (row.ID) {
