@@ -24,6 +24,8 @@ import logo from './assets/images/logo.png';
 
 import CrisisWizard from './components/CrisisWizard'; // Phase 28: Decision Wizard
 import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
+import { useAuth } from './contexts/AuthContext';
+import PartnerLogin from './components/PartnerLogin';
 
 const App = () => {
     // Branding & Accessibility State
@@ -42,6 +44,8 @@ const App = () => {
     const [mapFilter, setMapFilter] = useState<'all' | 'open'>('open');
     const [mapFocus, setMapFocus] = useState<{ lat: number, lng: number, label: string, id?: string } | null>(null);
     const [showWizard, setShowWizard] = useState(false);
+    const [showPartnerLogin, setShowPartnerLogin] = useState(false);
+    const { currentUser, isPartner } = useAuth();
 
     // List View Pagination
     const [visibleCount, setVisibleCount] = useState(10);
@@ -356,6 +360,13 @@ const App = () => {
                     <div className="flex gap-2">
                         <button onClick={() => setStealthMode(!stealthMode)} className={`p-2 rounded-xl transition-all ${stealthMode ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`} title="Stealth Mode"><Icon name="eye" size={20} /></button>
                         <button onClick={() => setHighContrast(!highContrast)} className="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-colors" title="High Contrast"><Icon name="zap" size={20} /></button>
+                        <button
+                            onClick={() => setShowPartnerLogin(true)}
+                            className={`p-2 rounded-xl transition-all ${currentUser ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                            title="Partner Access"
+                        >
+                            <Icon name="users" size={20} />
+                        </button>
                     </div>
                 </div>
                 {isOffline && <div className="bg-amber-50 text-amber-700 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-center border-b border-amber-100 animate-pulse">Offline Support Active</div>}
@@ -654,6 +665,14 @@ const App = () => {
                             onSave={toggleSaved}
                             savedIds={savedIds}
                         />
+                    </div>
+                )}
+
+                {showPartnerLogin && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+                        <div className="w-full max-w-md">
+                            <PartnerLogin onClose={() => setShowPartnerLogin(false)} />
+                        </div>
                     </div>
                 )}
 
