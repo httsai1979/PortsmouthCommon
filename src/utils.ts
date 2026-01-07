@@ -7,7 +7,13 @@ export const checkStatus = (schedule: Record<number, string>) => {
 
     if (hoursStr === "00:00-23:59") return { isOpen: true, status: 'open', color: 'bg-green-100 text-green-800', label: 'Open 24/7' };
 
-    const [start, end] = hoursStr.split('-');
+    // Handle text-based schedules like "Dawn-Dusk" or "Variable"
+    if (!hoursStr.match(/\d+:\d+/)) return { isOpen: false, status: 'unknown', color: 'bg-slate-50 text-slate-500', label: hoursStr };
+
+    const parts = hoursStr.split('-');
+    if (parts.length !== 2) return { isOpen: false, status: 'unknown', color: 'bg-slate-50 text-slate-500', label: hoursStr };
+
+    const [start, end] = parts;
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
     const currentTotal = now.getHours() * 60 + now.getMinutes();
