@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ALL_DATA, AREAS, PROGRESS_TIPS, COMMUNITY_DEALS, GIFT_EXCHANGE } from './data';
+import { ALL_DATA, AREAS, PROGRESS_TIPS, COMMUNITY_DEALS, GIFT_EXCHANGE, TAG_ICONS } from './data';
 import { checkStatus, getDistance, playSuccessSound } from './utils';
 
 // Components
@@ -8,7 +8,7 @@ import SimpleMap from './components/SimpleMap';
 import ResourceCard from './components/ResourceCard';
 import { TipsModal, CrisisModal } from './components/Modals';
 import PrintView from './components/PrintView';
-import { AreaScheduleView, CategoryButton } from './components/Schedule';
+import { AreaScheduleView } from './components/Schedule';
 import AIAssistant from './components/AIAssistant';
 import PrivacyShield from './components/PrivacyShield';
 import JourneyPlanner from './components/JourneyPlanner';
@@ -23,9 +23,9 @@ const App = () => {
     const [highContrast, setHighContrast] = useState(false);
     const [stealthMode, setStealthMode] = useState(false);
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
-    const [language, setLanguage] = useState<'en' | 'zh' | 'pl'>('en'); // Language Integration
+
     const [loading, setLoading] = useState(true);
-    const [installPrompt, setInstallPrompt] = useState<any>(null); // PWA Install
+
 
     // Navigation & Modals
     const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'food-calendar'>('home');
@@ -106,11 +106,7 @@ const App = () => {
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
 
-        // PWA Install Prompt Capture
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            setInstallPrompt(e);
-        });
+
 
         // Scroll listener for Back to Top
         const handleScroll = () => {
@@ -200,19 +196,7 @@ const App = () => {
     }, [savedIds]);
 
     // Phase 25: Helper Functions
-    const handleInstallClick = () => {
-        if (installPrompt) {
-            installPrompt.prompt();
-            installPrompt.userChoice.then((choiceResult: any) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the A2HS prompt');
-                }
-                setInstallPrompt(null);
-            });
-        } else {
-            alert(language === 'zh' ? "請使用瀏覽器選單加入主畫面以離線使用" : "Add to Home Screen from browser menu for offline use.");
-        }
-    };
+
 
     const toggleJourneyItem = (id: string) => {
         setJourneyItems(prev =>
@@ -382,29 +366,9 @@ const App = () => {
             <AIAssistant onIntent={handleSearch} currentArea={filters.area} />
 
             <div className={`px-5 mt-4 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.5]' : ''}`}>
-                {/* Language & Offline Controls */}
-                <div className="flex justify-end gap-2 mb-4">
-                    <button
-                        onClick={() => setLanguage(prev => prev === 'en' ? 'zh' : prev === 'zh' ? 'pl' : 'en')}
-                        className="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-slate-200 shadow-sm flex items-center gap-1"
-                    >
-                        <Icon name="globe" size={12} /> {language === 'en' ? 'ENG' : language === 'zh' ? '繁體中文' : 'POLSKI'}
-                    </button>
-                    {(isOffline || installPrompt) && (
-                        <button
-                            onClick={handleInstallClick}
-                            className="bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1"
-                        >
-                            <Icon name="download" size={12} /> {isOffline ? 'Offline Ready' : 'Install App'}
-                        </button>
-                    )}
-                    <button
-                        onClick={() => setShowPrint(true)}
-                        className="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-slate-200 shadow-sm flex items-center gap-1 hover:bg-slate-50 transition-colors"
-                    >
-                        <Icon name="printer" size={12} /> Save PDF
-                    </button>
-                </div>
+
+                {/* Clean Spacer */}
+                <div className="mb-4"></div>
 
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
@@ -419,117 +383,12 @@ const App = () => {
 
                             <div className="relative z-10">
                                 <h2 className="text-3xl font-black tracking-tighter mb-2 leading-tight">{greeting.msg}</h2>
-                                <p className="text-indigo-100 text-xs font-black uppercase tracking-[0.2em] mb-8 opacity-80">{greeting.sub}</p>
-
-                                <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
-                                    <button
-                                        onClick={() => {
-                                            setSmartFilters({ ...smartFilters, verified: true });
-                                            setView('list');
-                                        }}
-                                        className="flex flex-col text-left hover:bg-white/5 p-2 rounded-xl transition-all active:scale-95"
-                                    >
-                                        <div className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                                            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                                            City Pulse
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xl font-black text-white">
-                                                {(() => {
-                                                    const verified = ALL_DATA.filter(p => (p.trustScore || 0) > 90).length;
-                                                    return Math.round((verified / ALL_DATA.length) * 100);
-                                                })()}%
-                                            </span>
-                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">High-Confidence<br />Verified Network</span>
-                                        </div>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setMapFilter('open');
-                                            setView('map');
-                                        }}
-                                        className="flex flex-col text-left hover:bg-white/5 p-2 rounded-xl transition-all active:scale-95"
-                                    >
-                                        <div className="text-[8px] font-black text-indigo-300 uppercase tracking-widest mb-1">Active Lifelines</div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xl font-black text-white">
-                                                {ALL_DATA.filter(p => (filters.area === 'All' || p.area === filters.area) && checkStatus(p.schedule).status === 'open').length}
-                                            </span>
-                                            <span className="text-[10px] font-bold text-indigo-200 leading-none">Hubs Open In<br />{filters.area === 'All' ? 'Portsmouth' : filters.area}</span>
-                                        </div>
-                                    </button>
-                                </div>
+                                <p className="text-indigo-100 text-xs font-black uppercase tracking-[0.2em] mb-4 opacity-80">{greeting.sub}</p>
                             </div>
                         </div>
 
-                        {/* Moved Up: Key Interactions - Planner & Help */}
-                        <div className="flex gap-2 mb-8">
-                            <button onClick={() => setView('planner')} className="flex-1 bg-slate-900 text-white p-4 rounded-[24px] shadow-xl shadow-slate-200 flex flex-col items-center justify-center gap-1 font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform">
-                                <Icon name="calendar" size={20} className="mb-1" /> {savedIds.length > 0 ? 'My Journey' : 'Plan Journey'}
-                            </button>
-                            <button onClick={() => setView('food-calendar')} className="flex-1 bg-emerald-600 text-white p-4 rounded-[24px] shadow-xl shadow-emerald-100 flex flex-col items-center justify-center gap-1 font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform">
-                                <Icon name="utensils" size={20} className="mb-1 text-white" /> Food Cal.
-                            </button>
-                            <button onClick={() => setShowTips(true)} className="flex-1 bg-white border-2 border-slate-100 p-4 rounded-[24px] flex flex-col items-center justify-center gap-1 font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform group">
-                                <Icon name="info" size={20} className="mb-1 text-indigo-600 group-hover:scale-110 transition-transform" /> Help Guide
-                            </button>
-                        </div>
-
-                        {/* Phase 28: Critical Decision Button */}
-                        <button
-                            onClick={() => setShowWizard(true)}
-                            className="w-full mb-8 bg-rose-500 text-white p-5 rounded-[28px] shadow-xl shadow-rose-200 flex items-center justify-between group transition-all hover:scale-[1.02] active:scale-95"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-                                    <Icon name="lifebuoy" size={24} className="text-white" />
-                                </div>
-                                <div className="text-left">
-                                    <h3 className="text-lg font-black leading-none mb-1">I Need Help Now</h3>
-                                    <p className="text-[10px] font-bold text-rose-100 uppercase tracking-widest">Decision Wizard • Find Support Instantly</p>
-                                </div>
-                            </div>
-                            <div className="w-10 h-10 bg-white text-rose-600 rounded-full flex items-center justify-center shadow-sm group-hover:bg-rose-50">
-                                <Icon name="arrow-right" size={20} />
-                            </div>
-                        </button>
-
-                        {/* Phase 25.5: Quick Actions - Now Higher Up */}
-                        <div className="mb-8">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Your Toolkit</h3>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4">
-                                {/* Compare Tool Card */}
-                                <button
-                                    onClick={() => compareItems.length > 0 ? setView('compare') : null}
-                                    className={`relative p-5 rounded-[24px] border-2 text-left overflow-hidden transition-all active:scale-[0.98] ${compareItems.length > 0 ? 'bg-gradient-to-br from-emerald-600 to-emerald-700 border-emerald-500 shadow-xl shadow-emerald-200' : 'bg-white border-slate-200 hover:border-emerald-200'}`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${compareItems.length > 0 ? 'bg-white/20 backdrop-blur-sm' : 'bg-emerald-50'} shadow-sm`}>
-                                                <Icon name="shield" size={20} className={compareItems.length > 0 ? 'text-white' : 'text-emerald-600'} />
-                                            </div>
-                                            <div>
-                                                <h4 className={`text-sm font-black ${compareItems.length > 0 ? 'text-white' : 'text-slate-900'}`}>Smart Compare</h4>
-                                                <p className={`text-[10px] font-bold ${compareItems.length > 0 ? 'text-emerald-100' : 'text-slate-400'}`}>
-                                                    {compareItems.length > 0 ? 'Click to view comparison' : 'Add items to compare'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {compareItems.length > 0 && (
-                                            <div className="bg-indigo-500 text-white px-3 py-1 rounded-full text-[9px] font-black shadow-lg">
-                                                {compareItems.length}
-                                            </div>
-                                        )}
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Phase 16: Universal Search Bar */}
-                        <div className="mb-6 relative group">
+                        {/* Phase 16: Universal Search Bar (Apple Style: Prime Position) */}
+                        <div className="mb-4 relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <Icon name="search" size={18} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                             </div>
@@ -541,34 +400,100 @@ const App = () => {
                                         setSearchQuery(e.target.value);
                                         if (view === 'home') setView('list');
                                     }}
-                                    placeholder="Search for food, shelter, help..."
-                                    className="flex-1 py-5 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none text-sm font-bold text-slate-900 transition-all shadow-xl shadow-slate-200/50"
+                                    placeholder="Search Portsmouth (e.g., 'food', 'shelter')"
+                                    className="flex-1 py-4 pl-12 pr-4 bg-white rounded-[20px] border border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none text-sm font-bold text-slate-900 transition-all shadow-lg shadow-slate-100 placeholder:text-slate-400"
                                 />
                                 <button
                                     onClick={handleShare}
-                                    className="p-5 bg-white border-2 border-slate-100 rounded-[24px] text-indigo-600 hover:bg-slate-50 transition-all shadow-xl shadow-slate-200/50 flex items-center justify-center"
-                                    title="Share with Friend"
+                                    className="p-4 bg-white border border-slate-200 rounded-[20px] text-indigo-600 hover:bg-slate-50 transition-all shadow-lg shadow-slate-100 flex items-center justify-center active:scale-95"
+                                    title="Share App"
                                 >
                                     <Icon name="share-2" size={20} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center mb-4 pl-1">
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Categories</p>
-                            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg uppercase">Portsmouth Total</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 pb-8">
-                            <CategoryButton label="Food" icon="utensils" color="text-emerald-700 bg-emerald-50" active={filters.category === 'food'} onClick={() => handleSearch({ ...filters, category: 'food' })} />
-                            <CategoryButton label="Shelter" icon="bed" color="text-indigo-700 bg-indigo-50" active={filters.category === 'shelter'} onClick={() => handleSearch({ ...filters, category: 'shelter' })} />
-                            <CategoryButton label="Warmth" icon="flame" color="text-orange-700 bg-orange-50" active={filters.category === 'warmth'} onClick={() => handleSearch({ ...filters, category: 'warmth' })} />
-                            <CategoryButton label="Family" icon="family" color="text-pink-700 bg-pink-50" active={filters.category === 'family'} onClick={() => handleSearch({ ...filters, category: 'family' })} />
-                            <CategoryButton label="Health" icon="lifebuoy" color="text-blue-700 bg-blue-50" active={filters.category === 'support'} onClick={() => handleSearch({ ...filters, category: 'support' })} />
-                            <CategoryButton label="Comm. Shop" icon="shopping-bag" color="text-rose-700 bg-rose-50" active={filters.category === 'charity'} onClick={() => handleSearch({ ...filters, category: 'charity' })} />
-                            <CategoryButton label="Learning" icon="book-open" color="text-amber-700 bg-amber-50" active={filters.category === 'learning'} onClick={() => handleSearch({ ...filters, category: 'learning' })} />
-                            <CategoryButton label="Work Skills" icon="briefcase" color="text-slate-700 bg-slate-100" active={filters.category === 'skills'} onClick={() => handleSearch({ ...filters, category: 'skills' })} />
+                        {/* Toggle: All vs Open (Apple Segmented Control) */}
+                        <div className="bg-slate-100 p-1.5 rounded-[18px] flex mb-6 border border-slate-200">
+                            <button
+                                onClick={() => setSmartFilters({ ...smartFilters, openNow: false })}
+                                className={`flex-1 py-3 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all ${!smartFilters.openNow ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                All Resources
+                            </button>
+                            <button
+                                onClick={() => setSmartFilters({ ...smartFilters, openNow: true })}
+                                className={`flex-1 py-3 rounded-[14px] text-[10px] font-black uppercase tracking-widest transition-all ${smartFilters.openNow ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                Open Now
+                            </button>
                         </div>
 
+                        {/* Categories - Grid */}
+                        <div className="grid grid-cols-4 gap-3 mb-8">
+                            {['food', 'shelter', 'warmth', 'support', 'family', 'skills', 'charity', 'all'].map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => handleSearch({ ...filters, category: cat })}
+                                    className="flex flex-col items-center gap-2 group"
+                                >
+                                    <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center text-xl shadow-sm transition-all group-active:scale-90 ${cat === 'all' ? 'bg-slate-100 text-slate-400' : filters.category === cat ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-100'}`}>
+                                        <Icon name={cat === 'all' ? 'grid' : cat === 'support' ? 'lifebuoy' : cat === 'skills' ? 'briefcase' : TAG_ICONS[cat]?.icon || 'circle'} size={20} />
+                                    </div>
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">{cat === 'all' ? 'More' : cat === 'support' ? 'Health' : cat}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Phase 28: Critical Decision Button (Primary Call to Action) */}
+                        <button
+                            onClick={() => setShowWizard(true)}
+                            className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all hover:scale-[1.02] active:scale-95 pr-2"
+                        >
+                            <div className="flex items-center justify-between bg-white/10 rounded-[28px] p-4 border border-white/20">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-white text-rose-600 rounded-full flex items-center justify-center animate-pulse shadow-sm">
+                                        <Icon name="lifebuoy" size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="text-base font-black leading-none mb-1">Find Help Now</h3>
+                                        <p className="text-[9px] font-bold text-rose-100 uppercase tracking-widest">Interactive Wizard</p>
+                                    </div>
+                                </div>
+                                <Icon name="chevron-right" size={20} className="mr-2 text-rose-100" />
+                            </div>
+                        </button>
+
+                        {/* Secondary Tools */}
+                        <div className="flex gap-3 mb-8 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                            <button onClick={() => setView('planner')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-indigo-200 transition-all text-left">
+                                <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                    <Icon name="calendar" size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">My Journey</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold">{savedIds.length} Saved Items</p>
+                                </div>
+                            </button>
+                            <button onClick={() => setView('food-calendar')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-emerald-200 transition-all text-left">
+                                <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <Icon name="utensils" size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">Food Cal.</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold">Weekly Schedule</p>
+                                </div>
+                            </button>
+                            <button onClick={() => setShowTips(true)} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-amber-200 transition-all text-left">
+                                <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                                    <Icon name="info" size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">Guide</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold">How to use</p>
+                                </div>
+                            </button>
+                        </div>
 
                         {/* Phase 21: Growth Pathway Tips */}
                         <div className="mb-10 p-6 bg-gradient-to-br from-amber-50 via-white to-orange-50 rounded-[32px] border-2 border-amber-100/50 shadow-md shadow-amber-200/20 relative overflow-hidden group transition-all hover:shadow-lg">
@@ -637,26 +562,6 @@ const App = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {savedResources.length > 0 && (
-                            <div className="mb-8 p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:bg-indigo-50 transition-colors"></div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
-                                    <Icon name="star" size={16} className="text-amber-500" /> My Bridge Pins
-                                </h3>
-                                <div className="space-y-3 relative z-10">
-                                    {savedResources.slice(0, 3).map(res => (
-                                        <div key={res.id} className="flex items-center justify-between">
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-black text-slate-900 truncate">{res.name}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{res.area} • {res.transport || 'Near You'}</p>
-                                            </div>
-                                            <button onClick={() => setView('planner')} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all"><Icon name="arrow-right" size={14} /></button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -1068,8 +973,35 @@ const App = () => {
                         </div>
                     </div>
                 )}
+                {/* FAQ & Support Section (User Request) */}
+                <div className="mt-12 mb-12 p-6 bg-slate-50 rounded-[32px] border border-slate-100/50">
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2">Frequently Asked Questions</h3>
+                    <div className="space-y-6">
+                        <div>
+                            <p className="font-bold text-slate-700 text-sm mb-1">Is this service free?</p>
+                            <p className="text-xs text-slate-500 leading-relaxed">Yes. Portsmouth Bridge is 100% free to use. Most resources listed are also free or low-cost (like community pantries).</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-700 text-sm mb-1">Do I need internet?</p>
+                            <p className="text-xs text-slate-500 leading-relaxed">The app works offline once loaded. You can "Install App" to your home screen to keep it available without data.</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-700 text-sm mb-1">Is my data private?</p>
+                            <p className="text-xs text-slate-500 leading-relaxed">Absolutely. We track nothing. Your location stays on your phone. No logins, no cookies.</p>
+                        </div>
+                        <div className="pt-4 border-t border-slate-200">
+                            <p className="font-bold text-indigo-900 text-sm mb-1">Developer Contact</p>
+                            <p className="text-xs text-slate-500 mb-2">For feedback, corrections, or technical support:</p>
+                            <a href="mailto:ht.tsai@sustainsage-group.com" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                <Icon name="mail" size={14} />
+                                ht.tsai@sustainsage-group.com
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 {/* PB: B2B Hint - Internal Marketplace (Point 7) */}
-                <div className="mt-8 mb-8 text-center opacity-30 hover:opacity-100 transition-opacity">
+                <div className="mb-8 text-center opacity-30 hover:opacity-100 transition-opacity">
                     <button onClick={() => alert("Partner Portal: Please sign in with your organization ID to access the Resource Exchange Market.")} className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-transparent hover:border-slate-400 pb-1">
                         Partner Portal Access
                     </button>
