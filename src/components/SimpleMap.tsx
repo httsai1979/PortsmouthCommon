@@ -1,28 +1,36 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import Icon from './Icon';
 import { checkStatus, getTagConfig } from '../utils';
 import { TAG_ICONS } from '../data';
-import type { Resource } from '../data';
-
-import type { LiveStatus } from '../services/LiveStatusService';
+import type { ServiceDocument } from '../types/schema';
 
 // Portsmouth Coordinates
 const PORTSMOUTH_CENTER: [number, number] = [50.805, -1.07];
 
 interface SimpleMapProps {
-    data: Resource[];
+    data: any[]; // Supports Resource or ServiceDocument
     category: string;
     statusFilter: string;
     savedIds: string[];
     onToggleSave: (id: string) => void;
     stealthMode?: boolean;
+    isPartner?: boolean;
+    externalFocus?: { lat: number; lng: number; label?: string; id?: string } | null;
+    onCategoryChange: (category: string) => void;
 }
 
 // Utility to create a custom marker icon
-const createCustomIcon = (item: Resource, isSelected: boolean, stealthMode?: boolean, isSaved?: boolean) => {
+const createCustomIcon = (item: any, isSelected: boolean, stealthMode?: boolean, isSaved?: boolean) => {
+    const service = item as ServiceDocument;
+    const lat = service.location?.lat || item.lat;
+    const lng = service.location?.lng || item.lng;
+    const category = item.category || 'support';
+
+    // Status Logic
     const status = checkStatus(item.schedule);
+    const liveIsOpen = service.liveStatus?.isOpen ?? status.status === 'open';
 
     // PB: Safe Mode (Privacy Protection)
     if (stealthMode) {
@@ -40,18 +48,18 @@ const createCustomIcon = (item: Resource, isSelected: boolean, stealthMode?: boo
         });
     }
 
-    const config = TAG_ICONS[item.category] || TAG_ICONS.default;
+    const config = TAG_ICONS[category] || TAG_ICONS.default;
     const color = config.hex;
 
     return L.divIcon({
         className: 'custom-div-icon',
         html: `
             <div class="relative group">
-                ${status.status === 'open' ? `
+                ${liveIsOpen ? `
                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white z-50 animate-pulse shadow-lg"></div>
-                ` : status.status === 'closing' ? `
-                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full border-2 border-white z-50 shadow-lg"></div>
-                ` : ''}
+                ` : `
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-slate-400 rounded-full border-2 border-white z-50 shadow-lg"></div>
+                `}
                 
                 ${isSaved ? `
                     <div class="absolute -top-2 -left-2 w-5 h-5 bg-amber-400 rounded-full border-2 border-white z-50 shadow-md flex items-center justify-center text-white">
@@ -68,7 +76,6 @@ const createCustomIcon = (item: Resource, isSelected: boolean, stealthMode?: boo
                         </svg>
                     </div>
                 </div>
-                <!-- Droplet stem -->
                 <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100 z-[-1] rounded-sm"></div>
                 <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 z-[0]" style="background-color: ${color}"></div>
             </div>
@@ -78,56 +85,37 @@ const createCustomIcon = (item: Resource, isSelected: boolean, stealthMode?: boo
     });
 };
 
-// Component to handle map center/zoom updates
-// Component to handle map center/zoom updates
-const MapController = ({ selectedPos, locateTrigger, externalPos, data }: { selectedPos: [number, number] | null, locateTrigger: number, externalPos?: [number, number] | null, data: Resource[] }) => {
+// Map Controller
+const MapController = ({ selectedPos, locateTrigger, externalPos, data }: { selectedPos: [number, number] | null, locateTrigger: number, externalPos?: [number, number] | null, data: any[] }) => {
     const map = useMap();
 
-    // Auto-fit to results when filters change
     useEffect(() => {
         if (data.length > 0) {
-            const bounds = L.latLngBounds(data.map(item => [item.lat, item.lng]));
-            if (bounds.isValid()) {
+            const points = data.map(item => [item.location?.lat || item.lat, item.location?.lng || item.lng]).filter(p => !isNaN(p[0]));
+            if (points.length > 0) {
+                const bounds = L.latLngBounds(points as any);
                 map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
             }
         }
     }, [data, map]);
 
     useEffect(() => {
-        if (selectedPos) {
-            map.flyTo(selectedPos, 16, { animate: true });
-        }
+        if (selectedPos) map.flyTo(selectedPos, 16, { animate: true });
     }, [selectedPos, map]);
 
     useEffect(() => {
-        if (externalPos) {
-            map.flyTo(externalPos, 18, { animate: true });
-        }
+        if (externalPos) map.flyTo(externalPos, 18, { animate: true });
     }, [externalPos, map]);
 
     useEffect(() => {
-        if (locateTrigger > 0) {
-            map.locate({ setView: true, maxZoom: 16 });
-        }
+        if (locateTrigger > 0) map.locate({ setView: true, maxZoom: 16 });
     }, [locateTrigger, map]);
 
     return null;
 };
 
-interface SimpleMapProps {
-    data: Resource[];
-    category: string;
-    statusFilter: string;
-    savedIds: string[];
-    onToggleSave: (id: string) => void;
-    stealthMode?: boolean;
-    externalFocus?: { lat: number; lng: number; label?: string; id?: string } | null;
-    onCategoryChange: (category: string) => void;
-    liveStatus?: Record<string, LiveStatus>;
-}
-
-const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode, externalFocus, onCategoryChange, liveStatus }: SimpleMapProps) => {
-    const [selectedItem, setSelectedItem] = useState<Resource | null>(null);
+const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, stealthMode, isPartner, externalFocus, onCategoryChange }: SimpleMapProps) => {
+    const [selectedItem, setSelectedItem] = useState<any | null>(null);
     const [locateTrigger, setLocateTrigger] = useState(0);
     const [showHours, setShowHours] = useState(false);
 
@@ -141,13 +129,8 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
         }
     }, [externalFocus, data]);
 
-    // Filter points based on category (passed from parent) and status
     const filteredPoints = useMemo(() => {
         return data.filter(item => {
-            // If data is already filtered by parent, this check might be redundant but safe.
-            // If parent passes ALL_DATA, this is needed. If parent passes filtered data, this is a no-op if logic matches.
-            // However, the issue is 'App' passes filtered data.
-            // So if 'category' prop matches 'filters.category', we are good.
             const status = checkStatus(item.schedule).status;
             const matchStatus = statusFilter === 'all' || (status === 'open' || status === 'closing');
             return matchStatus;
@@ -167,17 +150,12 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
 
     return (
         <div className="w-full h-[65vh] bg-slate-100 rounded-[32px] relative overflow-hidden shadow-2xl border-4 border-white">
-            {/* Phase 23: High-Density Icon Grid (Non-Scrolling) */}
+            {/* Category Filter HUD */}
             <div className="absolute top-4 left-4 right-4 z-[1000] bg-white/90 backdrop-blur-xl p-4 rounded-[32px] shadow-2xl border border-white/50">
                 <div className="flex items-center justify-between mb-3 px-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Find by Need</span>
                     {category !== 'all' && (
-                        <button
-                            onClick={() => onCategoryChange('all')}
-                            className="text-[9px] font-bold text-indigo-600 uppercase hover:underline"
-                        >
-                            Reset
-                        </button>
+                        <button onClick={() => onCategoryChange('all')} className="text-[9px] font-bold text-indigo-600 uppercase hover:underline">Reset</button>
                     )}
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -185,10 +163,7 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
                         <button
                             key={cat.id}
                             onClick={() => onCategoryChange(cat.id)}
-                            className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl transition-all active:scale-90 ${category === cat.id
-                                ? 'bg-slate-900 text-white scale-100 shadow-xl'
-                                : 'bg-slate-50 text-slate-400 border border-slate-100'
-                                }`}
+                            className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl transition-all active:scale-90 ${category === cat.id ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
                         >
                             <Icon name={cat.icon} size={18} />
                             <span className={`text-[8px] font-black uppercase tracking-tight truncate w-full px-1 text-center ${category === cat.id ? 'text-white' : 'text-slate-400'}`}>{cat.label.split(' ')[0]}</span>
@@ -197,121 +172,58 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
                 </div>
             </div>
 
-            <MapContainer
-                center={PORTSMOUTH_CENTER}
-                zoom={14}
-                className="w-full h-full"
-                zoomControl={false}
-            >
+            <MapContainer center={PORTSMOUTH_CENTER} zoom={14} className="w-full h-full" zoomControl={false}>
                 <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    attribution='&copy; CARTO'
                 />
 
                 {filteredPoints.map(item => (
                     <Marker
                         key={item.id}
-                        position={[item.lat, item.lng]}
+                        position={[item.location?.lat || item.lat, item.location?.lng || item.lng]}
                         icon={createCustomIcon(item, selectedItem?.id === item.id, stealthMode, savedIds.includes(item.id))}
-                        eventHandlers={{
-                            click: () => {
-                                setSelectedItem(item);
-                                setShowHours(false);
-                            },
-                        }}
+                        eventHandlers={{ click: () => { setSelectedItem(item); setShowHours(false); } }}
                     />
                 ))}
 
-                {/* External Focus Marker for Synergy Items */}
-                {externalFocus && (
-                    <Marker
-                        position={[externalFocus.lat, externalFocus.lng]}
-                        icon={L.divIcon({
-                            className: 'custom-div-icon',
-                            html: `
-                                <div class="relative group">
-                                    <div class="absolute inset-0 bg-rose-500/20 blur-md rounded-full translate-y-1 animate-pulse"></div>
-                                    <div class="w-12 h-12 rounded-full border-[3px] border-white shadow-2xl flex items-center justify-center scale-125 z-50 ring-4 ring-rose-500/40" style="background-color: #f43f5e">
-                                        <div class="text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100 z-[-1] rounded-sm"></div>
-                                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 z-[0]" style="background-color: #f43f5e"></div>
-                                </div>
-                            `,
-                            iconSize: [48, 56],
-                            iconAnchor: [24, 56],
-                        })}
-                    />
-                )}
-
                 <MapController
-                    selectedPos={selectedItem ? [selectedItem.lat, selectedItem.lng] : null}
+                    selectedPos={selectedItem ? [selectedItem.location?.lat || selectedItem.lat, selectedItem.location?.lng || selectedItem.lng] : null}
                     externalPos={externalFocus ? [externalFocus.lat, externalFocus.lng] : null}
                     locateTrigger={locateTrigger}
                     data={filteredPoints}
                 />
             </MapContainer>
 
-            {filteredPoints.length === 0 && (
-                <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-slate-100/50 backdrop-blur-sm">
-                    <div className="bg-white p-6 rounded-[32px] shadow-2xl text-center border-2 border-slate-100 max-w-[200px]">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Icon name="search" size={32} className="text-slate-300" />
-                        </div>
-                        <h3 className="text-lg font-black text-slate-800 mb-1">No Results</h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                            Try switching categories or checking the "Open" toggle.
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            {/* Phase 17: Tactical HUD (Situational Awareness) */}
-            <div className={`absolute top-20 left-4 z-[1000] pointer-events-none transition-all ${stealthMode ? 'opacity-0' : ''}`}> {/* Hide HUD in Stealth */}
+            {/* Live Ecosystem HUD */}
+            <div className={`absolute top-20 left-4 z-[1000] pointer-events-none transition-all ${stealthMode ? 'opacity-0' : ''}`}>
                 <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-2xl flex flex-col gap-1 border border-white/10">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Live Status</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{isPartner ? 'Agency Sync Active' : 'Live Status'}</span>
                     </div>
                     <div className="text-xl font-black tabular-nums">
-                        {filteredPoints.filter(p => checkStatus(p.schedule).status === 'open').length} <span className="text-[10px] text-slate-400">Hubs Open</span>
+                        {filteredPoints.filter(p => (p.liveStatus?.isOpen ?? checkStatus(p.schedule).status === 'open')).length} <span className="text-[10px] text-slate-400">Hubs Active</span>
                     </div>
                 </div>
             </div>
 
-            {/* Locate Me Button */}
-            <button
-                onClick={() => setLocateTrigger(prev => prev + 1)}
-                className="absolute top-20 right-4 z-[1000] bg-white p-4 rounded-2xl shadow-xl text-indigo-600 hover:bg-slate-50 transition-all border border-slate-100 flex items-center justify-center active:scale-90"
-                title="Locate Me"
-            >
+            <button onClick={() => setLocateTrigger(prev => prev + 1)} className="absolute top-20 right-4 z-[1000] bg-white p-4 rounded-2xl shadow-xl text-indigo-600 hover:bg-slate-50 transition-all border border-slate-100 active:scale-90">
                 <Icon name="mapPin" size={24} />
             </button>
 
             {selectedItem && (
-                <div className="absolute bottom-6 left-6 right-6 z-[1000] bg-white rounded-3xl p-5 shadow-2xl animate-fade-in-up border-2 transition-colors duration-500" style={{ borderColor: stealthMode ? '#e2e8f0' : `${TAG_ICONS[selectedItem.category]?.hex || '#f1f5f9'}20` }}>
+                <div className="absolute bottom-6 left-6 right-6 z-[1000] bg-white rounded-3xl p-5 shadow-2xl border-2 transition-all" style={{ borderColor: stealthMode ? '#e2e8f0' : `${TAG_ICONS[selectedItem.category]?.hex || '#f1f5f9'}20` }}>
                     <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-3xl" style={{ backgroundColor: stealthMode ? '#cbd5e1' : TAG_ICONS[selectedItem.category]?.hex || '#475569' }}></div>
-                    <button
-                        onClick={() => setSelectedItem(null)}
-                        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-                    >
-                        <Icon name="x" size={18} />
-                    </button>
+                    <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><Icon name="x" size={18} /></button>
 
-                    {liveStatus?.[selectedItem.id] && (
-                        <div className={`mb-3 p-3 rounded-xl border flex gap-3 animate-pulse ${liveStatus[selectedItem.id].urgency === 'High' ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'}`}>
-                            <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${liveStatus[selectedItem.id].urgency === 'High' ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
+                    {/* Broadcast Banner */}
+                    {selectedItem.liveStatus?.message && (
+                        <div className="mb-3 p-3 rounded-xl border flex gap-3 bg-indigo-50 border-indigo-200">
+                            <Icon name="zap" size={14} className="text-indigo-600 mt-1 shrink-0" />
                             <div>
-                                <h4 className={`text-[10px] font-black uppercase tracking-widest ${liveStatus[selectedItem.id].urgency === 'High' ? 'text-rose-700' : 'text-emerald-700'}`}>
-                                    Live Status • {liveStatus[selectedItem.id].lastUpdated}
-                                </h4>
-                                <p className="text-xs font-bold text-slate-800 leading-tight">
-                                    {liveStatus[selectedItem.id].message}
-                                </p>
+                                <h4 className="text-[9px] font-black uppercase tracking-widest text-indigo-600">Broadcast • {new Date(selectedItem.liveStatus.lastUpdated).toLocaleTimeString()}</h4>
+                                <p className="text-xs font-bold text-slate-800 leading-tight">{selectedItem.liveStatus.message}</p>
                             </div>
                         </div>
                     )}
@@ -321,68 +233,41 @@ const SimpleMap = ({ data, category, statusFilter, savedIds, onToggleSave, steal
                             <Icon name={stealthMode ? 'mapPin' : getTagConfig(selectedItem.category, TAG_ICONS).icon} size={24} />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-[10px] font-black uppercase tracking-widest leading-none ${stealthMode ? 'text-slate-400' : TAG_ICONS[selectedItem.category]?.color || 'text-slate-400'}`}>
-                                    {stealthMode ? 'Place' : TAG_ICONS[selectedItem.category]?.label || selectedItem.category} • {stealthMode ? 'Nearby' : selectedItem.area}
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900 leading-tight mb-1">{stealthMode ? 'Local Resource' : selectedItem.name}</h3>
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                                <Icon name="mapPin" size={12} /> {selectedItem.address}
-                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{selectedItem.area} • {selectedItem.category}</span>
+                            <h3 className="text-xl font-black text-slate-900 leading-tight mb-1">{selectedItem.name}</h3>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400"><Icon name="mapPin" size={12} /> {selectedItem.location?.address || selectedItem.address}</div>
                         </div>
                     </div>
 
+                    {/* Partner Notes Section */}
+                    {isPartner && selectedItem.b2bData && (
+                        <div className="mt-4 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-[10px] font-bold text-indigo-900">
+                            🛡️ <span className="uppercase font-black text-indigo-600 mr-2">Internal:</span> {selectedItem.b2bData.partnerNotes}
+                        </div>
+                    )}
+
                     {showHours && (
                         <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 animate-fade-in-up">
-                            <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <Icon name="clock" size={14} className="text-indigo-600" /> Opening Schedule
-                            </h4>
+                            <div className="grid grid-cols-2 gap-2 mb-3 pb-3 border-b border-slate-100">
+                                <div><p className="text-[8px] font-bold text-slate-400 uppercase">Queue</p><p className="text-[10px] font-black">{selectedItem.thresholdInfo?.queueStatus || 'Unknown'}</p></div>
+                                <div><p className="text-[8px] font-bold text-slate-400 uppercase">Access</p><p className="text-[10px] font-black">{selectedItem.thresholdInfo?.idRequired ? 'ID Required' : 'Open Access'}</p></div>
+                            </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {Object.entries(selectedItem.schedule).map(([day, hours]) => (
+                                {Object.entries(selectedItem.schedule || {}).map(([day, hours]) => (
                                     <div key={day} className="flex justify-between items-center text-[10px] font-bold">
                                         <span className="text-slate-400 capitalize">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][Number(day)]}</span>
-                                        <span className={hours === 'Closed' ? 'text-rose-500' : 'text-slate-700'}>{hours}</span>
+                                        <span className={hours === 'Closed' ? 'text-rose-500' : 'text-slate-700'}>{hours as string}</span>
                                     </div>
                                 ))}
                             </div>
-                            <p className="mt-3 text-[10px] text-slate-400 italic font-medium leading-relaxed">
-                                {selectedItem.description}
-                            </p>
                         </div>
                     )}
 
                     <div className="mt-5 flex gap-2">
-                        <button
-                            onClick={() => onToggleSave(selectedItem.id)}
-                            className={`p-4 rounded-2xl transition-all shadow-lg active:scale-90 ${savedIds.includes(selectedItem.id) ? 'bg-amber-500 text-white shadow-amber-200' : 'bg-slate-100 text-slate-400'}`}
-                            title={savedIds.includes(selectedItem.id) ? "Unpin from Journey" : "Pin to Journey"}
-                        >
-                            <Icon name="star" size={20} />
-                        </button>
-                        <button
-                            onClick={() => setShowHours(!showHours)}
-                            className={`p-4 rounded-2xl transition-all shadow-lg active:scale-95 ${showHours ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}
-                            title="View Hours & Details"
-                        >
-                            <Icon name="info" size={20} />
-                        </button>
-                        {selectedItem.phone && (
-                            <a
-                                href={`tel:${selectedItem.phone}`}
-                                className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg active:scale-95 shadow-emerald-100"
-                            >
-                                <Icon name="phone" size={14} /> Call
-                            </a>
-                        )}
-                        <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${selectedItem.lat},${selectedItem.lng}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95"
-                            title="Navigation"
-                        >
-                            <Icon name="navigation" size={18} />
+                        <button onClick={() => onToggleSave(selectedItem.id)} className={`p-4 rounded-2xl transition-all shadow-lg ${savedIds.includes(selectedItem.id) ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}><Icon name="star" size={20} /></button>
+                        <button onClick={() => setShowHours(!showHours)} className={`p-4 rounded-2xl transition-all shadow-lg ${showHours ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}><Icon name="info" size={20} /></button>
+                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedItem.location?.lat || selectedItem.lat},${selectedItem.location?.lng || selectedItem.lng}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all">
+                            <Icon name="navigation" size={18} /> Navigate
                         </a>
                     </div>
                 </div>

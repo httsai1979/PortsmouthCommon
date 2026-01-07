@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import Icon from './Icon';
 import { getDistance } from '../utils';
 import type { Resource } from '../data';
+import type { ServiceDocument } from '../types/schema';
 
 interface JourneyPlannerProps {
-    items: Resource[];
+    items: (Resource | ServiceDocument)[];
     userLocation: { lat: number; lng: number } | null;
     onRemove: (id: string) => void;
     onClear: () => void;
@@ -16,7 +17,7 @@ const JourneyPlanner = ({ items, userLocation, onRemove, onClear }: JourneyPlann
         if (items.length === 0 || !userLocation) return items;
 
         const unvisited = [...items];
-        const route: Resource[] = [];
+        const route: (Resource | ServiceDocument)[] = [];
         let current = userLocation;
 
         while (unvisited.length > 0) {
@@ -24,7 +25,9 @@ const JourneyPlanner = ({ items, userLocation, onRemove, onClear }: JourneyPlann
             let nearestDist = Infinity;
 
             unvisited.forEach((item, index) => {
-                const dist = getDistance(current.lat, current.lng, item.lat, item.lng);
+                const itemLat = (item as any).location?.lat || (item as any).lat;
+                const itemLng = (item as any).location?.lng || (item as any).lng;
+                const dist = getDistance(current.lat, current.lng, itemLat, itemLng);
                 if (dist < nearestDist) {
                     nearestDist = dist;
                     nearestIndex = index;
@@ -34,7 +37,10 @@ const JourneyPlanner = ({ items, userLocation, onRemove, onClear }: JourneyPlann
             const nearest = unvisited[nearestIndex];
             route.push(nearest);
             unvisited.splice(nearestIndex, 1);
-            current = { lat: nearest.lat, lng: nearest.lng };
+            current = {
+                lat: (nearest as any).location?.lat || (nearest as any).lat,
+                lng: (nearest as any).location?.lng || (nearest as any).lng
+            };
         }
 
         return route;
@@ -47,8 +53,10 @@ const JourneyPlanner = ({ items, userLocation, onRemove, onClear }: JourneyPlann
         let prev = userLocation;
 
         optimizedRoute.forEach(item => {
-            total += getDistance(prev.lat, prev.lng, item.lat, item.lng);
-            prev = { lat: item.lat, lng: item.lng };
+            const itemLat = (item as any).location?.lat || (item as any).lat;
+            const itemLng = (item as any).location?.lng || (item as any).lng;
+            total += getDistance(prev.lat, prev.lng, itemLat, itemLng);
+            prev = { lat: itemLat, lng: itemLng };
         });
 
         return total;
@@ -64,10 +72,17 @@ const JourneyPlanner = ({ items, userLocation, onRemove, onClear }: JourneyPlann
         if (optimizedRoute.length === 0) return;
 
         const lastStop = optimizedRoute[optimizedRoute.length - 1];
-        const waypoints = optimizedRoute.slice(0, -1).map(r => `${r.lat},${r.lng}`).join('|');
+        const lastLat = (lastStop as any).location?.lat || (lastStop as any).lat;
+        const lastLng = (lastStop as any).location?.lng || (lastStop as any).lng;
+
+        const waypoints = optimizedRoute.slice(0, -1).map(r => {
+            const lat = (r as any).location?.lat || (r as any).lat;
+            const lng = (r as any).location?.lng || (r as any).lng;
+            return `${lat},${lng}`;
+        }).join('|');
 
         // Deep Link: Current Location -> Optimized Waypoints -> Final Destination
-        const url = `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${lastStop.lat},${lastStop.lng}&waypoints=${waypoints}&travelmode=walking`;
+        const url = `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${lastLat},${lastLng}&waypoints=${waypoints}&travelmode=walking`;
 
         window.open(url, '_blank');
     };
@@ -146,7 +161,7 @@ const JourneyPlanner = ({ items, userLocation, onRemove, onClear }: JourneyPlann
                                 <div className="min-w-0 flex-1">
                                     <h5 className="text-sm font-black text-slate-900 truncate leading-tight uppercase tracking-tight">{item.name}</h5>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.area}</span>
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{(item as any).location?.area || (item as any).area}</span>
                                         <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
                                         <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">{item.category}</span>
                                     </div>

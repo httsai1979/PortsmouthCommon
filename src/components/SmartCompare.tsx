@@ -2,9 +2,10 @@ import Icon from './Icon';
 import { checkStatus, getTagConfig, getDistance } from '../utils';
 import { TAG_ICONS } from '../data';
 import type { Resource } from '../data';
+import type { ServiceDocument } from '../types/schema';
 
 interface SmartCompareProps {
-    items: Resource[];
+    items: (Resource | ServiceDocument)[];
     userLocation: { lat: number; lng: number } | null;
     onRemove: (id: string) => void;
     onNavigate: (id: string) => void;
@@ -24,9 +25,11 @@ const SmartCompare = ({ items, userLocation, onRemove, onNavigate, onCall }: Sma
 
     // Calculate metrics for each item
     const itemsWithMetrics = items.map(item => {
+        const itemLat = (item as any).location?.lat || (item as any).lat;
+        const itemLng = (item as any).location?.lng || (item as any).lng;
         const status = checkStatus(item.schedule);
         const distance = userLocation
-            ? getDistance(userLocation.lat, userLocation.lng, item.lat, item.lng)
+            ? getDistance(userLocation.lat, userLocation.lng, itemLat, itemLng)
             : null;
         const trustScore = item.trustScore || 0;
 
@@ -98,7 +101,7 @@ const SmartCompare = ({ items, userLocation, onRemove, onNavigate, onCall }: Sma
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-lg font-black text-slate-900 leading-tight mb-1">{item.name}</h4>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{item.area} • {item.type}</p>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{(item as any).location?.area || (item as any).area} • {(item as any).type || (item as any).category}</p>
                                     </div>
                                 </div>
 
@@ -194,7 +197,7 @@ const SmartCompare = ({ items, userLocation, onRemove, onNavigate, onCall }: Sma
                                         <div className="p-3 bg-white rounded-2xl border-2 border-slate-200">
                                             <span className="text-[10px] font-bold text-slate-400 block mb-2 uppercase">Languages</span>
                                             <div className="flex flex-wrap gap-1">
-                                                {item.languages?.length ? item.languages.map(l => (
+                                                {((item as any).languages as string[])?.length ? ((item as any).languages as string[]).map(l => (
                                                     <span key={l} className="text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">{l}</span>
                                                 )) : <span className="text-[9px] text-slate-400">Default (En)</span>}
                                             </div>
@@ -202,7 +205,7 @@ const SmartCompare = ({ items, userLocation, onRemove, onNavigate, onCall }: Sma
                                         <div className="p-3 bg-white rounded-2xl border-2 border-slate-200">
                                             <span className="text-[10px] font-bold text-slate-400 block mb-2 uppercase">Culture</span>
                                             <div className="flex flex-wrap gap-1">
-                                                {item.culture_tags?.length ? item.culture_tags.map(t => (
+                                                {((item as any).culture_tags as string[])?.length ? ((item as any).culture_tags as string[]).map(t => (
                                                     <span key={t} className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-50 text-rose-500">{t}</span>
                                                 )) : <span className="text-[9px] text-slate-400">-</span>}
                                             </div>

@@ -1,5 +1,6 @@
 import Icon from './Icon';
 import type { Resource } from '../data';
+import type { ServiceDocument } from '../types/schema';
 import { checkStatus } from '../utils';
 
 export const CategoryButton = ({ label, icon, active, onClick, color }: { label: string; icon: string; active: boolean; onClick: () => void; color: string }) => (
@@ -17,23 +18,24 @@ export const CategoryButton = ({ label, icon, active, onClick, color }: { label:
     </button>
 );
 
-export const AreaScheduleView = ({ data, area, category }: { data: Resource[]; area: string; category: string }) => {
+export const AreaScheduleView = ({ data, area, category }: { data: (Resource | ServiceDocument)[]; area: string; category: string }) => {
     const currentDayIdx = new Date().getDay();
     const nowHour = new Date().getHours();
 
     const filteredData = data.filter(item => {
-        const matchesArea = area === 'All' || item.area === area;
+        const itemArea = (item as any).location?.area || (item as any).area;
+        const matchesArea = area === 'All' || itemArea === area;
         const matchesCategory = category === 'all' || item.category === category;
-        const isOpenToday = item.schedule[currentDayIdx] !== 'Closed';
+        const isOpenToday = item.schedule[currentDayIdx] && item.schedule[currentDayIdx] !== 'Closed';
         return matchesArea && matchesCategory && isOpenToday;
     });
 
     // Sorting: Open now first, then by priority
     const sortedData = [...filteredData].sort((a, b) => {
-        const aStatus = checkStatus(a.schedule).status;
-        const bStatus = checkStatus(b.schedule).status;
-        if (aStatus === 'open' && bStatus !== 'open') return -1;
-        if (aStatus !== 'open' && bStatus === 'open') return 1;
+        const statusA = checkStatus(a.schedule);
+        const statusB = checkStatus(b.schedule);
+        if (statusA.status === 'open' && statusB.status !== 'open') return -1;
+        if (statusA.status !== 'open' && statusB.status === 'open') return 1;
         return 0;
     });
 
@@ -75,7 +77,7 @@ export const AreaScheduleView = ({ data, area, category }: { data: Resource[]; a
                             <div className={`bg-white rounded-[28px] p-5 shadow-xl transition-all border-2 ${isOpen ? 'border-emerald-100 shadow-emerald-200/20' : 'border-white opacity-90 grayscale-[0.3]'}`}>
                                 <div className="flex justify-between items-start mb-3 gap-2">
                                     <div className="min-w-0">
-                                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1 truncate">{item.type}</div>
+                                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1 truncate">{(item as any).type || (item as any).category}</div>
                                         <h3 className="text-lg font-black text-slate-900 leading-tight truncate">{item.name}</h3>
                                     </div>
                                     <div className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter ${isOpen ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>
@@ -83,7 +85,7 @@ export const AreaScheduleView = ({ data, area, category }: { data: Resource[]; a
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                                    <Icon name="mapPin" size={12} className="shrink-0" /> {item.address}
+                                    <Icon name="mapPin" size={12} className="shrink-0" /> {(item as any).location?.address || (item as any).address}
                                 </div>
 
                                 {isOpen && (
