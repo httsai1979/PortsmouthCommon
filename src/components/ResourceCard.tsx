@@ -15,13 +15,12 @@ interface ResourceCardProps {
     onTagClick?: (tag: string) => void;
     isInJourney?: boolean;
     isInCompare?: boolean;
-    onReport?: () => void; // [NEW] Optional report handler
+    onReport?: () => void;
 }
 
 const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, onAddToJourney, onAddToCompare, onTagClick, isInJourney, isInCompare, onReport }: ResourceCardProps) => {
     const [expanded, setExpanded] = useState(false);
 
-    // Type guards/casting for specific fields
     const service = item as ServiceDocument;
     const resource = item as Resource;
     const status = checkStatus(item.schedule);
@@ -31,7 +30,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
 
             {/* Magazine Hero Section */}
             <div className="relative bg-slate-100 overflow-hidden">
-                {/* Stage 1: Broadcast Message (Top Priority) */}
                 {service.liveStatus?.message && (
                     <div className="absolute top-0 left-0 right-0 z-10 bg-indigo-600/90 backdrop-blur-md text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest text-center animate-pulse">
                         📢 {service.liveStatus.message}
@@ -40,7 +38,16 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
 
                 <div className="h-32 relative">
                     {service.thresholdInfo?.entrancePhotoUrl ? (
-                        <img src={service.thresholdInfo.entrancePhotoUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        /* [PERFORMANCE FIX] Added lazy loading and fetch priority */
+                        <img 
+                            src={service.thresholdInfo.entrancePhotoUrl} 
+                            alt={item.name} 
+                            loading="lazy" 
+                            decoding="async"
+                            width="400" 
+                            height="128"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                        />
                     ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${item.category === 'food' ? 'from-emerald-400 to-teal-600' :
                             item.category === 'shelter' ? 'from-indigo-400 to-purple-600' :
@@ -54,10 +61,8 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                         </div>
                     )}
 
-                    {/* Overlay Gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 
-                    {/* Top Right: Capacity Indicator (Traffic Light) - Use Live Data */}
                     <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
                         {service.liveStatus && (
                             <div className={`flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md border border-white/20 shadow-lg ${service.liveStatus.capacity === 'High' ? 'bg-emerald-500/90 text-white' :
@@ -74,14 +79,12 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                         )}
                     </div>
 
-                    {/* Top Left: Saved Badge */}
                     {isSaved && (
                         <div className="absolute top-4 left-4 bg-indigo-600 text-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1">
                             <Icon name="star" size={12} /> Pinned
                         </div>
                     )}
 
-                    {/* Bottom Left: Type & Status */}
                     <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 items-center">
                         <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg backdrop-blur-md border border-white/20 ${status.status === 'open' ? 'bg-emerald-500 text-white' : 'bg-slate-800/80 text-white'}`}>
                             {status.label}
@@ -94,7 +97,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
             </div>
 
             <div className="flex-1 p-6 relative">
-                {/* Main Content */}
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">{item.name}</h3>
                     <button
@@ -111,7 +113,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
 
                 <p className="text-sm text-slate-600 mb-6 leading-relaxed font-medium line-clamp-2">{item.description}</p>
 
-                {/* Tags applied as chiclets */}
                 <div className="flex flex-wrap gap-2 mb-6">
                     {(resource.eligibility === 'open' || item.tags?.includes('no_referral')) && (
                         <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1 cursor-default">
@@ -132,9 +133,7 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                     ))}
                 </div>
 
-                {/* Actions Grid */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                    {/* Primary Action */}
                     <button
                         onClick={() => setExpanded(!expanded)}
                         className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-2 ${expanded
@@ -145,7 +144,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                         {expanded ? 'Close Info' : 'View Details'} <Icon name={expanded ? "chevron-up" : "chevron-down"} size={12} />
                     </button>
 
-                    {/* Navigation Action */}
                     <a
                         href={`https://www.google.com/maps/dir/?api=1&destination=${service.location?.lat || resource.lat},${service.location?.lng || resource.lng}`}
                         target="_blank"
@@ -156,7 +154,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                     </a>
                 </div>
 
-                {/* Additional Actions Row (Call, Journey, Compare) */}
                 <div className="flex gap-2">
                     {(resource.phone || service.phone) && (
                         <a href={`tel:${service.phone || resource.phone}`} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors flex items-center justify-center flex-1">
@@ -175,20 +172,23 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                     )}
                 </div>
 
-                {/* Expanded Details Section */}
                 {expanded && (
                     <div className="mt-6 pt-6 border-t border-slate-100 animate-fade-in">
-                        {/* Entrance Photo */}
                         {service.thresholdInfo?.entrancePhotoUrl && (
                             <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 relative aspect-video shadow-sm">
-                                <img src={service.thresholdInfo.entrancePhotoUrl} alt="Entrance View" className="w-full h-full object-cover" />
+                                {/* [PERFORMANCE FIX] Lazy loading for detailed images too */}
+                                <img 
+                                    src={service.thresholdInfo.entrancePhotoUrl} 
+                                    alt="Entrance View" 
+                                    loading="lazy"
+                                    className="w-full h-full object-cover" 
+                                />
                                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-2 text-[9px] font-black uppercase tracking-widest backdrop-blur-sm">
                                     Verifiable Entrance View
                                 </div>
                             </div>
                         )}
 
-                        {/* Partner Only Internal Notes (B2B Data Access) */}
                         {isPartner && service.b2bData && (
                             <div className="mb-6 p-5 bg-indigo-50 rounded-[28px] border border-indigo-100 animate-fade-in">
                                 <div className="flex items-center gap-2 mb-3">
@@ -207,7 +207,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                         )}
 
                         <div className="grid grid-cols-2 gap-3 mb-4">
-                            {/* Queue Status */}
                             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Live Queue</p>
                                 <div className="flex items-center gap-2">
@@ -215,7 +214,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                                     <span className="text-xs font-black text-slate-900">{service.thresholdInfo?.queueStatus || 'Unknown'}</span>
                                 </div>
                             </div>
-                            {/* ID Requirement */}
                             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Access</p>
                                 <div className="flex items-center gap-2">
@@ -236,7 +234,6 @@ const ResourceCard = ({ item, isSaved, isPartner, onToggleSave, highContrast, on
                             </div>
                         </div>
 
-                        {/* [NEW] Report Button (Only if onReport prop is provided) */}
                         {onReport && (
                             <div className="pt-4 flex justify-center border-t border-slate-100 mt-4">
                                 <button onClick={onReport} className="text-[10px] font-bold text-slate-300 hover:text-rose-500 flex items-center gap-1.5 transition-colors uppercase tracking-widest">
