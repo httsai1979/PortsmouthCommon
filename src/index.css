@@ -6,11 +6,6 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -20,30 +15,37 @@ body {
   background-color: #ffffff;
 }
 
-/* [SAFE FONT SIZE SYSTEM]
-   策略：只在需要的時候放大字體，但不強制改變全域容器大小。
-   避免使用 !important 在會影響佈局的屬性上。
+/* [SMART ACCESSIBILITY SYSTEM] 
+   策略：只放大「資訊類」文字，嚴格避開「結構類」元件 (如按鈕、導航)。
 */
 
-/* Level 1: Large Text */
-.fs-1 p, .fs-1 span, .fs-1 a, .fs-1 li, .fs-1 button {
-  font-size: 1.1em; /* 相對放大 10% */
+/* Level 1: 加大 (適合閱讀) */
+.fs-1 p, .fs-1 li, .fs-1 h1, .fs-1 h2, .fs-1 h3, .fs-1 h4 {
+  font-size: 1.15em !important; /* 放大 15% */
+  line-height: 1.6 !important;
 }
 
-/* Level 2: Extra Large Text */
-.fs-2 p, .fs-2 span, .fs-2 a, .fs-2 li, .fs-2 button {
-  font-size: 1.25em; /* 相對放大 25% */
-  font-weight: 600; /* 加粗 */
+/* Level 2: 特大 (弱視友善) */
+.fs-2 p, .fs-2 li, .fs-2 h1, .fs-2 h2, .fs-2 h3, .fs-2 h4 {
+  font-size: 1.3em !important; /* 放大 30% */
+  line-height: 1.7 !important;
+  font-weight: 600 !important; /* 加粗 */
 }
 
-/* 針對按鈕的特別保護：允許文字換行，避免按鈕被撐壞 */
-button {
-  white-space: normal;
-  height: auto;
-  min-height: 44px; /* 確保最小點擊區域 */
+/* [HIGH CONTRAST] 針對放大模式，加深灰色文字的顏色 */
+.fs-1 .text-slate-400, .fs-1 .text-slate-500, .fs-1 .text-slate-600,
+.fs-2 .text-slate-400, .fs-2 .text-slate-500, .fs-2 .text-slate-600 {
+  color: #1e293b !important; /* 改為深藍黑 */
+  opacity: 1 !important;
 }
 
-/* 隱藏捲軸但保持功能 */
+/* [LAYOUT SAFETY] 保護關鍵介面元素不受影響 */
+/* 絕對不放大按鈕內的文字，防止圖示按鈕破版 */
+button, button * {
+  font-size: unset; 
+}
+
+/* 隱藏捲軸但保持滑動 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -52,20 +54,19 @@ button {
   scrollbar-width: none;
 }
 
-/* 基礎動畫 */
+/* 動畫 */
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
+.animate-bounce-in {
+  animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
 @keyframes bounceIn {
   0% { transform: scale(0.1); opacity: 0; }
   60% { transform: scale(1.2); opacity: 1; }
   100% { transform: scale(1); }
-}
-.animate-bounce-in {
-  animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
