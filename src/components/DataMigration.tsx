@@ -1,61 +1,65 @@
 import { useState } from 'react';
 import { db } from '../lib/firebase';
-import { collection, setDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, setDoc, doc, getDocs } from 'firebase/firestore';
 import { ALL_DATA } from '../data';
 import type { ServiceDocument } from '../types/schema';
-import Icon from './Icon';
 import { useAuth } from '../contexts/AuthContext';
 
 const DataMigration = () => {
     const { isPartner } = useAuth();
     const [migrating, setMigrating] = useState(false);
-    const [progress, setProgress] = useState(0);
     const [log, setLog] = useState<string[]>([]);
     const [firestoreCount, setFirestoreCount] = useState<number | null>(null);
 
+    // 這是用來顯示畫面上文字紀錄的功能
     const addLog = (message: string) => {
-        setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+        setLog(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev]);
     };
 
+    // 檢查目前雲端有多少資料
     const checkFirestoreStatus = async () => {
         try {
+            addLog('📡 正在連接資料庫...');
             const snapshot = await getDocs(collection(db, 'services'));
             setFirestoreCount(snapshot.size);
-            addLog(`✓ Firestore connected. Found ${snapshot.size} services.`);
+            addLog(`✅ 連線成功！目前雲端有 ${snapshot.size} 筆資料。`);
         } catch (error: any) {
-            addLog(`✗ Error checking Firestore: ${error.message}`);
+            console.error(error);
+            addLog(`❌ 連線錯誤: ${error.message}`);
             setFirestoreCount(0);
         }
     };
 
+    // 開始上傳資料的主程式
     const migrateData = async () => {
         if (migrating) return;
 
+        // 簡單的防呆確認
         const confirmed = window.confirm(
-            'This will upload all static data to Firestore. ' +
-            'Existing documents with the same ID will be overwritten. Continue?'
+            `確定要將 ${ALL_DATA.length} 筆靜態資料上傳到雲端資料庫嗎？`
         );
 
         if (!confirmed) return;
 
         setMigrating(true);
-        setProgress(0);
-        addLog('🚀 Starting migration...');
+        setLog([]); // 清空紀錄
+        addLog('🚀 開始上傳資料...');
 
         const servicesCollection = collection(db, 'services');
-        const total = ALL_DATA.length;
         let success = 0;
         let failed = 0;
 
+        // 迴圈：一筆一筆上傳
         for (let i = 0; i < ALL_DATA.length; i++) {
             const resource = ALL_DATA[i];
 
+            // 準備要上傳的資料格式
             const docData: ServiceDocument = {
                 id: resource.id,
                 name: resource.name,
                 category: (['food', 'shelter', 'warmth', 'support', 'family'].includes(resource.category)
                     ? resource.category
-                    : 'support') as ServiceDocument['category'],
+                    : 'support') as any,
                 location: {
                     lat: resource.lat,
                     lng: resource.lng,
@@ -64,21 +68,18 @@ const DataMigration = () => {
                 },
                 thresholdInfo: {
                     idRequired: resource.entranceMeta?.idRequired ?? false,
-                    queueStatus: resource.entranceMeta?.queueStatus
-                        ? (resource.entranceMeta.queueStatus.charAt(0).toUpperCase() +
-                            resource.entranceMeta.queueStatus.slice(1)) as ServiceDocument['thresholdInfo']['queueStatus']
-                        : 'Empty',
+                    queueStatus: 'Empty',
                     entrancePhotoUrl: resource.entranceMeta?.imageUrl
                 },
                 liveStatus: {
-                    isOpen: true,
+                    isOpen: true, 
                     capacity: 'High',
                     lastUpdated: new Date().toISOString(),
-                    message: "Welcome to Portsmouth Bridge live updates."
+                    message: ""
                 },
                 b2bData: {
-                    internalPhone: resource.phone || '023 9282 2251 (Council Hub)',
-                    partnerNotes: "Migrated from Portsmouth Bridge V1 Static Dataset."
+                    internalPhone: resource.phone || 'N/A',
+                    partnerNotes: "資料由系統自動遷移建立"
                 },
                 description: resource.description,
                 tags: resource.tags,
@@ -88,166 +89,78 @@ const DataMigration = () => {
             };
 
             try {
+                // 寫入資料庫
                 await setDoc(doc(servicesCollection, resource.id), docData);
                 success++;
-                addLog(`✓ Migrated: ${resource.name}`);
+                addLog(`✓ 成功上傳: ${resource.name}`);
             } catch (error: any) {
                 failed++;
-                addLog(`✗ Failed: ${resource.name} - ${error.message}`);
+                addLog(`❌ 失敗: ${resource.name} (${error.code})`);
             }
-
-            setProgress(Math.round(((i + 1) / total) * 100));
         }
 
-        addLog(`\n🏁 Migration complete!`);
-        addLog(`   Success: ${success} | Failed: ${failed}`);
+        addLog(`🏁 任務結束！ 成功: ${success}, 失敗: ${failed}`);
         setMigrating(false);
-
-        // Refresh count
-        await checkFirestoreStatus();
+        await checkFirestoreStatus(); // 更新狀態
     };
 
-    const clearFirestore = async () => {
-        if (migrating) return;
-
-        const confirmed = window.confirm(
-            '⚠️ WARNING: This will DELETE all services from Firestore. ' +
-            'This action cannot be undone. Are you absolutely sure?'
-        );
-
-        if (!confirmed) return;
-
-        setMigrating(true);
-        addLog('🗑️ Clearing Firestore services...');
-
-        try {
-            const snapshot = await getDocs(collection(db, 'services'));
-            let deleted = 0;
-
-            for (const docSnapshot of snapshot.docs) {
-                await deleteDoc(doc(db, 'services', docSnapshot.id));
-                deleted++;
-            }
-
-            addLog(`✓ Deleted ${deleted} documents.`);
-            setFirestoreCount(0);
-        } catch (error: any) {
-            addLog(`✗ Error clearing: ${error.message}`);
-        }
-
-        setMigrating(false);
-    };
-
-    if (!isPartner) {
-        return (
-            <div className="p-8 bg-white rounded-[32px] shadow-xl text-center">
-                <Icon name="lock" size={40} className="text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-800 mb-2">Access Restricted</h3>
-                <p className="text-xs text-slate-400">Only verified partners can access data migration tools.</p>
-            </div>
-        );
-    }
+    // 如果不是夥伴帳號，不顯示內容
+    if (!isPartner) return <div className="p-10 text-center">沒有權限</div>;
 
     return (
-        <div className="max-w-2xl mx-auto p-6 space-y-6 pb-32">
+        <div className="max-w-2xl mx-auto p-6 space-y-6 pb-32 animate-fade-in-up">
             <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Data Migration</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Firebase Synchronization Tool</p>
-                </div>
-                <div className="px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-widest">
-                    Admin Only
-                </div>
+                <h2 className="text-2xl font-black text-slate-900">資料遷移中心</h2>
             </div>
 
-            {/* Status Card */}
+            {/* 控制面板 */}
             <div className="bg-white rounded-[32px] p-6 shadow-lg border border-slate-100">
-                <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest mb-4">System Status</h3>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-4 bg-slate-50 rounded-2xl">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Static Data</p>
-                        <p className="text-2xl font-black text-slate-900">{ALL_DATA.length}</p>
-                        <p className="text-[9px] text-slate-400">Resources in code</p>
+                <div className="flex gap-4 mb-6">
+                    <div className="flex-1 p-4 bg-slate-50 rounded-2xl text-center">
+                        <p className="text-[10px] font-black text-slate-400 uppercase">本地資料</p>
+                        <p className="text-3xl font-black text-slate-900">{ALL_DATA.length}</p>
                     </div>
-                    <div className="p-4 bg-slate-50 rounded-2xl">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Firestore</p>
-                        <p className="text-2xl font-black text-indigo-600">
-                            {firestoreCount === null ? '—' : firestoreCount}
+                    <div className="flex-1 p-4 bg-slate-50 rounded-2xl text-center">
+                        <p className="text-[10px] font-black text-slate-400 uppercase">雲端資料</p>
+                        <p className={`text-3xl font-black ${firestoreCount === 0 ? 'text-rose-500' : 'text-indigo-600'}`}>
+                            {firestoreCount === null ? '?' : firestoreCount}
                         </p>
-                        <p className="text-[9px] text-slate-400">Documents synced</p>
                     </div>
                 </div>
 
-                <button
-                    onClick={checkFirestoreStatus}
-                    disabled={migrating}
-                    className="w-full py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-50"
-                >
-                    Check Connection
-                </button>
-            </div>
-
-            {/* Actions Card */}
-            <div className="bg-white rounded-[32px] p-6 shadow-lg border border-slate-100">
-                <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest mb-4">Migration Actions</h3>
-
-                {migrating && (
-                    <div className="mb-4">
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-2">
-                            <span>Progress</span>
-                            <span>{progress}%</span>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-indigo-600 transition-all duration-300"
-                                style={{ width: `${progress}%` }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
+                    <button
+                        onClick={checkFirestoreStatus}
+                        className="w-full py-3 bg-white border-2 border-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
+                    >
+                        重新檢查連線
+                    </button>
+                    
                     <button
                         onClick={migrateData}
                         disabled={migrating}
-                        className="py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
                     >
-                        <Icon name="upload" size={16} />
-                        {migrating ? 'Migrating...' : 'Migrate to Firestore'}
-                    </button>
-                    <button
-                        onClick={clearFirestore}
-                        disabled={migrating}
-                        className="py-4 bg-rose-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        <Icon name="trash" size={16} />
-                        Clear Firestore
+                        {migrating ? '資料上傳中...' : '開始上傳資料 (Start Migration)'}
                     </button>
                 </div>
             </div>
 
-            {/* Log Console */}
-            {log.length > 0 && (
-                <div className="bg-slate-900 rounded-[32px] p-6 shadow-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Console Output</h3>
-                        <button
-                            onClick={() => setLog([])}
-                            className="text-[9px] text-slate-500 hover:text-white transition-colors"
-                        >
-                            Clear
-                        </button>
-                    </div>
-                    <div className="bg-slate-800 rounded-xl p-4 max-h-64 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1">
-                        {log.map((line, i) => (
-                            <div key={i} className={line.includes('✓') ? 'text-emerald-400' : line.includes('✗') ? 'text-rose-400' : ''}>
-                                {line}
-                            </div>
-                        ))}
-                    </div>
+            {/* 執行紀錄視窗 */}
+            <div className="bg-slate-900 rounded-[32px] p-6 shadow-lg border border-slate-800">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase">系統紀錄</h3>
+                    <button onClick={() => setLog([])} className="text-xs text-slate-500 hover:text-white">清除</button>
                 </div>
-            )}
+                <div className="bg-slate-800/50 rounded-xl p-4 h-64 overflow-y-auto font-mono text-[10px] text-slate-300 space-y-1">
+                    {log.length === 0 && <span className="text-slate-600 italic">等待執行...</span>}
+                    {log.map((line, i) => (
+                        <div key={i} className={line.includes('❌') ? 'text-rose-400' : line.includes('✅') ? 'text-emerald-400' : ''}>
+                            {line}
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };
