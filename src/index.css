@@ -20,42 +20,27 @@ body {
   background-color: #ffffff;
 }
 
-/* [FIXED] 安全的動態字體系統 (Safe Font Resizing) */
-/* 策略：只放大內容文字，不改變根元素 (html) 的大小，避免破壞版面 (Layout) */
+/* [SAFE FONT SIZE SYSTEM]
+   策略：只在需要的時候放大字體，但不強制改變全域容器大小。
+   避免使用 !important 在會影響佈局的屬性上。
+*/
 
 /* Level 1: Large Text */
-.fs-1 p, .fs-1 span, .fs-1 div, .fs-1 a, .fs-1 button, .fs-1 li {
-  font-size: 110% !important; /* 放大 10% */
-  line-height: 1.6 !important;
+.fs-1 p, .fs-1 span, .fs-1 a, .fs-1 li, .fs-1 button {
+  font-size: 1.1em; /* 相對放大 10% */
 }
 
 /* Level 2: Extra Large Text */
-.fs-2 p, .fs-2 span, .fs-2 div, .fs-2 a, .fs-2 button, .fs-2 li {
-  font-size: 125% !important; /* 放大 25% */
-  line-height: 1.7 !important;
-  font-weight: 600 !important; /* 加粗 */
+.fs-2 p, .fs-2 span, .fs-2 a, .fs-2 li, .fs-2 button {
+  font-size: 1.25em; /* 相對放大 25% */
+  font-weight: 600; /* 加粗 */
 }
 
-/* 強制高對比度 (適用於 Level 1 & 2) */
-.fs-1 *, .fs-2 * {
-  --tw-text-opacity: 1 !important;
-}
-.fs-1 .text-slate-400, .fs-2 .text-slate-400,
-.fs-1 .text-slate-500, .fs-2 .text-slate-500 {
-  color: #334155 !important; /* 將淺灰字體加深 */
-}
-
-/* 防止 icon 變得過大 */
-.fs-1 svg, .fs-2 svg {
-  width: 1.2em;
-  height: 1.2em;
-}
-
-/* 確保按鈕彈性長高，不被文字撐破 */
+/* 針對按鈕的特別保護：允許文字換行，避免按鈕被撐壞 */
 button {
-  height: auto !important;
-  min-height: 44px;
-  white-space: normal !important; /* 允許文字換行 */
+  white-space: normal;
+  height: auto;
+  min-height: 44px; /* 確保最小點擊區域 */
 }
 
 /* 隱藏捲軸但保持功能 */
@@ -67,7 +52,7 @@ button {
   scrollbar-width: none;
 }
 
-/* 動畫效果 */
+/* 基礎動畫 */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -76,7 +61,6 @@ button {
   animation: fadeInUp 0.5s ease-out forwards;
 }
 
-/* 地圖標記彈跳動畫 */
 @keyframes bounceIn {
   0% { transform: scale(0.1); opacity: 0; }
   60% { transform: scale(1.2); opacity: 1; }
