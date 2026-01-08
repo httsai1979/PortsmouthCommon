@@ -2,19 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* [FACTORY RESET] 
-   完全移除所有自定義設定。
-   只保留最基礎的 Tailwind 功能，確保版面絕對正常。
-*/
-
-body {
+/* [SYSTEM RESET] 強制設定根元素大小，防止版面塌陷 */
+html, body, #root {
+  height: 100%;
+  width: 100%;
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: #ffffff;
+  padding: 0;
+  overflow-x: hidden; /* 防止水平卷軸 */
+  -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
 }
 
-/* 僅保留捲軸隱藏 (美觀用，不影響版面) */
+body {
+  background-color: #f1f5f9; /* 淺灰色背景，讓 App 居中時更明顯 */
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* 修復捲軸美觀度 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -23,7 +26,7 @@ body {
   scrollbar-width: none;
 }
 
-/* 僅保留基礎動畫 (不影響版面) */
+/* 基礎動畫 */
 .animate-fade-in-up {
   animation: fadeInUp 0.5s ease-out forwards;
 }
