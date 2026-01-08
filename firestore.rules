@@ -39,7 +39,7 @@ service cloud.firestore {
     function isWhitelisted() {
       return request.auth.token.email in [
         'test@test.org', 
-        'admin@sustainsage-group.com'
+        'hc.tsai@sustainsage-group.com'
       ] || 
       request.auth.token.email.matches('.*@sustainsage-group\\.com') ||
       request.auth.token.email.matches('.*@portsmouthbridge\\.org');
