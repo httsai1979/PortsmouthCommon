@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
     Home, MapPin, Search, Menu, X, Heart, Coffee, Bed, Flame, 
     LifeBuoy, Users, Briefcase, BookOpen, Smile, 
