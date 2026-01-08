@@ -1,37 +1,62 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
-/* [SYSTEM RESET] 強制設定根元素大小，防止版面塌陷 */
-html, body, #root {
-  height: 100%;
+.leaflet-container {
   width: 100%;
+  height: 100%;
+  background: #f8fafc;
+}
+
+.custom-div-icon {
+  background: none;
+  border: none;
+}
+
+/* Custom Global Styles */
+body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* 防止水平卷軸 */
-  -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
+  background-color: #f8fafc;
+  /* matching the app bg */
 }
 
-body {
-  background-color: #f1f5f9; /* 淺灰色背景，讓 App 居中時更明顯 */
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-}
-
-/* 修復捲軸美觀度 */
+/* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
   -ms-overflow-style: none;
+  /* IE and Edge */
   scrollbar-width: none;
+  /* Firefox */
+/* 動態字體控制系統 */
+
+/* 等級 0: 預設 (16px) */
+html.fs-0 {
+  font-size: 16px;
 }
 
-/* 基礎動畫 */
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
+/* 等級 1: 加大 (約 19px) - 適合輕度視力退化 */
+html.fs-1 {
+  font-size: 19px;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* 等級 2: 特大 (約 22px) - 適合重度需求，確保易讀性 */
+html.fs-2 {
+  font-size: 22px;
+}
+
+/* 讓所有文字在放大時保持清晰對比 */
+html.fs-1 p, html.fs-1 span, html.fs-1 div,
+html.fs-2 p, html.fs-2 span, html.fs-2 div {
+  --tw-text-opacity: 1 !important;
+}
+
+/* 確保按鈕在字體放大時不會破版，自動長高 */
+button {
+  height: auto;
+  min-height: 44px;
+}
 }

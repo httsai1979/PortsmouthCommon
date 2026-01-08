@@ -135,7 +135,14 @@ const App = () => {
         }
     }, [currentUser, authLoading, view]);
 
-     useEffect(() => {
+    // Font Size Effect
+    useEffect(() => {
+        const root = document.documentElement;
+        root.classList.remove('fs-0', 'fs-1', 'fs-2');
+        root.classList.add(`fs-${fontSize}`);
+    }, [fontSize]);
+
+    useEffect(() => {
         setTimeout(() => setLoading(false), 800);
 
         const servicesRef = collection(db, 'services');
