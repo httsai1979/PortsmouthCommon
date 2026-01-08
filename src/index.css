@@ -2,9 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* [SYSTEM RECOVERY] 
-   完全移除所有自定義字體與排版設定。
-   這將強制系統回到 Tailwind 的預設狀態，修復所有版面錯亂。
+/* [FACTORY RESET] 
+   完全移除所有自定義設定。
+   只保留最基礎的 Tailwind 功能，確保版面絕對正常。
 */
 
 body {
@@ -14,7 +14,7 @@ body {
   background-color: #ffffff;
 }
 
-/* 僅保留捲軸隱藏功能 (不影響版面) */
+/* 僅保留捲軸隱藏 (美觀用，不影響版面) */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
