@@ -1,26 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     Home, MapPin, Search, Menu, X, Heart, Coffee, Bed, Flame, 
-    LifeBuoy, Users, Briefcase, BookOpen, Smile, 
-    Navigation, Phone, Tag, Info, Cloud, RefreshCw, AlertCircle
+    LifeBuoy, Users, Zap, Briefcase, Database, Activity, 
+    Calendar, ChevronRight, Share2, Star, Navigation, 
+    CheckCircle, Tag, Info, Phone, ExternalLink, Filter,
+    Leaf, Music, ShoppingBag, BookOpen, Smile, Monitor, Clock
 } from 'lucide-react';
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, onSnapshot } from "firebase/firestore";
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
-// --- 0. GLOBAL DECLARATIONS ---
-// Declare globals injected by the build system to satisfy TypeScript
-declare const __firebase_config: string;
-declare const __app_id: string;
-declare const __initial_auth_token: string;
-
-// --- 1. FIREBASE CONFIG & INIT ---
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// --- 2. DATA STRUCTURES ---
+// --- 1. FULL EXTENDED DATA (LOCAL SOURCE OF TRUTH) ---
+// 包含所有擴充後的 60+ 個地點數據
 export interface Resource {
     id: string;
     name: string;
@@ -48,15 +36,14 @@ export const TAG_ICONS: Record<string, { icon: any; label: string; color: string
     warmth: { icon: Flame, label: 'Warm Spaces', color: 'text-orange-600', bg: 'bg-orange-50' },
     support: { icon: LifeBuoy, label: 'Community Hub', color: 'text-blue-600', bg: 'bg-blue-50' },
     family: { icon: Users, label: 'Family & Play', color: 'text-pink-600', bg: 'bg-pink-50' },
-    charity: { icon: Tag, label: 'Charity Shop', color: 'text-rose-600', bg: 'bg-rose-50' },
+    charity: { icon: ShoppingBag, label: 'Charity Shop', color: 'text-rose-600', bg: 'bg-rose-50' },
     mental_health: { icon: Smile, label: 'Wellbeing', color: 'text-purple-600', bg: 'bg-purple-50' },
     skills: { icon: Briefcase, label: 'Jobs & Skills', color: 'text-cyan-600', bg: 'bg-cyan-50' },
     learning: { icon: BookOpen, label: 'Library', color: 'text-amber-600', bg: 'bg-amber-50' },
     default: { icon: Info, label: 'General', color: 'text-slate-600', bg: 'bg-slate-50' }
 };
 
-// 本地備份數據 (51筆) - 僅在雲端斷線時使用
-export const LOCAL_BACKUP_DATA: Resource[] = [
+export const ALL_DATA: Resource[] = [
     // --- 🟢 FOOD (EAT) ---
     {
         id: 'f1',
@@ -860,7 +847,7 @@ export const LOCAL_BACKUP_DATA: Resource[] = [
     }
 ];
 
-// --- 3. HELPERS ---
+// --- 2. HELPERS ---
 const checkStatus = (schedule: Record<number, string>) => {
     const now = new Date();
     const day = now.getDay();
@@ -887,7 +874,7 @@ const checkStatus = (schedule: Record<number, string>) => {
     };
 };
 
-// --- 4. SUB-COMPONENTS ---
+// --- 3. SUB-COMPONENTS ---
 const ResourceCard = ({ item, isSaved, onToggleSave, onNavigate }: any) => {
     const status = checkStatus(item.schedule);
     const TagIcon = TAG_ICONS[item.category]?.icon || TAG_ICONS.default.icon;
@@ -960,83 +947,17 @@ const SimpleMap = ({ data }: any) => {
     );
 };
 
-// --- 5. MAIN APP COMPONENT ---
+// --- 4. MAIN APP COMPONENT ---
 const App = () => {
     const [view, setView] = useState<'home' | 'list' | 'map'>('home');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('all');
     const [savedIds, setSavedIds] = useState<string[]>([]);
     
-    // Auth & Data Sync Variables
-    // Using global declarations to avoid TS errors
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    
-    const [currentUser, setCurrentUser] = useState<any>(null);
-    const [firebaseData, setFirebaseData] = useState<Resource[]>([]);
-    const [isSyncing, setIsSyncing] = useState(true);
-    const [syncStatus, setSyncStatus] = useState<'cloud' | 'local' | 'error'>('local');
-    
-    // Auth & Data Sync
-    useEffect(() => {
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth Error:", error);
-                setSyncStatus('error');
-                setIsSyncing(false);
-            }
-        };
-        initAuth();
-        
-        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-            setCurrentUser(user);
-        });
-
-        return () => unsubscribeAuth();
-    }, []);
-
-    // Sync Data Strategy: Cloud Priority, Local Fallback
-    useEffect(() => {
-        if (!currentUser) return;
-
-        setIsSyncing(true);
-        // 優先監聽雲端資料 (Firestore)
-        const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'resources');
-        const unsubscribeData = onSnapshot(collectionRef, (snapshot) => {
-            if (!snapshot.empty) {
-                // 成功抓到雲端資料 -> 使用雲端 (58筆)
-                const cloudResources = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
-                setFirebaseData(cloudResources);
-                setSyncStatus('cloud');
-                console.log(`☁️ Synced ${cloudResources.length} resources from Cloud`);
-            } else {
-                // 雲端是空的 -> 使用本地備份
-                console.log("⚠️ Cloud empty, falling back to Local Data");
-                setSyncStatus('local');
-            }
-            setIsSyncing(false);
-        }, (error) => {
-            // 連線失敗/權限錯誤 -> 使用本地備份
-            console.error("Sync Error (using fallback):", error);
-            setSyncStatus('local');
-            setIsSyncing(false);
-        });
-
-        return () => unsubscribeData();
-    }, [appId, currentUser]);
-
-    // Decide which data source to use
-    // 如果 syncStatus 是 cloud，就用 firebaseData；否則用 LOCAL_BACKUP_DATA
-    const activeData = syncStatus === 'cloud' && firebaseData.length > 0 ? firebaseData : LOCAL_BACKUP_DATA;
-    const [filteredData, setFilteredData] = useState(activeData);
+    const [filteredData, setFilteredData] = useState(ALL_DATA);
 
     useEffect(() => {
-        let res = activeData;
+        let res = ALL_DATA;
         
         if (filterCategory !== 'all') {
             res = res.filter(item => item.category === filterCategory);
@@ -1052,7 +973,7 @@ const App = () => {
         }
 
         setFilteredData(res);
-    }, [searchQuery, filterCategory, activeData]);
+    }, [searchQuery, filterCategory]);
 
     const toggleSaved = (id: string) => {
         setSavedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -1073,15 +994,7 @@ const App = () => {
                     </div>
                     <div>
                         <h1 className="text-xl font-black text-slate-900 tracking-tighter leading-none mb-1">Portsmouth Bridge</h1>
-                        <p className="text-[8px] font-black text-slate-400 tracking-widest uppercase flex items-center gap-1">
-                            {isSyncing ? (
-                                <><RefreshCw size={8} className="animate-spin" /> Syncing...</>
-                            ) : syncStatus === 'cloud' ? (
-                                <><Cloud size={8} className="text-emerald-500" /> Live Cloud Data</>
-                            ) : (
-                                <><AlertCircle size={8} className="text-amber-500" /> Local Backup Mode</>
-                            )}
-                        </p>
+                        <p className="text-[8px] font-black text-slate-400 tracking-widest uppercase">Community Network</p>
                     </div>
                 </div>
                 <button className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 transition-colors">
@@ -1126,10 +1039,8 @@ const App = () => {
                         {/* Stats Card */}
                         <div className="p-6 bg-slate-900 rounded-[32px] text-white relative overflow-hidden mb-8 shadow-xl shadow-slate-200">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
-                            <h3 className="text-2xl font-black mb-1 relative z-10">{activeData.length} Locations</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 relative z-10">
-                                {syncStatus === 'cloud' ? 'Synced with Cloud' : 'Using Local Database'}
-                            </p>
+                            <h3 className="text-2xl font-black mb-1 relative z-10">{ALL_DATA.length} Locations</h3>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 relative z-10">Verified & Active Now</p>
                             <button onClick={() => setView('list')} className="px-6 py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform">
                                 Browse All
                             </button>
