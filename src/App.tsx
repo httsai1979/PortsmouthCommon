@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { 
     Home, MapPin, Search, Menu, X, Heart, Coffee, Bed, Flame, 
     LifeBuoy, Users, Briefcase, BookOpen, Smile, 
-    Navigation, Phone, Tag, Info, Cloud, RefreshCw, AlertCircle
+    Navigation, Phone, Tag, Info, Cloud, RefreshCw, AlertCircle, Printer
 } from 'lucide-react';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot } from "firebase/firestore";
 import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 // --- 0. GLOBAL DECLARATIONS ---
-// Declare globals injected by the build system to satisfy TypeScript
 declare const __firebase_config: string;
 declare const __app_id: string;
 declare const __initial_auth_token: string;
@@ -19,6 +18,9 @@ const firebaseConfig = JSON.parse(__firebase_config);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// [PERFORMANCE] Lazy Load Heavy Components
+const PrintView = lazy(() => import('./components/PrintView'));
 
 // --- 2. DATA STRUCTURES ---
 export interface Resource {
@@ -55,7 +57,7 @@ export const TAG_ICONS: Record<string, { icon: any; label: string; color: string
     default: { icon: Info, label: 'General', color: 'text-slate-600', bg: 'bg-slate-50' }
 };
 
-// 本地備份數據 (51筆) - 僅在雲端斷線時使用
+// 本地備份數據 (51筆)
 export const LOCAL_BACKUP_DATA: Resource[] = [
     // --- 🟢 FOOD (EAT) ---
     {
@@ -962,7 +964,7 @@ const SimpleMap = ({ data }: any) => {
 
 // --- 5. MAIN APP COMPONENT ---
 const App = () => {
-    const [view, setView] = useState<'home' | 'list' | 'map'>('home');
+    const [view, setView] = useState<'home' | 'list' | 'map' | 'print'>('home');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('all');
     const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -1063,6 +1065,15 @@ const App = () => {
         window.open(url, '_blank');
     };
 
+    // Render Print View directly
+    if (view === 'print') {
+        return (
+            <Suspense fallback={<div className="p-10 text-center">Loading Print View...</div>}>
+                <PrintView data={activeData} onClose={() => setView('home')} />
+            </Suspense>
+        );
+    }
+
     return (
         <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative pb-24 overflow-hidden font-sans text-slate-900">
             {/* Header */}
@@ -1084,9 +1095,18 @@ const App = () => {
                         </p>
                     </div>
                 </div>
-                <button className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 transition-colors">
-                    <Menu size={20} />
-                </button>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => setView('print')}
+                        className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                        title="Print List"
+                    >
+                        <Printer size={20} />
+                    </button>
+                    <button className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 transition-colors">
+                        <Menu size={20} />
+                    </button>
+                </div>
             </header>
 
             {/* Main Content */}
