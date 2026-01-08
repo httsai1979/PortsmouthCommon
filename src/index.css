@@ -6,6 +6,11 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -15,37 +20,39 @@ body {
   background-color: #ffffff;
 }
 
-/* [SMART ACCESSIBILITY SYSTEM] 
-   策略：只放大「資訊類」文字，嚴格避開「結構類」元件 (如按鈕、導航)。
+/* [FIX] 強制字體大小控制系統 
+   使用 !important 確保覆蓋 Tailwind 的預設值
 */
 
-/* Level 1: 加大 (適合閱讀) */
-.fs-1 p, .fs-1 li, .fs-1 h1, .fs-1 h2, .fs-1 h3, .fs-1 h4 {
-  font-size: 1.15em !important; /* 放大 15% */
-  line-height: 1.6 !important;
+/* 等級 0: 預設 (16px) */
+html.fs-0 {
+  font-size: 16px !important;
 }
 
-/* Level 2: 特大 (弱視友善) */
-.fs-2 p, .fs-2 li, .fs-2 h1, .fs-2 h2, .fs-2 h3, .fs-2 h4 {
-  font-size: 1.3em !important; /* 放大 30% */
-  line-height: 1.7 !important;
-  font-weight: 600 !important; /* 加粗 */
+/* 等級 1: 加大 (19px - 放大約 120%) */
+html.fs-1 {
+  font-size: 19px !important;
 }
 
-/* [HIGH CONTRAST] 針對放大模式，加深灰色文字的顏色 */
-.fs-1 .text-slate-400, .fs-1 .text-slate-500, .fs-1 .text-slate-600,
-.fs-2 .text-slate-400, .fs-2 .text-slate-500, .fs-2 .text-slate-600 {
-  color: #1e293b !important; /* 改為深藍黑 */
-  opacity: 1 !important;
+/* 等級 2: 特大 (22px - 放大約 140%) */
+html.fs-2 {
+  font-size: 22px !important;
 }
 
-/* [LAYOUT SAFETY] 保護關鍵介面元素不受影響 */
-/* 絕對不放大按鈕內的文字，防止圖示按鈕破版 */
-button, button * {
-  font-size: unset; 
+/* 當字體放大時，強制加深所有文字顏色，確保老人能看清 */
+html.fs-1 p, html.fs-1 span, html.fs-1 div, html.fs-1 h1, html.fs-1 h2, html.fs-1 h3,
+html.fs-2 p, html.fs-2 span, html.fs-2 div, html.fs-2 h1, html.fs-2 h2, html.fs-2 h3 {
+  --tw-text-opacity: 1 !important; /* 不透明度 100% */
+  color: #0f172a !important; /* 接近純黑的深藍 */
 }
 
-/* 隱藏捲軸但保持滑動 */
+/* 確保按鈕隨字體長高，不會被文字撐破 */
+button {
+  height: auto !important;
+  min-height: 44px;
+}
+
+/* 隱藏捲軸但保持功能 (美觀優化) */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -54,19 +61,21 @@ button, button * {
   scrollbar-width: none;
 }
 
-/* 動畫 */
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
+/* 動畫效果 */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-bounce-in {
-  animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
 }
+
+/* 地圖標記彈跳動畫 */
 @keyframes bounceIn {
   0% { transform: scale(0.1); opacity: 0; }
   60% { transform: scale(1.2); opacity: 1; }
   100% { transform: scale(1); }
+}
+.animate-bounce-in {
+  animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
