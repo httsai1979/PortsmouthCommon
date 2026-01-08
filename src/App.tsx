@@ -53,7 +53,7 @@ const App = () => {
     const [mapFocus, setMapFocus] = useState<{ lat: number, lng: number, label: string, id?: string } | null>(null);
     const [showWizard, setShowWizard] = useState(false);
     const [showPartnerLogin, setShowPartnerLogin] = useState(false);
-    const { currentUser, isPartner } = useAuth();
+    const { currentUser, isPartner, loading: authLoading } = useAuth(); // Destructure auth loading
 
     // Modal States for Reporting and Partner Requests
     const [reportTarget, setReportTarget] = useState<{name: string, id: string} | null>(null);
@@ -112,6 +112,18 @@ const App = () => {
         category: 'all',
         date: 'today'
     });
+
+    // 🛡️ [NEW] Route Guard: Auto-redirect to home on logout if in restricted area
+    useEffect(() => {
+        // If auth is finished loading AND user is NOT logged in
+        if (!authLoading && !currentUser) {
+            const restrictedViews = ['partner-dashboard', 'analytics', 'data-migration'];
+            // If currently on a restricted page, kick back to home
+            if (restrictedViews.includes(view)) {
+                setView('home');
+            }
+        }
+    }, [currentUser, authLoading, view]);
 
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
@@ -661,6 +673,33 @@ const App = () => {
                     </div>
                 )}
 
+                {/* Modals */}
+                {showPartnerLogin && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+                        <div className="w-full max-w-md">
+                            <PartnerLogin 
+                                onClose={() => setShowPartnerLogin(false)}
+                                onRequestAccess={() => {
+                                    setShowPartnerLogin(false);
+                                    setShowPartnerRequest(true);
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* [NEW] Render the new Modals */}
+                <ReportModal 
+                    isOpen={!!reportTarget} 
+                    onClose={() => setReportTarget(null)} 
+                    resourceName={reportTarget?.name || ''}
+                    resourceId={reportTarget?.id || ''}
+                />
+                <PartnerRequestModal 
+                    isOpen={showPartnerRequest} 
+                    onClose={() => setShowPartnerRequest(false)} 
+                />
+
                 {/* List View with Report Interaction */}
                 {view === 'list' && (
                     <div className="animate-fade-in-up">
@@ -784,9 +823,6 @@ const App = () => {
                 isOpen={showPartnerRequest} 
                 onClose={() => setShowPartnerRequest(false)} 
             />
-            <div className="mt-12 mb-12 p-6 bg-slate-50 rounded-[32px] border border-slate-100/50"><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2">Frequently Asked Questions</h3><div className="space-y-6"><div><p className="font-bold text-slate-700 text-sm mb-1">Is this service free?</p><p className="text-xs text-slate-500 leading-relaxed">Yes. Portsmouth Bridge is 100% free to use. Most resources listed are also free or low-cost (like community pantries).</p></div><div><p className="font-bold text-slate-700 text-sm mb-1">Do I need internet?</p><p className="text-xs text-slate-500 leading-relaxed">The app works offline once loaded. You can "Install App" to your home screen to keep it available without data.</p></div><div><p className="font-bold text-slate-700 text-sm mb-1">Is my data private?</p><p className="text-xs text-slate-500 leading-relaxed">Absolutely. We track nothing. Your location stays on your phone. No logins, no cookies.</p></div><div className="pt-4 border-t border-slate-200"><p className="font-bold text-indigo-900 text-sm mb-1">Developer Contact</p><p className="text-xs text-slate-500 mb-2">For feedback, corrections, or technical support:</p><a href="mailto:ht.tsai@sustainsage-group.com" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-colors"><Icon name="mail" size={14} /> ht.tsai@sustainsage-group.com</a></div></div></div>
-            <div className="mb-8 text-center opacity-30 hover:opacity-100 transition-opacity"><button onClick={() => alert("Partner Portal: Please sign in with your organization ID to access the Resource Exchange Market.")} className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-transparent hover:border-slate-400 pb-1">Partner Portal Access</button></div>
-            {showWizard && (<CrisisWizard userLocation={userLocation} onClose={() => setShowWizard(false)} savedIds={savedIds} onToggleSave={(id) => { if (savedIds.includes(id)) { setSavedIds(prev => prev.filter(i => i !== id)); } else { setSavedIds(prev => [...prev, id]); playSuccessSound(); } }} />)}
         </div>
     );
 };
