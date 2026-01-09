@@ -130,6 +130,14 @@ const App = () => {
         }
     };
 
+    // [FIX: CRASH PREVENTION] Added missing scrollToTop function
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [smartFilters, setSmartFilters] = useState({
