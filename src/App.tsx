@@ -25,7 +25,7 @@ import logo from './assets/images/logo.png';
 import { useAuth } from './contexts/AuthContext';
 import PartnerLogin from './components/PartnerLogin';
 
-// [PERFORMANCE] Lazy Load Heavy Components Only
+// [PERFORMANCE] Lazy Load Heavy Components
 const SimpleMap = lazy(() => import('./components/SimpleMap'));
 const JourneyPlanner = lazy(() => import('./components/JourneyPlanner'));
 const SmartCompare = lazy(() => import('./components/SmartCompare'));
@@ -37,14 +37,14 @@ const PulseMap = lazy(() => import('./components/PulseMap'));
 const DataMigration = lazy(() => import('./components/DataMigration'));
 const PrintView = lazy(() => import('./components/PrintView'));
 
-// Loading Fallback Component
+// Loading Fallback
 const PageLoader = () => (
     <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
     </div>
 );
 
-// [Optimization] Move static styles outside component to prevent layout thrashing
+// [FIX] Move static styles outside component to prevent layout thrashing
 const APP_STYLES = `
     .app-container { max-width: 500px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); position: relative; padding-bottom: 140px; }
     .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -83,7 +83,7 @@ const App = () => {
     const [visibleCount, setVisibleCount] = useState(10);
     const [showScrollTop, setShowScrollTop] = useState(false);
     
-    // [Fix] Stable ref for intersection observer to prevent crashes
+    // [FIX] Stable ref for intersection observer
     const loadMoreRef = useRef<HTMLDivElement>(null);
 
     // [Hybrid Data State]
@@ -130,14 +130,6 @@ const App = () => {
         }
     };
 
-    // [FIX: CRASH PREVENTION] Added missing scrollToTop function
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    };
-
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [smartFilters, setSmartFilters] = useState({
@@ -152,7 +144,7 @@ const App = () => {
         date: 'today'
     });
 
-    // [Optimization] Inject Styles ONCE on mount to prevent Layout Thrashing
+    // [FIX] Inject Styles ONCE on mount
     useEffect(() => {
         const styleTag = document.createElement('style');
         styleTag.innerHTML = APP_STYLES;
@@ -177,7 +169,7 @@ const App = () => {
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    // [TASK 1 & 3] Google Sheets Polling + Offline Cache
+    // Initial Load & Polling
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
         
@@ -189,17 +181,11 @@ const App = () => {
         const loadSheetData = async () => {
             try {
                 const data = await fetchLiveStatus();
-                if (Object.keys(data).length === 0) {
-                    const cached = localStorage.getItem('cached_live_status');
-                    if (cached) {
-                        setSheetStatus(JSON.parse(cached));
-                    }
-                } else {
+                if (Object.keys(data).length) {
                     setSheetStatus(data);
                     localStorage.setItem('cached_live_status', JSON.stringify(data));
                 }
             } catch (e) {
-                console.error("Sheet fetch error", e);
                 const cached = localStorage.getItem('cached_live_status');
                 if (cached) setSheetStatus(JSON.parse(cached));
             }
@@ -219,20 +205,18 @@ const App = () => {
                             status: data.liveStatus.isOpen ? 'Open' : 'Closed',
                             urgency: data.liveStatus.capacity === 'Low' ? 'High' : 'Normal',
                             message: data.liveStatus.message || '',
-                            lastUpdated: data.liveStatus.lastUpdated || new Date().toISOString()
+                            lastUpdated: data.liveStatus.lastUpdated
                         };
                     }
                 });
                 setFirebaseStatus(fbData);
             }
-        }, (err) => {
-            console.warn("Firebase sync ignored:", err);
         });
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                (err) => console.log("Location access denied", err)
+                (err) => console.log(err)
             );
         }
 
@@ -240,7 +224,7 @@ const App = () => {
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
 
-        // [CRITICAL FIX] Throttled Scroll Listener to prevent crashes
+        // [FIX] Throttled Scroll Listener
         let ticking = false;
         const handleScroll = () => {
             if (!ticking) {
@@ -273,8 +257,7 @@ const App = () => {
         setVisibleCount(10);
     }, [filters, searchQuery, smartFilters]);
 
-    // [CRITICAL FIX] Infinite Scroll with stable observer
-    // This prevents the infinite loop of observer creation/destruction on scroll
+    // [FIX] Infinite Scroll with stable observer
     useEffect(() => {
         if (view !== 'list' || !loadMoreRef.current) return;
         
@@ -317,30 +300,16 @@ const App = () => {
                     const match = daySchedule.match(/(\d+):(\d+)/);
                     if (match) {
                         const [_, h, m] = match;
-                        const openHour = parseInt(h);
-                        const openMin = parseInt(m);
-                        const minutesUntilOpen = (openHour * 60 + openMin) - (currentHour * 60 + currentMinutes);
-
+                        const minutesUntilOpen = (parseInt(h) * 60 + parseInt(m)) - (currentHour * 60 + currentMinutes);
                         if (minutesUntilOpen > 0 && minutesUntilOpen <= 30 && status.status === 'closed') {
-                            newNotifications.push({
-                                id: `opening_${id}_${now.getTime()}`,
-                                type: 'opening_soon',
-                                message: `${resource.name} opens in ${minutesUntilOpen} minutes`,
-                                timestamp: now.getTime(),
-                                resourceId: id
-                            });
+                            newNotifications.push({ id: `opening_${id}_${now.getTime()}`, type: 'opening_soon', message: `${resource.name} opens in ${minutesUntilOpen} minutes`, timestamp: now.getTime(), resourceId: id });
                         }
                     }
                 }
             });
 
             if (currentHour >= 18 && now.getMonth() >= 10 && newNotifications.length === 0) {
-                newNotifications.push({
-                    id: `weather_${now.getTime()}`,
-                    type: 'weather',
-                    message: 'Cold evening ahead - Emergency shelter beds available tonight',
-                    timestamp: now.getTime()
-                });
+                newNotifications.push({ id: `weather_${now.getTime()}`, type: 'weather', message: 'Cold evening ahead - Emergency shelter beds available tonight', timestamp: now.getTime() });
             }
 
             if (newNotifications.length > 0) {
@@ -453,7 +422,6 @@ const App = () => {
 
     return (
         <div className={`app-container min-h-screen font-sans text-slate-900 selection:bg-indigo-200 selection:text-indigo-900 ${highContrast ? 'high-contrast' : ''}`}>
-            {/* Styles are now injected via useEffect, but we keep this placeholder if needed, or remove it entirely as styles are in head */}
             
             {showScrollTop && (
                 <button
@@ -534,9 +502,12 @@ const App = () => {
 
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
+                        {/* [UPDATE] New Content Logic for Sliding Cards */}
                         <CommunityBulletin onCTAClick={(id) => {
-                            if (id === '4') setView('map');
-                            else if (id === '1') setView('list');
+                            if (id === '1') { setMapFilter('open'); setView('map'); }
+                            else if (id === '2') { setFilters({ ...filters, category: 'food' }); setView('map'); }
+                            else if (id === '3') { setFilters({ ...filters, category: 'warmth' }); setView('map'); }
+                            else if (id === '4') { setView('faq'); } // Go to Guide
                         }} />
 
                         {savedIds.length > 0 && (
@@ -578,7 +549,7 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'faq', label: 'Guide', icon: 'help-circle' } // [修正] Help -> Guide
+                                { id: 'faq', label: 'Guide', icon: 'help-circle' } // Help -> Guide
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
@@ -596,7 +567,7 @@ const App = () => {
                             ))}
                         </div>
 
-                        {/* [修正] Find Help Now -> Find Support */}
+                        {/* Find Help Now -> Find Support */}
                         <button
                             onClick={() => setShowWizard(true)}
                             className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all hover:scale-[1.02] active:scale-95 pr-2"
@@ -725,12 +696,10 @@ const App = () => {
                     </div>
                 )}
 
-                {/* [關鍵修正] 直接渲染 FAQSection，解決滑動當機問題 */}
                 {view === 'faq' && (
                     <FAQSection onClose={() => setView('home')} onNavigate={handleFAQNavigate} />
                 )}
                 
-                {/* [優化] 使用穩定且標準的 Suspense 包裝，移除造成問題的 renderLazyView 輔助函式 */}
                 {view === 'community-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="food" title="Weekly Food Support" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
                 {view === 'safe-sleep-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="shelter" title="Safe Sleep" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
                 {view === 'warm-spaces-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="warmth" title="Warm Spaces" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}

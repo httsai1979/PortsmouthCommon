@@ -1,109 +1,93 @@
-import { useState, useEffect } from 'react';
 import Icon from './Icon';
 
 interface Bulletin {
     id: string;
-    type: 'positive' | 'urgent' | 'impact';
     title: string;
-    message: string;
-    cta?: string;
+    desc: string;
+    icon: string;
+    theme: 'indigo' | 'emerald' | 'orange' | 'rose';
+    cta: string;
 }
 
+// [內容優化] 改為針對使用者最迫切的四大需求，採用賦權與溫暖的語氣
 const BULLETINS: Bulletin[] = [
     {
         id: '1',
-        type: 'positive',
-        title: "You're Not Alone",
-        message: "Over 40+ community partners in Portsmouth are open today, ready to welcome you with a warm meal and a friendly face.",
-        cta: "Find a Hub"
+        title: "Open Right Now",
+        desc: "See what is open at this exact moment. Don't waste a journey.",
+        icon: "clock",
+        theme: "emerald",
+        cta: "Check Map"
     },
     {
         id: '2',
-        type: 'impact',
-        title: "Shared Power",
-        message: "Last month, our community shared 1,200+ meals across the city. We are stronger when we sustain each other.",
-        cta: "See Success Stories"
+        title: "Free Hot Meals",
+        desc: "Find community kitchens serving nutritious food today.",
+        icon: "utensils",
+        theme: "orange",
+        cta: "Find Food"
     },
     {
         id: '3',
-        type: 'positive',
-        title: "Dignity First",
-        message: "Did you know? Most hubs are 'Open Access'—no ID, no paperwork required. You are a neighbor, not a case file.",
-        cta: "Read Our Promise"
+        title: "Safe & Warm",
+        desc: "Libraries and hubs offering free warmth, WiFi, and charging.",
+        icon: "flame",
+        theme: "rose",
+        cta: "Find Warmth"
     },
     {
         id: '4',
-        type: 'urgent',
-        title: "Stay Warm Tonight",
-        message: "Winter Hubs are active tonight at 5 locations. Safe, warm spaces with hot tea and connectivity available.",
-        cta: "Safe Sleep Map"
+        title: "No Data? No Problem",
+        desc: "This app works offline. Your search history is safe and private.",
+        icon: "wifi-off",
+        theme: "indigo",
+        cta: "Read Guide"
     }
 ];
 
 const CommunityBulletin = ({ onCTAClick }: { onCTAClick: (id: string) => void }) => {
-    const [activeIndex, setActiveIndex] = useState(0);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setActiveIndex((prev) => (prev + 1) % BULLETINS.length);
-        }, 5000);
-        return () => clearInterval(timer);
-    }, []);
-
-    const active = BULLETINS[activeIndex];
-
     return (
-        <div className="relative mb-8 group overflow-hidden rounded-[40px] shadow-2xl shadow-indigo-100/50">
-            {/* Background Layer with Animated Shift */}
-            <div className={`absolute inset-0 transition-all duration-1000 ${active.type === 'urgent' ? 'bg-gradient-to-br from-rose-600 to-rose-900' :
-                active.type === 'impact' ? 'bg-gradient-to-br from-emerald-600 to-emerald-900' :
-                    'bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900'
-                }`}>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24 blur-2xl"></div>
-            </div>
-
-            {/* Content Layer */}
-            <div className="relative z-10 p-8 min-h-[220px] flex flex-col justify-between">
-                <div>
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">
-                                {active.type === 'urgent' ? 'Active Update' : active.type === 'impact' ? 'City Impact' : 'Support Voice'}
-                            </span>
+        <div className="flex gap-3 overflow-x-auto pb-6 -mx-5 px-5 scrollbar-hide snap-x">
+            {BULLETINS.map((item) => (
+                <div 
+                    key={item.id} 
+                    className={`snap-center shrink-0 w-72 p-5 rounded-[32px] relative overflow-hidden shadow-lg transition-all active:scale-95 border-2 
+                    ${item.theme === 'indigo' ? 'bg-indigo-900 border-indigo-800 text-white' : ''}
+                    ${item.theme === 'emerald' ? 'bg-emerald-600 border-emerald-500 text-white' : ''}
+                    ${item.theme === 'orange' ? 'bg-orange-500 border-orange-400 text-white' : ''}
+                    ${item.theme === 'rose' ? 'bg-rose-600 border-rose-500 text-white' : ''}
+                    `}
+                >
+                    {/* Decorative Circle for warmth and depth */}
+                    <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                    
+                    <div className="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2 opacity-90">
+                                <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+                                    <Icon name={item.icon} size={16} />
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest">
+                                    {item.theme === 'emerald' ? 'Live Status' : 
+                                     item.theme === 'orange' ? 'Eat Well' : 
+                                     item.theme === 'rose' ? 'Stay Safe' : 'Accessible'}
+                                </span>
+                            </div>
+                            <h3 className="text-xl font-black leading-tight mb-2 tracking-tight">{item.title}</h3>
+                            <p className="text-xs font-medium opacity-90 leading-relaxed max-w-[90%]">
+                                {item.desc}
+                            </p>
                         </div>
-                        {active.type === 'urgent' && <div className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></div>}
-                    </div>
 
-                    <h2 className="text-3xl font-black text-white tracking-tighter mb-2 leading-tight drop-shadow-sm">
-                        {active.title}
-                    </h2>
-                    <p className="text-white/80 text-xs font-bold leading-relaxed mb-6 max-w-[85%]">
-                        {active.message}
-                    </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                    <button
-                        onClick={() => onCTAClick(active.id)}
-                        className="px-6 py-3 bg-white text-indigo-900 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-2"
-                    >
-                        {active.cta}
-                        <Icon name="arrow-right" size={14} />
-                    </button>
-
-                    {/* Indicators */}
-                    <div className="flex gap-2">
-                        {BULLETINS.map((_, i) => (
-                            <div
-                                key={i}
-                                onClick={() => setActiveIndex(i)}
-                                className={`h-1.5 rounded-full transition-all cursor-pointer ${activeIndex === i ? 'w-8 bg-white' : 'w-1.5 bg-white/30'}`}
-                            />
-                        ))}
+                        <button 
+                            onClick={() => onCTAClick(item.id)}
+                            className="mt-4 w-full py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors border border-white/10"
+                        >
+                            {item.cta} <Icon name="arrow-right" size={12} />
+                        </button>
                     </div>
                 </div>
-            </div>
+            ))}
         </div>
     );
 };
