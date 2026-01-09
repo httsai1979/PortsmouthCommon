@@ -1,29 +1,24 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
-import Fuse from 'fuse.js';
-import { ALL_DATA } from './data';
+import Fuse from 'fuse.js'; // [關鍵] 引入模糊搜尋引擎
+import { ALL_DATA, AREAS, TAG_ICONS } from './data';
 import { checkStatus, playSuccessSound, getDistance } from './utils';
-import { logSearchEvent } from './services/AnalyticsService';
-import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService'; // [Google Sheet]
+import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService'; // [Google Sheets]
 
 // Components
 import Icon from './components/Icon';
 import ResourceCard from './components/ResourceCard';
-import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal } from './components/Modals'; // [Firebase Modals]
-import FAQSection from './components/FAQSection';
-import CommunityBulletin from './components/CommunityBulletin';
+import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal } from './components/Modals'; // [Firebase]
 import AIAssistant from './components/AIAssistant';
 import PrivacyShield from './components/PrivacyShield';
 import SmartNotifications from './components/SmartNotifications';
 import ProgressTimeline from './components/ProgressTimeline';
 
-// Images
-import logo from './assets/images/logo.png';
+// Images (直接使用 public 資料夾中的 icon.png)
+const logo = '/icon.png';
 
 // Authentication
 import { useAuth } from './contexts/AuthContext'; // [Firebase Auth]
 import PartnerLogin from './components/PartnerLogin';
-
-import { AREAS, TAG_ICONS, COMMUNITY_DEALS, GIFT_EXCHANGE, PROGRESS_TIPS } from './data';
 
 // [PERFORMANCE] Lazy Load Heavy Components
 const SimpleMap = lazy(() => import('./components/SimpleMap'));
@@ -32,9 +27,7 @@ const SmartCompare = lazy(() => import('./components/SmartCompare'));
 const UnifiedSchedule = lazy(() => import('./components/UnifiedSchedule'));
 const AreaScheduleView = lazy(() => import('./components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 const CrisisWizard = lazy(() => import('./components/CrisisWizard'));
-const PartnerDashboard = lazy(() => import('./components/PartnerDashboard'));
-const PulseMap = lazy(() => import('./components/PulseMap'));
-const DataMigration = lazy(() => import('./components/DataMigration'));
+const PartnerDashboard = lazy(() => import('./components/PartnerDashboard')); // 預留給未來的合作夥伴後台
 const PrintView = lazy(() => import('./components/PrintView'));
 
 // Loading Fallback Component
@@ -50,23 +43,20 @@ const App = () => {
     const [stealthMode, setStealthMode] = useState(false);
     const [fontSize, setFontSize] = useState(0); 
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
     const [loading, setLoading] = useState(true);
 
     // Navigation & Modals
-    const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'community-plan' | 'safe-sleep-plan' | 'warm-spaces-plan' | 'faq' | 'partner-dashboard' | 'analytics' | 'data-migration'>('home');
+    const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'community-plan' | 'safe-sleep-plan' | 'warm-spaces-plan' | 'partner-dashboard'>('home');
     const [showTips, setShowTips] = useState(false);
     const [showCrisis, setShowCrisis] = useState(false);
     const [showPrint, setShowPrint] = useState(false);
     const [mapFilter, setMapFilter] = useState<'all' | 'open'>('open');
     const [mapFocus, setMapFocus] = useState<{ lat: number, lng: number, label: string, id?: string } | null>(null);
     const [showWizard, setShowWizard] = useState(false);
-    const [showPartnerLogin, setShowPartnerLogin] = useState(false);
     
-    // Auth Context
+    // Auth & Partner States
     const { currentUser, isPartner, loading: authLoading } = useAuth();
-
-    // Modal States
+    const [showPartnerLogin, setShowPartnerLogin] = useState(false);
     const [reportTarget, setReportTarget] = useState<{name: string, id: string} | null>(null);
     const [showPartnerRequest, setShowPartnerRequest] = useState(false);
 
@@ -79,8 +69,8 @@ const App = () => {
     const [compareItems, setCompareItems] = useState<string[]>([]);
     const [notifications, setNotifications] = useState<Array<{ id: string; type: 'opening_soon' | 'favorite' | 'weather' | 'info'; message: string; timestamp: number; resourceId?: string }>>([]);
 
-    // Data State (The Hybrid Core)
-    const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({});
+    // Data State (Hybrid Architecture)
+    const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({}); // 來自 Google Sheets
 
     const [savedIds, setSavedIds] = useState<string[]>(() => {
         const saved = localStorage.getItem('bridge_saved_resources');
@@ -101,7 +91,7 @@ const App = () => {
             try {
                 await navigator.share({
                     title: 'Portsmouth Bridge',
-                    text: 'Find food, shelter, and community support in Portsmouth. Check out Portsmouth Bridge!',
+                    text: 'Find food, shelter, and community support in Portsmouth.',
                     url: window.location.href,
                 });
             } catch (err) {
@@ -109,7 +99,7 @@ const App = () => {
             }
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard! Share it with your friends.');
+            alert('Link copied to clipboard!');
         }
     };
 
@@ -127,16 +117,6 @@ const App = () => {
         date: 'today'
     });
 
-    // 🛡️ Route Guard
-    useEffect(() => {
-        if (!authLoading && !currentUser) {
-            const restrictedViews = ['partner-dashboard', 'analytics', 'data-migration'];
-            if (restrictedViews.includes(view)) {
-                setView('home');
-            }
-        }
-    }, [currentUser, authLoading, view]);
-
     // Font Size Effect
     useEffect(() => {
         const root = document.documentElement;
@@ -144,14 +124,14 @@ const App = () => {
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    // Initial Load & Data Sync
+    // Initial Load
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
 
-        // [Google Sheets] Fetch Live Status
+        // [Google Sheets] 讀取即時狀態
         fetchLiveStatus().then(statusMap => {
             setLiveStatus(statusMap);
-            console.log("📊 Google Sheets Live Status Synced");
+            console.log("📊 Live Status Synced from Google Sheets");
         });
 
         if (navigator.geolocation) {
@@ -187,7 +167,7 @@ const App = () => {
         setVisibleCount(10);
     }, [filters, searchQuery, smartFilters]);
 
-    // Smart Notifications
+    // Notifications Logic
     useEffect(() => {
         const checkForNotifications = () => {
             const now = new Date();
@@ -222,15 +202,6 @@ const App = () => {
                     }
                 }
             });
-
-            if (currentHour >= 18 && now.getMonth() >= 10 && newNotifications.length === 0) {
-                newNotifications.push({
-                    id: `weather_${now.getTime()}`,
-                    type: 'weather',
-                    message: 'Cold evening ahead - Emergency shelter beds available tonight',
-                    timestamp: now.getTime()
-                });
-            }
 
             if (newNotifications.length > 0) {
                 setNotifications(prev => {
@@ -269,43 +240,44 @@ const App = () => {
     const handleSearch = (newFilters: any) => {
         setFilters(newFilters);
         if (newFilters.category !== 'all' && view === 'home') {
-            setView('map');
+            setView('list'); // 搜尋後切換到列表模式
         }
     };
 
-    // --- Core Logic: Data Merging & Search ---
+    // --- 核心邏輯：資料合併 & 模糊搜尋 ---
     const filteredData = useMemo(() => {
-        // 1. Merge Static Data (ALL_DATA) with Live Status (Google Sheet)
-        // This ensures the app always has data, but updates it with live info if available.
+        // 1. 合併靜態資料與 Google Sheets 即時狀態
         let mergedData = ALL_DATA.map(item => {
             const status = liveStatus[item.id];
             if (status) {
                 return { 
                     ...item, 
-                    // Override fields if Google Sheet has data, otherwise keep static
+                    // 如果有即時訊息，覆蓋原本的描述
                     description: status.message ? `[${status.status}] ${status.message}` : item.description,
-                    capacityLevel: status.urgency === 'High' || status.urgency === 'Critical' ? 'low' : 'high', // Map urgency to capacity
+                    // 如果狀態緊急，標示為低庫存以提醒使用者
+                    capacityLevel: status.urgency === 'High' || status.urgency === 'Critical' ? 'low' : 'high', 
                 };
             }
             return item;
         });
 
-        // 2. Fuzzy Search (Fuse.js)
+        // 2. Fuse.js 模糊搜尋 (解決你提到的問題：打錯字也能找到)
         if (searchQuery) {
             const fuse = new Fuse(mergedData, {
                 keys: [
-                    { name: 'name', weight: 0.4 },
-                    { name: 'tags', weight: 0.3 },
-                    { name: 'description', weight: 0.2 },
-                    { name: 'address', weight: 0.1 }
+                    { name: 'name', weight: 0.4 },        // 名稱權重最高
+                    { name: 'tags', weight: 0.3 },        // 標籤其次
+                    { name: 'description', weight: 0.2 }, // 描述內文
+                    { name: 'address', weight: 0.1 }      // 地址
                 ],
-                threshold: 0.3,
+                threshold: 0.3, // 容許度 (0.3 代表允許少量拼字錯誤)
                 ignoreLocation: true
             });
+            // 將搜尋結果轉換回原本的格式
             mergedData = fuse.search(searchQuery).map(result => result.item);
         }
 
-        // 3. Filtering
+        // 3. 執行一般過濾 (區域、分類、智慧標籤)
         const data = mergedData.filter(item => {
             const matchesArea = filters.area === 'All' || item.area === filters.area;
             const matchesCategory = filters.category === 'all' || item.category === filters.category;
@@ -323,17 +295,20 @@ const App = () => {
             return matchesArea && matchesCategory && matchesOpenNow && matchesVerified && matchesNearMe;
         });
 
-        // 4. Sorting
+        // 4. 排序結果 (緊急程度 > 營業中 > 距離)
         return data.sort((a, b) => {
-            // Urgency Sort (from Google Sheet)
+            // Live Status 緊急程度優先
             const urgencyA = liveStatus[a.id]?.urgency === 'High' ? 1 : 0;
             const urgencyB = liveStatus[b.id]?.urgency === 'High' ? 1 : 0;
             if (urgencyA !== urgencyB) return urgencyB - urgencyA;
 
+            // 營業狀態
             const statusA = checkStatus(a.schedule);
             const statusB = checkStatus(b.schedule);
             if (statusA.isOpen && !statusB.isOpen) return -1;
             if (!statusA.isOpen && statusB.isOpen) return 1;
+            
+            // 距離
             if (userLocation) {
                 const distA = getDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
                 const distB = getDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
@@ -343,23 +318,9 @@ const App = () => {
         });
     }, [filters, userLocation, searchQuery, smartFilters, liveStatus]);
 
-    // Analytics Logger
-    useEffect(() => {
-        if (searchQuery.length > 2) {
-            const timer = setTimeout(() => {
-                logSearchEvent(searchQuery, filteredData.length, filters.area, filters.category);
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [searchQuery, filteredData.length, filters.area, filters.category]);
-
     const savedResources = useMemo(() => {
         return ALL_DATA.filter(item => savedIds.includes(item.id));
     }, [savedIds]);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
 
     // Helper for Suspense
     const renderLazyView = (Component: any, props = {}) => (
@@ -378,12 +339,13 @@ const App = () => {
                 .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
                 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .fs-0 { font-size: 16px; } .fs-1 { font-size: 18px; } .fs-2 { font-size: 20px; }
             `}</style>
 
             {/* Scroll To Top */}
             {showScrollTop && (
                 <button
-                    onClick={scrollToTop}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="fixed bottom-24 right-5 z-[5000] p-4 bg-slate-900 text-white rounded-full shadow-2xl animate-fade-in-up hover:bg-black transition-all active:scale-90"
                     aria-label="Scroll to top"
                 >
@@ -415,20 +377,12 @@ const App = () => {
 
                         {/* Partner Tools */}
                         {isPartner && (
-                            <>
-                                <button
-                                    onClick={() => setView(view === 'partner-dashboard' ? 'home' : 'partner-dashboard')}
-                                    className={`p-2 rounded-xl transition-all ${view === 'partner-dashboard' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-emerald-50 text-emerald-600'}`}
-                                >
-                                    <Icon name="briefcase" size={20} />
-                                </button>
-                                <button
-                                    onClick={() => setView(view === 'analytics' ? 'home' : 'analytics')}
-                                    className={`p-2 rounded-xl transition-all ${view === 'analytics' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-600'}`}
-                                >
-                                    <Icon name="activity" size={20} />
-                                </button>
-                            </>
+                            <button
+                                onClick={() => setView(view === 'partner-dashboard' ? 'home' : 'partner-dashboard')}
+                                className={`p-2 rounded-xl transition-all ${view === 'partner-dashboard' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-emerald-50 text-emerald-600'}`}
+                            >
+                                <Icon name="briefcase" size={20} />
+                            </button>
                         )}
 
                         <button
@@ -445,13 +399,12 @@ const App = () => {
 
             <AIAssistant onIntent={handleSearch} currentArea={filters.area} />
 
-            {/* Main Content Area */}
+            {/* Main Content */}
             <div className={`px-5 mt-4 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.3]' : ''}`}>
                 
                 {/* View: Home */}
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
-                        <CommunityBulletin onCTAClick={(id) => { if (id === '4') setView('map'); else if (id === '1') setView('list'); }} />
                         {savedIds.length > 0 && <div className="mb-6"><ProgressTimeline savedCount={savedIds.length} /></div>}
 
                         {/* Search Bar */}
@@ -461,7 +414,7 @@ const App = () => {
                                 type="text" 
                                 value={searchQuery} 
                                 onChange={(e) => { setSearchQuery(e.target.value); if (view === 'home') setView('list'); }} 
-                                placeholder="Search resources..." 
+                                placeholder="Try 'fud bank' or 'help'..." 
                                 className="w-full py-4 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 outline-none text-sm font-bold text-slate-900 shadow-sm" 
                             />
                         </div>
@@ -476,11 +429,11 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'faq', label: 'Common Q&A', icon: 'help-circle' }
+                                { id: 'all', label: 'More', icon: 'grid' }
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
-                                    onClick={() => { if (cat.id === 'faq') setView('faq'); else handleSearch({ ...filters, category: cat.id || 'all' }); }}
+                                    onClick={() => handleSearch({ ...filters, category: cat.id || 'all' })}
                                     className="flex flex-col items-center gap-2 group"
                                 >
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-all group-active:scale-90 ${filters.category === cat.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 border-2 border-slate-50 group-hover:border-indigo-100'}`}>
@@ -530,7 +483,7 @@ const App = () => {
                         <div className="space-y-4 mb-8">
                             <div className="relative">
                                 <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold" />
+                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Fuzzy search..." className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold" />
                                 {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600"><Icon name="x" size={14} /></button>}
                             </div>
                             <div className="flex gap-2 items-center">
@@ -558,7 +511,7 @@ const App = () => {
                                     highContrast={highContrast}
                                     isPartner={isPartner}
                                     onTagClick={(tag) => setSearchQuery(tag)}
-                                    onReport={() => setReportTarget({ name: item.name, id: item.id })} // Pass report handler
+                                    onReport={() => setReportTarget({ name: item.name, id: item.id })} // 觸發回報 Modal
                                 />
                             ))}
                         </div>
@@ -589,18 +542,14 @@ const App = () => {
                             onToggleSave: toggleSaved, 
                             stealthMode: stealthMode, 
                             externalFocus: mapFocus, 
-                            isPartner: isPartner, 
-                            liveStatus: liveStatus, // Pass live status to map
+                            liveStatus: liveStatus, // 傳入 Google Sheets 即時狀態
                             onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
                         })}
                     </div>
                 )}
 
                 {/* Sub-Views (Rendered Lazily) */}
-                {view === 'faq' && renderLazyView(FAQSection, { onClose: () => setView('home') })}
                 {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
-                {view === 'analytics' && renderLazyView(PulseMap)}
-                {view === 'data-migration' && renderLazyView(DataMigration)}
                 
                 {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
                 
@@ -613,7 +562,7 @@ const App = () => {
                 {view === 'compare' && (
                     <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}>
                         <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
-                            {renderLazyView(SmartCompare, { items: services.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = services.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=$${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
+                            {renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
                         </div>
                     </div>
                 )}
@@ -637,13 +586,28 @@ const App = () => {
             {showPartnerLogin && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
                     <div className="w-full max-w-md">
-                        <PartnerLogin onClose={() => setShowPartnerLogin(false)} onRequestAccess={() => { setShowPartnerLogin(false); setShowPartnerRequest(true); }} />
+                        <PartnerLogin 
+                            onClose={() => setShowPartnerLogin(false)}
+                            onRequestAccess={() => {
+                                setShowPartnerLogin(false);
+                                setShowPartnerRequest(true);
+                            }}
+                        />
                     </div>
                 </div>
             )}
 
-            <ReportModal isOpen={!!reportTarget} onClose={() => setReportTarget(null)} resourceName={reportTarget?.name || ''} resourceId={reportTarget?.id || ''} />
-            <PartnerRequestModal isOpen={showPartnerRequest} onClose={() => setShowPartnerRequest(false)} />
+            {/* Firebase Reports & Requests Modals */}
+            <ReportModal 
+                isOpen={!!reportTarget} 
+                onClose={() => setReportTarget(null)} 
+                resourceName={reportTarget?.name || ''}
+                resourceId={reportTarget?.id || ''}
+            />
+            <PartnerRequestModal 
+                isOpen={showPartnerRequest} 
+                onClose={() => setShowPartnerRequest(false)} 
+            />
 
             {showWizard && renderLazyView(CrisisWizard, { userLocation: userLocation, onClose: () => setShowWizard(false), savedIds: savedIds, onToggleSave: toggleSaved })}
             
@@ -655,7 +619,7 @@ const App = () => {
                 </div>
             )}
 
-            {view === 'planner' && journeyItems.length > 0 && (<div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end" onClick={() => setView('home')}><div className="w-full max-w-lg mx-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>{renderLazyView(JourneyPlanner, { items: services.filter(r => journeyItems.includes(r.id)), userLocation: userLocation, onRemove: (id: string) => setJourneyItems(prev => prev.filter(i => i !== id)), onClear: () => { setJourneyItems([]); setView('home'); }, onNavigate: () => { if (journeyItems.length > 0) { const points = services.filter(r => journeyItems.includes(r.id)).map(r => `${r.lat},${r.lng}`).join('|'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${points.split('|').pop()}&waypoints=${points}`, '_blank'); } } })}</div></div>)}
+            {view === 'planner' && journeyItems.length > 0 && (<div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end" onClick={() => setView('home')}><div className="w-full max-w-lg mx-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>{renderLazyView(JourneyPlanner, { items: ALL_DATA.filter(r => journeyItems.includes(r.id)), userLocation: userLocation, onRemove: (id: string) => setJourneyItems(prev => prev.filter(i => i !== id)), onClear: () => { setJourneyItems([]); setView('home'); }, onNavigate: () => { if (journeyItems.length > 0) { const points = ALL_DATA.filter(r => journeyItems.includes(r.id)).map(r => `${r.lat},${r.lng}`).join('|'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${points.split('|').pop()}&waypoints=${points}`, '_blank'); } } })}</div></div>)}
         </div>
     );
 };
