@@ -1,18 +1,17 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import Fuse from 'fuse.js';
-// [混合架構關鍵] 引入 Firebase 監聽功能，用於接收合作夥伴的即時更新 (Option B)
 import { collection, onSnapshot } from 'firebase/firestore'; 
 import { db } from './lib/firebase'; 
 import { ALL_DATA, AREAS, TAG_ICONS, COMMUNITY_DEALS, GIFT_EXCHANGE, PROGRESS_TIPS } from './data';
 import { checkStatus, playSuccessSound, getDistance } from './utils';
 import { logSearchEvent } from './services/AnalyticsService';
-// [Google Sheets] 引入基礎即時狀態服務
 import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
 
 // Components
 import Icon from './components/Icon';
 import ResourceCard from './components/ResourceCard';
-import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal } from './components/Modals';
+// [MODIFIED] 引入 TutorialModal
+import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal, TutorialModal } from './components/Modals';
 import FAQSection from './components/FAQSection';
 import CommunityBulletin from './components/CommunityBulletin';
 import AIAssistant from './components/AIAssistant';
@@ -35,8 +34,7 @@ const UnifiedSchedule = lazy(() => import('./components/UnifiedSchedule'));
 const AreaScheduleView = lazy(() => import('./components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 const CrisisWizard = lazy(() => import('./components/CrisisWizard'));
 const PartnerDashboard = lazy(() => import('./components/PartnerDashboard'));
-// [PulseMap] 這是您的戰略數據儀表板，已確認檔案存在，此處正確引入
-const PulseMap = lazy(() => import('./components/PulseMap')); 
+const PulseMap = lazy(() => import('./components/PulseMap'));
 const DataMigration = lazy(() => import('./components/DataMigration'));
 const PrintView = lazy(() => import('./components/PrintView'));
 
@@ -53,7 +51,6 @@ const App = () => {
     const [stealthMode, setStealthMode] = useState(false);
     const [fontSize, setFontSize] = useState(0); 
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
     const [loading, setLoading] = useState(true);
 
     // Navigation & Modals
@@ -66,6 +63,9 @@ const App = () => {
     const [showWizard, setShowWizard] = useState(false);
     const [showPartnerLogin, setShowPartnerLogin] = useState(false);
     const { currentUser, isPartner, loading: authLoading } = useAuth();
+    
+    // [NEW] Tutorial State
+    const [showTutorial, setShowTutorial] = useState(false);
 
     // Modal States
     const [reportTarget, setReportTarget] = useState<{name: string, id: string} | null>(null);
@@ -75,12 +75,10 @@ const App = () => {
     const [visibleCount, setVisibleCount] = useState(10);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // [Hybrid Data State] 混合資料來源：這是實現 Option B 的核心
-    const [sheetStatus, setSheetStatus] = useState<Record<string, LiveStatus>>({}); // 來自 Google Sheets
-    const [firebaseStatus, setFirebaseStatus] = useState<Record<string, LiveStatus>>({}); // 來自 Firebase (Partner updates)
+    // [Hybrid Data State]
+    const [sheetStatus, setSheetStatus] = useState<Record<string, LiveStatus>>({});
+    const [firebaseStatus, setFirebaseStatus] = useState<Record<string, LiveStatus>>({});
     
-    // 合併後的最終狀態 (Firebase 優先權高於 Google Sheets)
-    // 這樣如果合作夥伴在後台更新了 (Firebase)，就會覆蓋掉 Google Sheets 的舊資料
     const liveStatus = useMemo(() => {
         return { ...sheetStatus, ...firebaseStatus };
     }, [sheetStatus, firebaseStatus]);
@@ -103,102 +101,73 @@ const App = () => {
             return next;
         });
     };
+    
     const handleShare = async () => {
         if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Portsmouth Bridge',
-                    text: 'Find food, shelter, and community support in Portsmouth. Check out Portsmouth Bridge!',
-                    url: window.location.href,
-                });
-            } catch (err) {
-                console.log('Error sharing:', err);
-            }
+            try { await navigator.share({ title: 'Portsmouth Bridge', text: 'Find food, shelter, and community support in Portsmouth.', url: window.location.href }); } 
+            catch (err) { console.log('Error sharing:', err); }
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard! Share it with your friends.');
+            alert('Link copied to clipboard!');
         }
     };
 
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [smartFilters, setSmartFilters] = useState({
-        openNow: false,
-        nearMe: false,
-        verified: false
-    });
+    const [smartFilters, setSmartFilters] = useState({ openNow: false, nearMe: false, verified: false });
+    const [filters, setFilters] = useState({ area: 'All', category: 'all', date: 'today' });
 
-    const [filters, setFilters] = useState({
-        area: 'All',
-        category: 'all',
-        date: 'today'
-    });
-
-    // 🛡️ Route Guard
     useEffect(() => {
         if (!authLoading && !currentUser) {
             const restrictedViews = ['partner-dashboard', 'analytics', 'data-migration'];
-            if (restrictedViews.includes(view)) {
-                setView('home');
-            }
+            if (restrictedViews.includes(view)) setView('home');
         }
     }, [currentUser, authLoading, view]);
 
-    // Font Size Effect
     useEffect(() => {
         const root = document.documentElement;
         root.classList.remove('fs-0', 'fs-1', 'fs-2');
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    // [TASK 1 & 3] Google Sheets Polling + Offline Cache (離線韌性)
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
 
+        // [NEW] Check if tutorial has been seen
+        const seenTutorial = localStorage.getItem('seen_tutorial');
+        if (!seenTutorial) {
+            setShowTutorial(true);
+            localStorage.setItem('seen_tutorial', 'true');
+        }
+
         const loadSheetData = async () => {
-            console.log("🔄 Polling Google Sheets...");
             try {
                 const data = await fetchLiveStatus();
-                // 如果抓取到的資料是空的 (例如網路錯誤)，嘗試讀取快取
                 if (Object.keys(data).length === 0) {
                     const cached = localStorage.getItem('cached_live_status');
-                    if (cached) {
-                        console.log("⚠️ Network failed, loading offline cache.");
-                        setSheetStatus(JSON.parse(cached));
-                    }
+                    if (cached) setSheetStatus(JSON.parse(cached));
                 } else {
-                    // 抓取成功，更新狀態並寫入快取
                     setSheetStatus(data);
                     localStorage.setItem('cached_live_status', JSON.stringify(data));
                 }
             } catch (e) {
-                console.error("Sheet fetch error", e);
-                // 錯誤時也嘗試讀取快取
                 const cached = localStorage.getItem('cached_live_status');
                 if (cached) setSheetStatus(JSON.parse(cached));
             }
         };
 
-        // 立即執行一次
         loadSheetData();
-
-        // 每 5 分鐘輪詢一次 (Zero Cost Polling)
         const intervalId = setInterval(loadSheetData, 5 * 60 * 1000);
 
-        // [TASK 1: Option B] Firebase Partner Listener (Hybrid Read)
-        // 監聽 'services' 集合，這會接收 PartnerDashboard 的即時更新
-        // 因為只有合作夥伴會更新這個集合，所以讀取量很低，符合免費額度需求
         const unsubscribeFirebase = onSnapshot(collection(db, 'services'), (snapshot) => {
             if (!snapshot.empty) {
                 const fbData: Record<string, LiveStatus> = {};
                 snapshot.docs.forEach(doc => {
                     const data = doc.data();
-                    // 將 Firebase 資料結構 (PartnerDashboard 寫入的格式) 轉換為 App 通用的 LiveStatus 格式
                     if (data.liveStatus) {
                         fbData[doc.id] = {
                             id: doc.id,
                             status: data.liveStatus.isOpen ? 'Open' : 'Closed',
-                            // 將 PartnerDashboard 的 'Low' capacity 對應為 'High' urgency (邏輯轉換)
                             urgency: data.liveStatus.capacity === 'Low' ? 'High' : 'Normal',
                             message: data.liveStatus.message || '',
                             lastUpdated: data.liveStatus.lastUpdated || new Date().toISOString()
@@ -206,46 +175,44 @@ const App = () => {
                     }
                 });
                 setFirebaseStatus(fbData);
-                console.log("🔥 Partner Updates Synced from Firebase");
             }
-        }, (err) => {
-            console.warn("Firebase sync ignored (offline or permission):", err);
         });
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                (err) => console.log("Location access denied", err)
+                (err) => console.log("Location denied", err)
             );
         }
 
         const handleStatus = () => setIsOffline(!navigator.onLine);
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
-
-        const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 300);
-        };
+        const handleScroll = () => setShowScrollTop(window.scrollY > 300);
         window.addEventListener('scroll', handleScroll);
 
         return () => {
             clearInterval(intervalId);
-            unsubscribeFirebase(); // 取消 Firebase 監聽，避免記憶體洩漏
+            unsubscribeFirebase();
             window.removeEventListener('online', handleStatus);
             window.removeEventListener('offline', handleStatus);
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
 
-    useEffect(() => {
-        if (view !== 'map') {
-            setMapFocus(null);
-        }
-    }, [view]);
+    useEffect(() => { if (view !== 'map') setMapFocus(null); }, [view]);
+    useEffect(() => { setVisibleCount(10); }, [filters, searchQuery, smartFilters]);
 
-    useEffect(() => {
-        setVisibleCount(10);
-    }, [filters, searchQuery, smartFilters]);
+    // [NEW] FAQ Navigation Handler
+    const handleFAQNavigate = (action: string) => {
+        if (action === 'food' || action === 'support' || action === 'warmth') {
+            setFilters({ ...filters, category: action });
+            setView('map');
+        } else if (action === 'no_referral') {
+            setSearchQuery('no_referral');
+            setView('list');
+        }
+    };
 
     // Notifications Logic
     useEffect(() => {
@@ -333,24 +300,20 @@ const App = () => {
         }
     };
 
-    // [核心邏輯] 資料合併 (Static + Sheet + Firebase) & 模糊搜尋
+    // Data Merging & Search Logic
     const filteredData = useMemo(() => {
-        // 1. 合併資料：使用 useMemo 計算出來的 liveStatus (Firebase 覆蓋 Sheet)
         let mergedData = ALL_DATA.map(item => {
             const status = liveStatus[item.id];
             if (status) {
                 return { 
                     ...item, 
-                    // 如果有即時訊息，覆蓋原本的描述
                     description: status.message ? `[${status.status}] ${status.message}` : item.description,
-                    // 如果狀態緊急，標示為低庫存
                     capacityLevel: status.urgency === 'High' || status.urgency === 'Critical' ? 'low' : 'high', 
                 };
             }
             return item;
         });
 
-        // 2. Fuse.js 模糊搜尋
         if (searchQuery) {
             const fuse = new Fuse(mergedData, {
                 keys: [
@@ -359,13 +322,12 @@ const App = () => {
                     { name: 'description', weight: 0.2 },
                     { name: 'category', weight: 0.1 }
                 ],
-                threshold: 0.3, // 容許度
+                threshold: 0.3,
                 ignoreLocation: true
             });
             mergedData = fuse.search(searchQuery).map(result => result.item);
         }
 
-        // 3. 過濾
         const data = mergedData.filter(item => {
             const matchesArea = filters.area === 'All' || item.area === filters.area;
             const matchesCategory = filters.category === 'all' || item.category === filters.category;
@@ -383,7 +345,6 @@ const App = () => {
             return matchesArea && matchesCategory && matchesOpenNow && matchesVerified && matchesNearMe;
         });
 
-        // 4. 排序
         return data.sort((a, b) => {
             const urgencyA = liveStatus[a.id]?.urgency === 'High' ? 1 : 0;
             const urgencyB = liveStatus[b.id]?.urgency === 'High' ? 1 : 0;
@@ -402,23 +363,6 @@ const App = () => {
             return 0;
         });
     }, [filters, userLocation, searchQuery, smartFilters, liveStatus]);
-
-    useEffect(() => {
-        if (searchQuery.length > 2) {
-            const timer = setTimeout(() => {
-                logSearchEvent(searchQuery, filteredData.length, filters.area, filters.category);
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [searchQuery, filteredData.length, filters.area, filters.category]);
-
-    const savedResources = useMemo(() => {
-        return ALL_DATA.filter(item => savedIds.includes(item.id));
-    }, [savedIds]);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
 
     // Helper for Suspense
     const renderLazyView = (Component: any, props = {}) => (
@@ -564,7 +508,7 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'faq', label: 'Common Q&A', icon: 'help-circle' }
+                                { id: 'faq', label: 'Help', icon: 'help-circle' } // [UPDATE] Changed label to 'Help'
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
@@ -711,97 +655,18 @@ const App = () => {
                 )}
 
                 {/* Other Views... */}
-                {view === 'faq' && renderLazyView(FAQSection, { onClose: () => setView('home') })}
-                {view === 'community-plan' && (
-                    <div className="animate-fade-in-up">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Food Support</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shared Meals & Community Pantries</p>
-                            </div>
-                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
-                        </div>
-                        {renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", subtitle: "Sustaining the community together", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                    </div>
-                )}
-                {view === 'safe-sleep-plan' && (
-                    <div className="animate-fade-in-up">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Safe Sleep</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Housing & Emergency Night Support</p>
-                            </div>
-                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
-                        </div>
-                        {renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep & Housing", subtitle: "Support for finding a safe place", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                    </div>
-                )}
-                {view === 'warm-spaces-plan' && (
-                    <div className="animate-fade-in-up">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Warm Hubs</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Spaces & Warmth</p>
-                            </div>
-                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
-                        </div>
-                        {renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces Calendar", subtitle: "Friendly places to stay warm", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                    </div>
-                )}
+                {view === 'faq' && renderLazyView(FAQSection, { onClose: () => setView('home'), onNavigate: handleFAQNavigate })}
+                
+                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds })}
+                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds })}
+                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds })}
                 {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
-                {view === 'analytics' && (
-                    <div className="animate-fade-in-up">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Analytics</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Demand Insights</p>
-                            </div>
-                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
-                        </div>
-                        {renderLazyView(PulseMap)}
-                    </div>
-                )}
-                {view === 'data-migration' && (
-                    <div className="animate-fade-in-up">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Data Migration</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Firebase Sync Tools</p>
-                            </div>
-                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
-                        </div>
-                        {renderLazyView(DataMigration)}
-                    </div>
-                )}
+                {view === 'analytics' && renderLazyView(PulseMap)}
+                {view === 'data-migration' && renderLazyView(DataMigration)}
+                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
+                {view === 'compare' && <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}><div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>{renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}</div></div>}
 
-                {/* Modals */}
-                {showPartnerLogin && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-                        <div className="w-full max-w-md">
-                            <PartnerLogin 
-                                onClose={() => setShowPartnerLogin(false)}
-                                onRequestAccess={() => {
-                                    setShowPartnerLogin(false);
-                                    setShowPartnerRequest(true);
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* [NEW] Render the new Modals */}
-                <ReportModal 
-                    isOpen={!!reportTarget} 
-                    onClose={() => setReportTarget(null)} 
-                    resourceName={reportTarget?.name || ''}
-                    resourceId={reportTarget?.id || ''}
-                />
-                <PartnerRequestModal 
-                    isOpen={showPartnerRequest} 
-                    onClose={() => setShowPartnerRequest(false)} 
-                />
-
-                {/* List View with Report Interaction */}
+                {/* List View */}
                 {view === 'list' && (
                     <div className="animate-fade-in-up">
                         <div className="flex justify-between items-center mb-6">
@@ -869,7 +734,10 @@ const App = () => {
                 {view === 'map' && (
                     <div className="animate-fade-in-up pb-20">
                         <div className="mb-4 flex items-center justify-between">
-                            <div><h2 className="text-xl font-black text-slate-800">Explorer</h2><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Visual navigation</p></div>
+                            <div>
+                                <h2 className="text-xl font-black text-slate-800">Explorer</h2>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Visual navigation</p>
+                            </div>
                             <div className="flex gap-2">
                                 <button onClick={() => setView('list')} className="p-3 bg-white border-2 border-slate-100 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"><Icon name="list" size={18} /></button>
                                 <div className="flex gap-1">
@@ -892,25 +760,6 @@ const App = () => {
                             onReport: (item: any) => setReportTarget({ name: item.name, id: item.id }),
                             onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
                         })}
-                    </div>
-                )}
-
-                {/* Sub-Views (Rendered Lazily) */}
-                {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
-                
-                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
-                
-                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                
-                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                
-                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-
-                {view === 'compare' && (
-                    <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}>
-                        <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
-                            {renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
-                        </div>
                     </div>
                 )}
             </div>
@@ -955,6 +804,9 @@ const App = () => {
                 isOpen={showPartnerRequest} 
                 onClose={() => setShowPartnerRequest(false)} 
             />
+
+            {/* [NEW] Show Tutorial on first visit */}
+            <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
 
             {showWizard && renderLazyView(CrisisWizard, { userLocation: userLocation, onClose: () => setShowWizard(false), savedIds: savedIds, onToggleSave: toggleSaved })}
             
