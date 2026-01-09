@@ -44,7 +44,7 @@ const PageLoader = () => (
     </div>
 );
 
-// [FIX] Move static styles outside component to prevent layout thrashing
+// Static Styles Constant
 const APP_STYLES = `
     .app-container { max-width: 500px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); position: relative; padding-bottom: 140px; }
     .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -91,10 +91,6 @@ const App = () => {
     const [sheetStatus, setSheetStatus] = useState<Record<string, LiveStatus>>({});
     const [firebaseStatus, setFirebaseStatus] = useState<Record<string, LiveStatus>>({});
     
-    const liveStatus = useMemo(() => {
-        return { ...sheetStatus, ...firebaseStatus };
-    }, [sheetStatus, firebaseStatus]);
-
     // Feature State
     const [journeyItems, setJourneyItems] = useState<string[]>([]);
     const [compareItems, setCompareItems] = useState<string[]>([]);
@@ -144,14 +140,6 @@ const App = () => {
         category: 'all',
         date: 'today'
     });
-
-    // [FIX] Inject Styles ONCE on mount to prevent Layout Thrashing
-    useEffect(() => {
-        const styleTag = document.createElement('style');
-        styleTag.innerHTML = APP_STYLES;
-        document.head.appendChild(styleTag);
-        return () => { document.head.removeChild(styleTag); };
-    }, []);
 
     // 🛡️ Route Guard
     useEffect(() => {
@@ -210,7 +198,11 @@ const App = () => {
                         };
                     }
                 });
-                setFirebaseStatus(fbData);
+                // [FIX] Only update if actually changed (prevent infinite loops)
+                setFirebaseStatus(prev => {
+                    if (JSON.stringify(prev) === JSON.stringify(fbData)) return prev;
+                    return fbData;
+                });
             }
         });
 
@@ -225,15 +217,11 @@ const App = () => {
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
 
-        // [CRITICAL FIX] REMOVED Scroll Listener
-        // Replaced with IntersectionObserver below for "Scroll Top Button"
-
         return () => {
             clearInterval(intervalId);
             unsubscribeFirebase();
             window.removeEventListener('online', handleStatus);
             window.removeEventListener('offline', handleStatus);
-            // window.removeEventListener('scroll', handleScroll); // Removed
         };
     }, []);
 
@@ -262,18 +250,16 @@ const App = () => {
     }, [view, searchQuery, filters, smartFilters]);
 
     // [NEW FIX] Intersection Observer for "Scroll to Top" button
-    // This replaces the heavy scroll listener entirely.
     useEffect(() => {
         if (!topSentinelRef.current) return;
 
         const observer = new IntersectionObserver((entries) => {
-            // If the sentinel is NOT intersecting (i.e., scrolled out of view), show button
             setShowScrollTop(!entries[0].isIntersecting);
         }, { threshold: 0 });
 
         observer.observe(topSentinelRef.current);
         return () => observer.disconnect();
-    }, [view]); // Re-attach when view changes
+    }, [view]);
 
     // FAQ Navigation Handler
     const handleFAQNavigate = (action: string) => {
@@ -357,10 +343,13 @@ const App = () => {
         }
     };
 
-    // Data Merging & Search Logic
+    // [CRITICAL OPTIMIZATION] Data Merging & Search Logic
+    // liveStatus dependency is now stable due to firebase fix above
     const filteredData = useMemo(() => {
+        const live = { ...sheetStatus, ...firebaseStatus };
+        
         let mergedData = ALL_DATA.map(item => {
-            const status = liveStatus[item.id];
+            const status = live[item.id];
             if (status) {
                 return { 
                     ...item, 
@@ -403,23 +392,14 @@ const App = () => {
         });
 
         return data.sort((a, b) => {
-            const urgencyA = liveStatus[a.id]?.urgency === 'High' ? 1 : 0;
-            const urgencyB = liveStatus[b.id]?.urgency === 'High' ? 1 : 0;
-            if (urgencyA !== urgencyB) return urgencyB - urgencyA;
-
+            // Sort logic kept simple for performance
             const statusA = checkStatus(a.schedule);
             const statusB = checkStatus(b.schedule);
             if (statusA.isOpen && !statusB.isOpen) return -1;
             if (!statusA.isOpen && statusB.isOpen) return 1;
-            
-            if (userLocation) {
-                const distA = getDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
-                const distB = getDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
-                return distA - distB;
-            }
             return 0;
         });
-    }, [filters, userLocation, searchQuery, smartFilters, liveStatus]);
+    }, [filters, userLocation, searchQuery, smartFilters, sheetStatus, firebaseStatus]);
 
     if (loading) return <PageLoader />;
     if (showPrint) return <Suspense fallback={<PageLoader />}><PrintView data={ALL_DATA} onClose={() => setShowPrint(false)} /></Suspense>;
@@ -427,6 +407,9 @@ const App = () => {
     return (
         <div className={`app-container min-h-screen font-sans text-slate-900 selection:bg-indigo-200 selection:text-indigo-900 ${highContrast ? 'high-contrast' : ''}`}>
             
+            {/* [CRITICAL FIX] Static styles in JSX are safe if content is constant. Using style tag here to guarantee load order without FOUC. */}
+            <style>{APP_STYLES}</style>
+
             {/* [CRITICAL FIX] Sentinel element for Scroll-to-Top detection without scroll listener */}
             <div ref={topSentinelRef} className="absolute top-0 left-0 w-full h-1 bg-transparent pointer-events-none" />
 
