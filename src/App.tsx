@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import Fuse from 'fuse.js';
-// [混合架構] 引入 Firebase 用於監聽合作夥伴的即時更新
+// [混合架構關鍵] 引入 Firebase 監聽功能，用於接收合作夥伴的即時更新 (Option B)
 import { collection, onSnapshot } from 'firebase/firestore'; 
 import { db } from './lib/firebase'; 
 import { ALL_DATA, AREAS, TAG_ICONS, COMMUNITY_DEALS, GIFT_EXCHANGE, PROGRESS_TIPS } from './data';
@@ -35,7 +35,7 @@ const UnifiedSchedule = lazy(() => import('./components/UnifiedSchedule'));
 const AreaScheduleView = lazy(() => import('./components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 const CrisisWizard = lazy(() => import('./components/CrisisWizard'));
 const PartnerDashboard = lazy(() => import('./components/PartnerDashboard'));
-// [PulseMap] 這會讀取 Firebase 真實數據，實現願景中的「戰略儀表板」
+// [PulseMap] 這是您的戰略數據儀表板，已確認檔案存在，此處正確引入
 const PulseMap = lazy(() => import('./components/PulseMap')); 
 const DataMigration = lazy(() => import('./components/DataMigration'));
 const PrintView = lazy(() => import('./components/PrintView'));
@@ -53,6 +53,7 @@ const App = () => {
     const [stealthMode, setStealthMode] = useState(false);
     const [fontSize, setFontSize] = useState(0); 
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
     const [loading, setLoading] = useState(true);
 
     // Navigation & Modals
@@ -74,11 +75,12 @@ const App = () => {
     const [visibleCount, setVisibleCount] = useState(10);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // [Hybrid Data State] 混合資料來源
+    // [Hybrid Data State] 混合資料來源：這是實現 Option B 的核心
     const [sheetStatus, setSheetStatus] = useState<Record<string, LiveStatus>>({}); // 來自 Google Sheets
     const [firebaseStatus, setFirebaseStatus] = useState<Record<string, LiveStatus>>({}); // 來自 Firebase (Partner updates)
     
-    // 合併後的最終狀態 (Firebase 優先於 Sheets)
+    // 合併後的最終狀態 (Firebase 優先權高於 Google Sheets)
+    // 這樣如果合作夥伴在後台更新了 (Firebase)，就會覆蓋掉 Google Sheets 的舊資料
     const liveStatus = useMemo(() => {
         return { ...sheetStatus, ...firebaseStatus };
     }, [sheetStatus, firebaseStatus]);
@@ -149,7 +151,7 @@ const App = () => {
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    // [TASK 1 & 3] Google Sheets Polling + Offline Cache
+    // [TASK 1 & 3] Google Sheets Polling + Offline Cache (離線韌性)
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
 
@@ -171,28 +173,32 @@ const App = () => {
                 }
             } catch (e) {
                 console.error("Sheet fetch error", e);
+                // 錯誤時也嘗試讀取快取
+                const cached = localStorage.getItem('cached_live_status');
+                if (cached) setSheetStatus(JSON.parse(cached));
             }
         };
 
         // 立即執行一次
         loadSheetData();
 
-        // 每 5 分鐘輪詢一次
+        // 每 5 分鐘輪詢一次 (Zero Cost Polling)
         const intervalId = setInterval(loadSheetData, 5 * 60 * 1000);
 
-        // [TASK 1] Firebase Partner Listener (Hybrid Read)
-        // 監聽 'services' 集合，這是 PartnerDashboard 寫入的地方
+        // [TASK 1: Option B] Firebase Partner Listener (Hybrid Read)
+        // 監聽 'services' 集合，這會接收 PartnerDashboard 的即時更新
+        // 因為只有合作夥伴會更新這個集合，所以讀取量很低，符合免費額度需求
         const unsubscribeFirebase = onSnapshot(collection(db, 'services'), (snapshot) => {
             if (!snapshot.empty) {
                 const fbData: Record<string, LiveStatus> = {};
                 snapshot.docs.forEach(doc => {
                     const data = doc.data();
-                    // 確保資料結構符合 LiveStatus 介面
+                    // 將 Firebase 資料結構 (PartnerDashboard 寫入的格式) 轉換為 App 通用的 LiveStatus 格式
                     if (data.liveStatus) {
                         fbData[doc.id] = {
                             id: doc.id,
                             status: data.liveStatus.isOpen ? 'Open' : 'Closed',
-                            // 將 Firebase 的 capacity 對應回 urgency
+                            // 將 PartnerDashboard 的 'Low' capacity 對應為 'High' urgency (邏輯轉換)
                             urgency: data.liveStatus.capacity === 'Low' ? 'High' : 'Normal',
                             message: data.liveStatus.message || '',
                             lastUpdated: data.liveStatus.lastUpdated || new Date().toISOString()
@@ -224,7 +230,7 @@ const App = () => {
 
         return () => {
             clearInterval(intervalId);
-            unsubscribeFirebase(); // 取消 Firebase 監聽
+            unsubscribeFirebase(); // 取消 Firebase 監聽，避免記憶體洩漏
             window.removeEventListener('online', handleStatus);
             window.removeEventListener('offline', handleStatus);
             window.removeEventListener('scroll', handleScroll);
@@ -329,13 +335,15 @@ const App = () => {
 
     // [核心邏輯] 資料合併 (Static + Sheet + Firebase) & 模糊搜尋
     const filteredData = useMemo(() => {
-        // 1. 合併資料：Firebase 的狀態會覆蓋 Google Sheets 的狀態
+        // 1. 合併資料：使用 useMemo 計算出來的 liveStatus (Firebase 覆蓋 Sheet)
         let mergedData = ALL_DATA.map(item => {
-            const status = liveStatus[item.id]; // 這裡是合併後的 liveStatus
+            const status = liveStatus[item.id];
             if (status) {
                 return { 
                     ...item, 
+                    // 如果有即時訊息，覆蓋原本的描述
                     description: status.message ? `[${status.status}] ${status.message}` : item.description,
+                    // 如果狀態緊急，標示為低庫存
                     capacityLevel: status.urgency === 'High' || status.urgency === 'Critical' ? 'low' : 'high', 
                 };
             }
@@ -509,6 +517,7 @@ const App = () => {
 
             <div className={`px-5 mt-4 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.3]' : ''}`}>
 
+                {/* --- [HOME VIEW] 保留你備份檔中的所有內容 --- */}
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
                         <CommunityBulletin onCTAClick={(id) => {
