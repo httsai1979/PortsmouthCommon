@@ -114,7 +114,7 @@ const App = () => {
             }
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard! Share it with your friends.');
+            alert('Link copied to clipboard!');
         }
     };
 
@@ -244,6 +244,9 @@ const App = () => {
             setView('map');
         } else if (action === 'no_referral') {
             setSearchQuery('no_referral');
+            setView('list');
+        } else if (action === 'all') {
+            setFilters({ area: 'All', category: 'all', date: 'today' });
             setView('list');
         }
     };
@@ -542,7 +545,7 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'faq', label: 'Help', icon: 'help-circle' } // [UPDATE] Changed label to 'Help'
+                                { id: 'faq', label: 'Guide', icon: 'help-circle' } // [UPDATE] Changed label to 'Guide'
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
@@ -570,7 +573,7 @@ const App = () => {
                                         <Icon name="lifebuoy" size={20} />
                                     </div>
                                     <div className="text-left">
-                                        <h3 className="text-base font-black leading-none mb-1">Find Help Now</h3>
+                                        <h3 className="text-base font-black leading-none mb-1">Find Support</h3>
                                         <p className="text-[9px] font-bold text-rose-100 uppercase tracking-widest">Interactive Wizard</p>
                                     </div>
                                 </div>
@@ -708,14 +711,37 @@ const App = () => {
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight capitalize">{filters.category === 'all' ? 'Directory' : filters.category}</h2>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Finding the right support</p>
                             </div>
-                            <div className="flex gap-2"><button onClick={() => setView('community-plan')} className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all"><Icon name="calendar" size={20} /></button><button onClick={() => setView('map')} className="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"><Icon name="mapPin" size={20} /></button><button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="home" size={20} /></button></div>
+                            <div className="flex gap-2">
+                                <button onClick={() => setView('community-plan')} className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all"><Icon name="calendar" size={20} /></button>
+                                <button onClick={() => setView('map')} className="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"><Icon name="mapPin" size={20} /></button>
+                                <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="home" size={20} /></button>
+                            </div>
                         </div>
+
+                        {/* Search and Filters */}
                         <div className="space-y-4 mb-8">
-                            <div className="relative"><Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" /><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search resources..." className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold" />{searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600"><Icon name="x" size={14} /></button>}</div>
-                            <div className="flex gap-2 items-center"><button onClick={() => setSmartFilters({ ...smartFilters, openNow: !smartFilters.openNow })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.openNow ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><div className={`w-1.5 h-1.5 rounded-full ${smartFilters.openNow ? 'bg-white animate-pulse' : 'bg-emerald-500'}`}></div>Open Now</button><button onClick={() => setSmartFilters({ ...smartFilters, verified: !smartFilters.verified })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.verified ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><Icon name="check_circle" size={10} /> Verified</button></div>
-                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2"><button onClick={() => setFilters({ ...filters, area: 'All' })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === 'All' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'}`}>Whole City</button>{AREAS.map(area => (<button key={area} onClick={() => setFilters({ ...filters, area })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{area}</button>))}</div>
-                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">{['all', 'food', 'shelter', 'warmth', 'support', 'family', 'learning', 'skills', 'charity'].map(cat => (<button key={cat} onClick={() => setFilters({ ...filters, category: cat })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{cat === 'all' ? 'All Needs' : cat}</button>))}</div>
+                            <div className="relative">
+                                <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search resources..." className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold" />
+                                {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600"><Icon name="x" size={14} /></button>}
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <button onClick={() => setSmartFilters({ ...smartFilters, openNow: !smartFilters.openNow })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.openNow ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><div className={`w-1.5 h-1.5 rounded-full ${smartFilters.openNow ? 'bg-white animate-pulse' : 'bg-emerald-500'}`}></div>Open Now</button>
+                                <button onClick={() => setSmartFilters({ ...smartFilters, verified: !smartFilters.verified })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.verified ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><Icon name="check_circle" size={10} /> Verified</button>
+                                <button onClick={() => setSmartFilters({ ...smartFilters, nearMe: !smartFilters.nearMe })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.nearMe ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><Icon name="navigation" size={10} /> Near Me</button>
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                                <button onClick={() => setFilters({ ...filters, area: 'All' })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === 'All' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'}`}>Whole City</button>
+                                {AREAS.map(area => (<button key={area} onClick={() => setFilters({ ...filters, area })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{area}</button>))}
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                                {['all', 'food', 'shelter', 'warmth', 'support', 'family', 'learning', 'skills', 'charity'].map(cat => (<button key={cat} onClick={() => setFilters({ ...filters, category: cat })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{cat === 'all' ? 'All Needs' : cat}</button>))}
+                            </div>
+                            <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide">
+                                {[{ label: 'No Referral', tag: 'no_referral', icon: 'check_circle' }, { label: 'Free', tag: 'free', icon: 'tag' }, { label: 'Membership', tag: 'membership', icon: 'id-card' }].map(f => (<button key={f.tag} onClick={() => setSearchQuery(searchQuery === f.tag ? '' : f.tag)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${searchQuery === f.tag ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}`}><Icon name={f.icon} size={12} />{f.label}</button>))}
+                            </div>
                         </div>
+
                         <div className="space-y-4 pb-24">
                             {filteredData.slice(0, visibleCount).map(item => (
                                 <ResourceCard
@@ -734,7 +760,10 @@ const App = () => {
                                 />
                             ))}
                         </div>
-                        {visibleCount < filteredData.length && <div ref={(node) => { if (!node) return; const observer = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) setVisibleCount(p => Math.min(p + 10, filteredData.length)); }); observer.observe(node); return () => observer.disconnect(); }} className="h-20 flex items-center justify-center p-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading more resources...</div>}
+                        {visibleCount < filteredData.length && (
+                            <div ref={(node) => { if (!node) return; const observer = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) { setVisibleCount(prev => Math.min(prev + 10, filteredData.length)); } }, { threshold: 0.1, rootMargin: '100px' }); observer.observe(node); return () => observer.disconnect(); }} className="h-20 flex items-center justify-center p-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading more resources...</div>
+                        )}
+                        <div className="pb-32"></div>
                     </div>
                 )}
 
@@ -743,13 +772,47 @@ const App = () => {
                     <div className="animate-fade-in-up pb-20">
                         <div className="mb-4 flex items-center justify-between">
                             <div><h2 className="text-xl font-black text-slate-800">Explorer</h2><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Visual navigation</p></div>
-                            <div className="flex gap-2"><button onClick={() => setView('list')} className="p-3 bg-white border-2 border-slate-100 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"><Icon name="list" size={18} /></button><div className="flex gap-1"><button onClick={() => setMapFilter('open')} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border-2 transition-all ${mapFilter === 'open' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-400 border-slate-100'}`}>Open</button><button onClick={() => setMapFilter('all')} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border-2 transition-all ${mapFilter === 'all' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100'}`}>All</button></div></div>
+                            <div className="flex gap-2">
+                                <button onClick={() => setView('list')} className="p-3 bg-white border-2 border-slate-100 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"><Icon name="list" size={18} /></button>
+                                <div className="flex gap-1">
+                                    <button onClick={() => setMapFilter('open')} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border-2 transition-all ${mapFilter === 'open' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-400 border-slate-100'}`}>Open</button>
+                                    <button onClick={() => setMapFilter('all')} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border-2 transition-all ${mapFilter === 'all' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100'}`}>All</button>
+                                </div>
+                            </div>
                         </div>
                         {renderLazyView(SimpleMap, { 
-                            data: filteredData, category: filters.category, statusFilter: mapFilter, savedIds, onToggleSave: toggleSaved, stealthMode, externalFocus: mapFocus, liveStatus, isPartner, 
+                            data: filteredData, 
+                            category: filters.category, 
+                            statusFilter: mapFilter, 
+                            savedIds: savedIds, 
+                            onToggleSave: toggleSaved, 
+                            stealthMode: stealthMode, 
+                            externalFocus: mapFocus, 
+                            liveStatus: liveStatus, 
+                            isPartner: isPartner, 
+                            // [關鍵] 這裡加入了 onReport，讓地圖元件可以呼叫回報視窗
                             onReport: (item: any) => setReportTarget({ name: item.name, id: item.id }),
                             onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
                         })}
+                    </div>
+                )}
+
+                {/* Sub-Views (Rendered Lazily) */}
+                {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
+                
+                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
+                
+                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                
+                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                
+                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+
+                {view === 'compare' && (
+                    <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}>
+                        <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+                            {renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
+                        </div>
                     </div>
                 )}
             </div>
@@ -763,16 +826,38 @@ const App = () => {
                 <button onClick={() => setShowCrisis(true)} className="text-rose-500 hover:text-rose-400 animate-pulse"><Icon name="lifebuoy" size={24} /></button>
             </div>
 
+            {/* Modals & Overlays */}
             <TipsModal isOpen={showTips} onClose={() => setShowTips(false)} />
             <CrisisModal isOpen={showCrisis} onClose={() => setShowCrisis(false)} />
             <PrivacyShield onAccept={() => console.log('Privacy accepted')} />
             <SmartNotifications notifications={notifications} onDismiss={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} onClearAll={() => setNotifications([])} onAction={(resourceId) => { const resource = ALL_DATA.find(r => r.id === resourceId); if (resource) { setMapFocus({ lat: resource.lat, lng: resource.lng, label: resource.name }); setView('map'); } }} />
             
-            {showPartnerLogin && <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in"><div className="w-full max-w-md"><PartnerLogin onClose={() => setShowPartnerLogin(false)} onRequestAccess={() => { setShowPartnerLogin(false); setShowPartnerRequest(true); }} /></div></div>}
-            
-            <ReportModal isOpen={!!reportTarget} onClose={() => setReportTarget(null)} resourceName={reportTarget?.name || ''} resourceId={reportTarget?.id || ''} />
-            <PartnerRequestModal isOpen={showPartnerRequest} onClose={() => setShowPartnerRequest(false)} />
-            
+            {showPartnerLogin && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+                    <div className="w-full max-w-md">
+                        <PartnerLogin 
+                            onClose={() => setShowPartnerLogin(false)}
+                            onRequestAccess={() => {
+                                setShowPartnerLogin(false);
+                                setShowPartnerRequest(true);
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Firebase Reports & Requests Modals */}
+            <ReportModal 
+                isOpen={!!reportTarget} 
+                onClose={() => setReportTarget(null)} 
+                resourceName={reportTarget?.name || ''}
+                resourceId={reportTarget?.id || ''}
+            />
+            <PartnerRequestModal 
+                isOpen={showPartnerRequest} 
+                onClose={() => setShowPartnerRequest(false)} 
+            />
+
             {/* [NEW] Show Tutorial on first visit - passes onClose prop correctly */}
             <TutorialModal 
                 isOpen={showTutorial} 
@@ -782,9 +867,16 @@ const App = () => {
                 }} 
             />
             
-            {showWizard && renderLazyView(CrisisWizard, { userLocation, onClose: () => setShowWizard(false), savedIds, onToggleSave: toggleSaved })}
+            {showWizard && renderLazyView(CrisisWizard, { userLocation: userLocation, onClose: () => setShowWizard(false), savedIds: savedIds, onToggleSave: toggleSaved })}
             
-            {(journeyItems.length > 0 || compareItems.length > 0) && (<div className="fixed bottom-24 left-5 z-[50] flex flex-col gap-3">{journeyItems.length > 0 && (<button onClick={() => setView('planner')} className="bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all active:scale-95 relative"><Icon name="mapPin" size={20} /><div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center"><span className="text-xs font-black">{journeyItems.length}</span></div></button>)}{compareItems.length > 0 && (<button onClick={() => setView('compare')} className="bg-emerald-600 text-white p-4 rounded-full shadow-2xl hover:bg-emerald-700 transition-all active:scale-95 relative"><Icon name="shield" size={20} /><div className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-500 rounded-full border-2 border-white flex items-center justify-center"><span className="text-xs font-black">{compareItems.length}</span></div></button>)}</div>)}
+            {/* Journey FAB */}
+            {(journeyItems.length > 0 || compareItems.length > 0) && (
+                <div className="fixed bottom-24 left-5 z-[50] flex flex-col gap-3">
+                    {journeyItems.length > 0 && (<button onClick={() => setView('planner')} className="bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all active:scale-95 relative"><Icon name="mapPin" size={20} /><div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center"><span className="text-xs font-black">{journeyItems.length}</span></div></button>)}
+                    {compareItems.length > 0 && (<button onClick={() => setView('compare')} className="bg-emerald-600 text-white p-4 rounded-full shadow-2xl hover:bg-emerald-700 transition-all active:scale-95 relative"><Icon name="shield" size={20} /><div className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-500 rounded-full border-2 border-white flex items-center justify-center"><span className="text-xs font-black">{compareItems.length}</span></div></button>)}
+                </div>
+            )}
+
             {view === 'planner' && journeyItems.length > 0 && (<div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end" onClick={() => setView('home')}><div className="w-full max-w-lg mx-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>{renderLazyView(JourneyPlanner, { items: ALL_DATA.filter(r => journeyItems.includes(r.id)), userLocation: userLocation, onRemove: (id: string) => setJourneyItems(prev => prev.filter(i => i !== id)), onClear: () => { setJourneyItems([]); setView('home'); }, onNavigate: () => { if (journeyItems.length > 0) { const points = ALL_DATA.filter(r => journeyItems.includes(r.id)).map(r => `${r.lat},${r.lng}`).join('|'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${points.split('|').pop()}&waypoints=${points}`, '_blank'); } } })}</div></div>)}
         </div>
     );
