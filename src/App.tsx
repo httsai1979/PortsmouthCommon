@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Suspense, lazy, useCallback } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy, useRef } from 'react';
 import Fuse from 'fuse.js';
 import { collection, onSnapshot } from 'firebase/firestore'; 
 import { db } from './lib/firebase'; 
@@ -11,7 +11,6 @@ import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
 import Icon from './components/Icon';
 import ResourceCard from './components/ResourceCard';
 import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal, TutorialModal } from './components/Modals';
-// [注意] FAQSection 是同步引入的，直接渲染以避免當機
 import FAQSection from './components/FAQSection';
 import CommunityBulletin from './components/CommunityBulletin';
 import AIAssistant from './components/AIAssistant';
@@ -45,6 +44,15 @@ const PageLoader = () => (
     </div>
 );
 
+// [Optimization] Move static styles outside component to prevent layout thrashing
+const APP_STYLES = `
+    .app-container { max-width: 500px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); position: relative; padding-bottom: 140px; }
+    .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+`;
+
 const App = () => {
     // Branding & Accessibility State
     const [highContrast, setHighContrast] = useState(false);
@@ -74,6 +82,8 @@ const App = () => {
     // List View Pagination
     const [visibleCount, setVisibleCount] = useState(10);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    // [Fix] Stable ref for intersection observer
+    const loadMoreRef = useRef<HTMLDivElement>(null);
 
     // [Hybrid Data State]
     const [sheetStatus, setSheetStatus] = useState<Record<string, LiveStatus>>({});
@@ -154,7 +164,6 @@ const App = () => {
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
         
-        // Check for Tutorial
         const seenTutorial = localStorage.getItem('seen_tutorial');
         if (!seenTutorial) {
             setShowTutorial(true);
@@ -214,17 +223,13 @@ const App = () => {
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
 
-        // [CRITICAL FIX] 使用 requestAnimationFrame 防止捲動當機
+        // [CRITICAL FIX] Throttled Scroll Listener to prevent crashes
         let ticking = false;
         const handleScroll = () => {
             if (!ticking) {
                 window.requestAnimationFrame(() => {
                     const shouldShow = window.scrollY > 300;
-                    // 只有當狀態真正改變時才更新，避免無限重繪
-                    setShowScrollTop(prev => {
-                        if (prev !== shouldShow) return shouldShow;
-                        return prev;
-                    });
+                    setShowScrollTop(prev => prev !== shouldShow ? shouldShow : prev);
                     ticking = false;
                 });
                 ticking = true;
@@ -253,34 +258,12 @@ const App = () => {
 
     // [UPDATED] FAQ Navigation Handler
     const handleFAQNavigate = (action: string) => {
-        if (action === 'planner') {
-            setView('planner');
-            return;
-        }
-        if (action === 'map') {
-            setView('map');
-            return;
-        }
-        if (action === 'list') {
-            setView('list');
-            return;
-        }
-        if (['food', 'support', 'warmth', 'shelter', 'family'].includes(action)) {
-            setFilters({ ...filters, category: action });
-            setView('map');
-            return;
-        }
-        if (action === 'no_referral') {
-            setSearchQuery('no_referral');
-            setView('list');
-            return;
-        }
-        if (action === 'all') {
-            setFilters({ area: 'All', category: 'all', date: 'today' });
-            setSearchQuery('');
-            setView('list');
-            return;
-        }
+        if (action === 'planner') { setView('planner'); return; }
+        if (action === 'map') { setView('map'); return; }
+        if (action === 'list') { setView('list'); return; }
+        if (['food', 'support', 'warmth', 'shelter', 'family'].includes(action)) { setFilters({ ...filters, category: action }); setView('map'); return; }
+        if (action === 'no_referral') { setSearchQuery('no_referral'); setView('list'); return; }
+        if (action === 'all') { setFilters({ area: 'All', category: 'all', date: 'today' }); setSearchQuery(''); setView('list'); return; }
     };
 
     // Notifications Logic
@@ -433,25 +416,26 @@ const App = () => {
         });
     }, [filters, userLocation, searchQuery, smartFilters, liveStatus]);
 
-    // Helper for Suspense (Memoized to prevent unnecessary re-creation)
-    const renderLazyView = useCallback((Component: any, props = {}) => (
-        <Suspense fallback={<PageLoader />}>
-            <Component {...props} />
-        </Suspense>
-    ), []);
+    // [CRITICAL FIX] Intersection Observer Logic for Infinite Scroll
+    useEffect(() => {
+        if (view !== 'list' || !loadMoreRef.current) return;
+        
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && visibleCount < filteredData.length) {
+                setVisibleCount(prev => Math.min(prev + 10, filteredData.length));
+            }
+        }, { threshold: 0.1, rootMargin: '100px' });
+        
+        observer.observe(loadMoreRef.current);
+        return () => observer.disconnect();
+    }, [view, visibleCount, filteredData.length]);
 
     if (loading) return <PageLoader />;
-    if (showPrint) return renderLazyView(PrintView, { data: ALL_DATA, onClose: () => setShowPrint(false) });
+    if (showPrint) return <Suspense fallback={<PageLoader />}><PrintView data={ALL_DATA} onClose={() => setShowPrint(false)} /></Suspense>;
 
     return (
         <div className={`app-container min-h-screen font-sans text-slate-900 selection:bg-indigo-200 selection:text-indigo-900 ${highContrast ? 'high-contrast' : ''}`}>
-            <style>{`
-                .app-container { max-width: 500px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); position: relative; padding-bottom: 140px; }
-                .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
-                .scrollbar-hide::-webkit-scrollbar { display: none; }
-                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-            `}</style>
+            <style>{APP_STYLES}</style>
 
             {showScrollTop && (
                 <button
@@ -576,7 +560,7 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'faq', label: 'Guide', icon: 'help-circle' } // [UPDATE] Changed label to 'Guide'
+                                { id: 'faq', label: 'Guide', icon: 'help-circle' }
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
@@ -594,7 +578,6 @@ const App = () => {
                             ))}
                         </div>
 
-                        {/* [UPDATE] Changed text to "Find Support" */}
                         <button
                             onClick={() => setShowWizard(true)}
                             className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all hover:scale-[1.02] active:scale-95 pr-2"
@@ -723,19 +706,40 @@ const App = () => {
                     </div>
                 )}
 
-                {/* [關鍵修正] 直接渲染 FAQSection，解決滑動當機問題 */}
+                {/* [重要修正] FAQSection 移除 Lazy Load，改為直接渲染以解決當機 */}
                 {view === 'faq' && (
                     <FAQSection onClose={() => setView('home')} onNavigate={handleFAQNavigate} />
                 )}
                 
-                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
-                {view === 'analytics' && renderLazyView(PulseMap)}
-                {view === 'data-migration' && renderLazyView(DataMigration)}
-                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
-                {view === 'compare' && <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}><div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>{renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}</div></div>}
+                {/* [優化] 使用穩定且標準的 Suspense 包裝，移除造成問題的 renderLazyView 輔助函式 */}
+                {view === 'community-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="food" title="Weekly Food Support" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
+                {view === 'safe-sleep-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="shelter" title="Safe Sleep" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
+                {view === 'warm-spaces-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="warmth" title="Warm Spaces" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
+                {view === 'partner-dashboard' && <Suspense fallback={<PageLoader />}><PartnerDashboard /></Suspense>}
+                {view === 'analytics' && <Suspense fallback={<PageLoader />}><PulseMap /></Suspense>}
+                {view === 'data-migration' && <Suspense fallback={<PageLoader />}><DataMigration /></Suspense>}
+                
+                {view === 'planner' && (
+                    <div className="animate-fade-in-up">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div>
+                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button>
+                        </div>
+                        <Suspense fallback={<PageLoader />}>
+                            <AreaScheduleView data={ALL_DATA.filter(item => savedIds.includes(item.id))} area={filters.area} category={filters.category} />
+                        </Suspense>
+                    </div>
+                )}
+                
+                {view === 'compare' && (
+                    <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}>
+                        <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+                            <Suspense fallback={<PageLoader />}>
+                                <SmartCompare items={ALL_DATA.filter(i => compareItems.includes(i.id))} userLocation={userLocation} onRemove={toggleCompareItem} onNavigate={(id) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }} onCall={(phone) => window.open(`tel:${phone}`)} />
+                            </Suspense>
+                        </div>
+                    </div>
+                )}
 
                 {/* List View */}
                 {view === 'list' && (
@@ -794,10 +798,8 @@ const App = () => {
                                 />
                             ))}
                         </div>
-                        {visibleCount < filteredData.length && (
-                            <div ref={(node) => { if (!node) return; const observer = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) { setVisibleCount(prev => Math.min(prev + 10, filteredData.length)); } }, { threshold: 0.1, rootMargin: '100px' }); observer.observe(node); return () => observer.disconnect(); }} className="h-20 flex items-center justify-center p-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading more resources...</div>
-                        )}
-                        <div className="pb-32"></div>
+                        {/* [CRITICAL FIX] Use stable ref for intersection observer to prevent memory leaks/crashes */}
+                        {visibleCount < filteredData.length && <div ref={loadMoreRef} className="h-20 flex items-center justify-center p-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading more resources...</div>}
                     </div>
                 )}
 
@@ -814,20 +816,21 @@ const App = () => {
                                 </div>
                             </div>
                         </div>
-                        {renderLazyView(SimpleMap, { 
-                            data: filteredData, 
-                            category: filters.category, 
-                            statusFilter: mapFilter, 
-                            savedIds: savedIds, 
-                            onToggleSave: toggleSaved, 
-                            stealthMode: stealthMode, 
-                            externalFocus: mapFocus, 
-                            liveStatus: liveStatus, 
-                            isPartner: isPartner, 
-                            // [關鍵] 這裡加入了 onReport，讓地圖元件可以呼叫回報視窗
-                            onReport: (item: any) => setReportTarget({ name: item.name, id: item.id }),
-                            onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
-                        })}
+                        <Suspense fallback={<PageLoader />}>
+                            <SimpleMap 
+                                data={filteredData} 
+                                category={filters.category} 
+                                statusFilter={mapFilter} 
+                                savedIds={savedIds} 
+                                onToggleSave={toggleSaved} 
+                                stealthMode={stealthMode} 
+                                externalFocus={mapFocus} 
+                                liveStatus={liveStatus} 
+                                isPartner={isPartner} 
+                                onReport={(item: any) => setReportTarget({ name: item.name, id: item.id })}
+                                onCategoryChange={(cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); }} 
+                            />
+                        </Suspense>
                     </div>
                 )}
             </div>
@@ -847,33 +850,11 @@ const App = () => {
             <PrivacyShield onAccept={() => console.log('Privacy accepted')} />
             <SmartNotifications notifications={notifications} onDismiss={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} onClearAll={() => setNotifications([])} onAction={(resourceId) => { const resource = ALL_DATA.find(r => r.id === resourceId); if (resource) { setMapFocus({ lat: resource.lat, lng: resource.lng, label: resource.name }); setView('map'); } }} />
             
-            {showPartnerLogin && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-md">
-                        <PartnerLogin 
-                            onClose={() => setShowPartnerLogin(false)}
-                            onRequestAccess={() => {
-                                setShowPartnerLogin(false);
-                                setShowPartnerRequest(true);
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Firebase Reports & Requests Modals */}
-            <ReportModal 
-                isOpen={!!reportTarget} 
-                onClose={() => setReportTarget(null)} 
-                resourceName={reportTarget?.name || ''}
-                resourceId={reportTarget?.id || ''}
-            />
-            <PartnerRequestModal 
-                isOpen={showPartnerRequest} 
-                onClose={() => setShowPartnerRequest(false)} 
-            />
-
-            {/* [NEW] Show Tutorial on first visit - passes onClose prop correctly */}
+            {showPartnerLogin && <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in"><div className="w-full max-w-md"><PartnerLogin onClose={() => setShowPartnerLogin(false)} onRequestAccess={() => { setShowPartnerLogin(false); setShowPartnerRequest(true); }} /></div></div>}
+            
+            <ReportModal isOpen={!!reportTarget} onClose={() => setReportTarget(null)} resourceName={reportTarget?.name || ''} resourceId={reportTarget?.id || ''} />
+            <PartnerRequestModal isOpen={showPartnerRequest} onClose={() => setShowPartnerRequest(false)} />
+            
             <TutorialModal 
                 isOpen={showTutorial} 
                 onClose={() => {
@@ -882,9 +863,8 @@ const App = () => {
                 }} 
             />
             
-            {showWizard && renderLazyView(CrisisWizard, { userLocation: userLocation, onClose: () => setShowWizard(false), savedIds: savedIds, onToggleSave: toggleSaved })}
+            {showWizard && <Suspense fallback={<PageLoader />}><CrisisWizard userLocation={userLocation} onClose={() => setShowWizard(false)} savedIds={savedIds} onToggleSave={toggleSaved} /></Suspense>}
             
-            {/* Journey FAB */}
             {(journeyItems.length > 0 || compareItems.length > 0) && (
                 <div className="fixed bottom-24 left-5 z-[50] flex flex-col gap-3">
                     {journeyItems.length > 0 && (<button onClick={() => setView('planner')} className="bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all active:scale-95 relative"><Icon name="mapPin" size={20} /><div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center"><span className="text-xs font-black">{journeyItems.length}</span></div></button>)}
@@ -892,7 +872,7 @@ const App = () => {
                 </div>
             )}
 
-            {view === 'planner' && journeyItems.length > 0 && (<div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end" onClick={() => setView('home')}><div className="w-full max-w-lg mx-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>{renderLazyView(JourneyPlanner, { items: ALL_DATA.filter(r => journeyItems.includes(r.id)), userLocation: userLocation, onRemove: (id: string) => setJourneyItems(prev => prev.filter(i => i !== id)), onClear: () => { setJourneyItems([]); setView('home'); }, onNavigate: () => { if (journeyItems.length > 0) { const points = ALL_DATA.filter(r => journeyItems.includes(r.id)).map(r => `${r.lat},${r.lng}`).join('|'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${points.split('|').pop()}&waypoints=${points}`, '_blank'); } } })}</div></div>)}
+            {view === 'planner' && journeyItems.length > 0 && (<div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end" onClick={() => setView('home')}><div className="w-full max-w-lg mx-auto animate-slide-up" onClick={(e) => e.stopPropagation()}><Suspense fallback={<PageLoader />}><JourneyPlanner items={ALL_DATA.filter(r => journeyItems.includes(r.id))} userLocation={userLocation} onRemove={(id) => setJourneyItems(prev => prev.filter(i => i !== id))} onClear={() => { setJourneyItems([]); setView('home'); }} onNavigate={() => { if (journeyItems.length > 0) { const points = ALL_DATA.filter(r => journeyItems.includes(r.id)).map(r => `${r.lat},${r.lng}`).join('|'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${points.split('|').pop()}&waypoints=${points}`, '_blank'); } }} /></Suspense></div></div>)}
         </div>
     );
 };
