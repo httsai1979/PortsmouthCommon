@@ -25,11 +25,10 @@ import logo from './assets/images/logo.png';
 import { useAuth } from './contexts/AuthContext';
 import PartnerLogin from './components/PartnerLogin';
 
-// [PERFORMANCE] Lazy Load Heavy Components
+// [PERFORMANCE] Lazy Load Heavy Components Only
 const SimpleMap = lazy(() => import('./components/SimpleMap'));
 const JourneyPlanner = lazy(() => import('./components/JourneyPlanner'));
 const SmartCompare = lazy(() => import('./components/SmartCompare'));
-// UnifiedSchedule & PrintView are loaded via Suspense to prevent blocking
 const UnifiedSchedule = lazy(() => import('./components/UnifiedSchedule'));
 const AreaScheduleView = lazy(() => import('./components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 const CrisisWizard = lazy(() => import('./components/CrisisWizard'));
@@ -45,7 +44,7 @@ const PageLoader = () => (
     </div>
 );
 
-// Static Styles (Moved out to prevent re-calc)
+// [FIX] Move static styles outside component to prevent layout thrashing
 const APP_STYLES = `
     .app-container { max-width: 500px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); position: relative; padding-bottom: 140px; }
     .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -146,7 +145,7 @@ const App = () => {
         date: 'today'
     });
 
-    // [FIX] Inject Styles ONCE on mount
+    // [FIX] Inject Styles ONCE on mount to prevent Layout Thrashing
     useEffect(() => {
         const styleTag = document.createElement('style');
         styleTag.innerHTML = APP_STYLES;
@@ -218,7 +217,7 @@ const App = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                (err) => console.log(err)
+                (err) => console.log("Location access denied", err)
             );
         }
 

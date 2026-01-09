@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Resource, TAG_ICONS } from '../data';
 import Icon from './Icon';
 
@@ -11,162 +11,158 @@ interface UnifiedScheduleProps {
     savedIds: string[];
 }
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// [FIX] Move styles OUTSIDE the component to prevent scroll crashing
-const PRINT_STYLES = `
+// [PERFORMANCE FIX] Move styles completely outside the component
+// This prevents the browser from recalculating styles on every scroll frame
+const SCHEDULE_STYLES = `
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+    .day-column {
+        min-width: 140px; /* Ensure columns don't get too squashed on mobile */
+    }
+    @media (max-width: 768px) {
+        .schedule-grid {
+            display: flex; /* On mobile, fallback to horizontal scroll if needed, but grid is preferred for tablet/desktop */
+            flex-direction: column;
+            gap: 24px;
+        }
+        .day-column {
+            min-width: 100%;
+        }
+    }
     @media print {
         body * { visibility: hidden; }
-        .animate-fade-in-up, .animate-fade-in-up * { visibility: visible; }
-        .animate-fade-in-up { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; color: black; }
-        button, .sticky, header, .fixed { display: none !important; }
-        .border-2 { border-width: 1px !important; border-color: #000 !important; }
-        .text-slate-400 { color: #666 !important; }
-        .bg-slate-50 { background: white !important; }
-        .group { border: 1px solid #ddd; page-break-inside: avoid; }
+        .schedule-view, .schedule-view * { visibility: visible; }
+        .schedule-view { position: absolute; left: 0; top: 0; width: 100%; }
+        .no-print { display: none !important; }
+        .schedule-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .day-column { border: 1px solid #ccc; break-inside: avoid; }
     }
 `;
 
 const UnifiedSchedule = ({ data, category, title, onNavigate, onSave, savedIds }: UnifiedScheduleProps) => {
-    const [selectedDay, setSelectedDay] = useState(new Date().getDay());
-
-    // [FIX] Inject styles ONCE on mount
+    
+    // [FIX] Inject styles once on mount
     useEffect(() => {
         const style = document.createElement('style');
-        style.textContent = PRINT_STYLES;
+        style.textContent = SCHEDULE_STYLES;
         document.head.appendChild(style);
-        return () => {
-            document.head.removeChild(style);
-        };
+        return () => { document.head.removeChild(style); };
     }, []);
 
-    // 過濾並排序當天開放的機構
-    const dailyResources = useMemo(() => {
-        const filtered = data.filter(item => {
-            const isOpenToday = item.schedule[selectedDay] && item.schedule[selectedDay] !== 'Closed';
-            const matchesCategory = category ? item.category === category : true;
-            return isOpenToday && matchesCategory;
+    // 整理一週資料：產生每天的開放清單
+    const weeklyData = useMemo(() => {
+        // Initialize 7 days
+        const week = Array(7).fill(null).map(() => [] as Resource[]);
+
+        data.forEach(item => {
+            // Filter by category if provided
+            if (category && item.category !== category) return;
+
+            // Check schedule for each day
+            for (let day = 0; day < 7; day++) {
+                const hours = item.schedule[day];
+                if (hours && hours !== 'Closed') {
+                    week[day].push(item);
+                }
+            }
         });
 
-        // 依據開放時間排序
-        return filtered.sort((a, b) => {
-            const timeA = a.schedule[selectedDay] || "99:99";
-            const timeB = b.schedule[selectedDay] || "99:99";
-            return timeA.localeCompare(timeB);
+        // Sort items by opening time within each day
+        return week.map((dayItems, dayIndex) => {
+            return dayItems.sort((a, b) => {
+                const timeA = a.schedule[dayIndex] || "99:99";
+                const timeB = b.schedule[dayIndex] || "99:99";
+                return timeA.localeCompare(timeB);
+            });
         });
-    }, [data, selectedDay, category]);
+    }, [data, category]);
+
+    const todayIndex = new Date().getDay();
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-32 animate-fade-in-up">
+        <div className="bg-slate-50 min-h-screen pb-32 animate-fade-in-up schedule-view">
             {/* Header */}
-            <div className="bg-white p-5 border-b border-slate-100 sticky top-0 z-10 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
+            <div className="bg-white p-5 border-b border-slate-100 sticky top-0 z-20 shadow-sm no-print">
+                <div className="flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-black text-slate-900 tracking-tight">{title || "Weekly Schedule"}</h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plan your visit</p>
+                        <h2 className="text-xl font-black text-slate-900 tracking-tight">{title || "Weekly Overview"}</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">7-Day Plan</p>
                     </div>
-                    {/* 列印/截圖按鈕 */}
                     <button 
                         onClick={() => window.print()}
                         className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors flex items-center gap-2 active:scale-95"
-                        title="Print or Screenshot this view"
                     >
                         <Icon name="printer" size={20} />
-                        <span className="text-xs font-black uppercase tracking-wider hidden sm:inline">Print / Save</span>
+                        <span className="text-xs font-black uppercase tracking-wider hidden sm:inline">Print</span>
                     </button>
-                </div>
-
-                {/* Day Selector */}
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    {DAYS.map((day, index) => (
-                        <button
-                            key={day}
-                            onClick={() => setSelectedDay(index)}
-                            className={`flex-shrink-0 px-5 py-3 rounded-2xl flex flex-col items-center min-w-[80px] transition-all border-2 ${
-                                selectedDay === index 
-                                ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-105' 
-                                : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
-                            }`}
-                        >
-                            <span className="text-[9px] font-black uppercase tracking-widest">{day.substring(0, 3)}</span>
-                            {/* 顯示當日開放數量小點 */}
-                            <span className={`text-sm font-bold mt-1 ${selectedDay === index ? 'text-white' : 'text-slate-600'}`}>
-                                {index === new Date().getDay() ? 'Today' : new Date().getDate() + (index - new Date().getDay())}
-                            </span>
-                        </button>
-                    ))}
                 </div>
             </div>
 
-            {/* List Content */}
-            <div className="p-5 space-y-3">
-                {dailyResources.length > 0 ? (
-                    dailyResources.map(item => {
-                        const style = TAG_ICONS[item.category] || TAG_ICONS.default;
-                        const time = item.schedule[selectedDay];
-                        const isSaved = savedIds.includes(item.id);
+            {/* [NEW] Visual Calendar Grid */}
+            <div className="p-4">
+                <div className="schedule-grid">
+                    {DAYS.map((dayName, index) => {
+                        const isToday = index === todayIndex;
+                        const items = weeklyData[index];
 
                         return (
-                            <div key={item.id} className="bg-white rounded-[24px] p-5 border-2 border-slate-100 shadow-sm flex gap-4 items-start group hover:border-indigo-100 transition-all">
-                                {/* Time Column */}
-                                <div className="flex flex-col items-center min-w-[60px] pt-1">
-                                    <span className="text-lg font-black text-slate-900 leading-none">{time?.split('-')[0]}</span>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase mt-1">Opens</span>
-                                    <div className="w-px h-full bg-slate-100 my-2"></div>
-                                    <span className="text-xs font-bold text-slate-500">{time?.split('-')[1]}</span>
+                            <div key={dayName} className={`day-column flex flex-col gap-3 ${isToday ? 'order-first md:order-none' : ''}`}>
+                                {/* Day Header */}
+                                <div className={`p-3 rounded-xl text-center border-b-4 ${isToday ? 'bg-indigo-600 text-white border-indigo-800' : 'bg-white text-slate-500 border-slate-200'}`}>
+                                    <h3 className="text-sm font-black uppercase tracking-wider">{dayName}</h3>
+                                    {isToday && <span className="text-[9px] font-bold opacity-80 block mt-1">TODAY</span>}
                                 </div>
 
-                                {/* Details */}
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider mb-2 ${style.bg} ${style.color}`}>
-                                            <Icon name={style.icon} size={10} /> {style.label}
+                                {/* Items List */}
+                                <div className="flex flex-col gap-2">
+                                    {items.length > 0 ? (
+                                        items.map(item => {
+                                            const style = TAG_ICONS[item.category] || TAG_ICONS.default;
+                                            const time = item.schedule[index];
+                                            
+                                            return (
+                                                <div 
+                                                    key={`${item.id}-${index}`} 
+                                                    className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
+                                                    onClick={() => onNavigate(item.id)}
+                                                >
+                                                    {/* Color Strip */}
+                                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.bg.replace('bg-', 'bg-')}-500`}></div>
+                                                    
+                                                    <div className="pl-2">
+                                                        <div className="flex justify-between items-start">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{time}</span>
+                                                            {savedIds.includes(item.id) && <Icon name="heart" size={10} className="text-rose-500" fill={true} />}
+                                                        </div>
+                                                        
+                                                        <h4 className="text-xs font-bold text-slate-800 leading-tight my-1 line-clamp-2">{item.name}</h4>
+                                                        
+                                                        <div className="flex items-center gap-1 mt-1">
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${style.bg.replace('bg-', 'bg-')}-500`}></div>
+                                                            <span className="text-[9px] text-slate-500 truncate max-w-[80px]">{item.area}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="p-4 text-center border-2 border-dashed border-slate-100 rounded-xl">
+                                            <span className="text-[10px] font-bold text-slate-300 uppercase">None</span>
                                         </div>
-                                        {/* Save Button */}
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); onSave(item.id); }}
-                                            className={`transition-colors p-2 -mr-2 -mt-2 ${isSaved ? 'text-rose-500' : 'text-slate-300 hover:text-slate-400'}`}
-                                        >
-                                            <Icon name="heart" size={20} fill={isSaved} />
-                                        </button>
-                                    </div>
-                                    
-                                    <h3 className="text-base font-black text-slate-900 leading-tight mb-1">{item.name}</h3>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mb-3">
-                                        <Icon name="mapPin" size={12} />
-                                        <span>{item.address}</span>
-                                    </div>
-
-                                    {/* Action Footer */}
-                                    <div className="flex gap-2 mt-2">
-                                        <button 
-                                            onClick={() => onNavigate(item.id)}
-                                            className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center justify-center gap-2 transition-colors"
-                                        >
-                                            View on Map
-                                        </button>
-                                        {item.no_referral && (
-                                            <div className="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center" title="No Referral Needed">
-                                                <Icon name="check_circle" size={12} />
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         );
-                    })
-                ) : (
-                    <div className="text-center py-20 opacity-50">
-                        <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Icon name="calendar-off" size={24} className="text-slate-400" />
-                        </div>
-                        <p className="text-sm font-bold text-slate-400">No services listed for this day.</p>
-                        <p className="text-xs text-slate-400 mt-1">Try checking another day.</p>
-                    </div>
-                )}
+                    })}
+                </div>
             </div>
-            
-            {/* NO STYLE TAG HERE */}
         </div>
     );
 };
