@@ -1,24 +1,32 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
-import Fuse from 'fuse.js'; // [關鍵] 引入模糊搜尋引擎
-import { ALL_DATA, AREAS, TAG_ICONS } from './data';
+// [移除] 移除 Firebase Firestore 的即時監聽，節省成本
+// import { collection, onSnapshot } from 'firebase/firestore';
+import Fuse from 'fuse.js'; // [新增] 引入模糊搜尋
+import { db } from './lib/firebase'; // 保留 db 用於寫入 (Report/Partner)
+import { ALL_DATA } from './data';   // [核心] 靜態資料來源
 import { checkStatus, playSuccessSound, getDistance } from './utils';
-import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService'; // [Google Sheets]
+import { logSearchEvent } from './services/AnalyticsService';
+import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService'; // [新增] Google Sheets 服務
 
 // Components
 import Icon from './components/Icon';
 import ResourceCard from './components/ResourceCard';
-import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal } from './components/Modals'; // [Firebase]
+import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal } from './components/Modals';
+import FAQSection from './components/FAQSection';
+import CommunityBulletin from './components/CommunityBulletin';
 import AIAssistant from './components/AIAssistant';
 import PrivacyShield from './components/PrivacyShield';
 import SmartNotifications from './components/SmartNotifications';
 import ProgressTimeline from './components/ProgressTimeline';
 
-// Images (直接使用 public 資料夾中的 icon.png)
-const logo = '/icon.png';
+// Images
+import logo from './assets/images/logo.png';
 
 // Authentication
-import { useAuth } from './contexts/AuthContext'; // [Firebase Auth]
+import { useAuth } from './contexts/AuthContext';
 import PartnerLogin from './components/PartnerLogin';
+
+import { AREAS, TAG_ICONS, COMMUNITY_DEALS, GIFT_EXCHANGE, PROGRESS_TIPS } from './data';
 
 // [PERFORMANCE] Lazy Load Heavy Components
 const SimpleMap = lazy(() => import('./components/SimpleMap'));
@@ -27,7 +35,9 @@ const SmartCompare = lazy(() => import('./components/SmartCompare'));
 const UnifiedSchedule = lazy(() => import('./components/UnifiedSchedule'));
 const AreaScheduleView = lazy(() => import('./components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 const CrisisWizard = lazy(() => import('./components/CrisisWizard'));
-const PartnerDashboard = lazy(() => import('./components/PartnerDashboard')); // 預留給未來的合作夥伴後台
+const PartnerDashboard = lazy(() => import('./components/PartnerDashboard'));
+const PulseMap = lazy(() => import('./components/PulseMap'));
+const DataMigration = lazy(() => import('./components/DataMigration'));
 const PrintView = lazy(() => import('./components/PrintView'));
 
 // Loading Fallback Component
@@ -43,20 +53,21 @@ const App = () => {
     const [stealthMode, setStealthMode] = useState(false);
     const [fontSize, setFontSize] = useState(0); 
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
     const [loading, setLoading] = useState(true);
 
     // Navigation & Modals
-    const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'community-plan' | 'safe-sleep-plan' | 'warm-spaces-plan' | 'partner-dashboard'>('home');
+    const [view, setView] = useState<'home' | 'map' | 'list' | 'planner' | 'compare' | 'community-plan' | 'safe-sleep-plan' | 'warm-spaces-plan' | 'faq' | 'partner-dashboard' | 'analytics' | 'data-migration'>('home');
     const [showTips, setShowTips] = useState(false);
     const [showCrisis, setShowCrisis] = useState(false);
     const [showPrint, setShowPrint] = useState(false);
     const [mapFilter, setMapFilter] = useState<'all' | 'open'>('open');
     const [mapFocus, setMapFocus] = useState<{ lat: number, lng: number, label: string, id?: string } | null>(null);
     const [showWizard, setShowWizard] = useState(false);
-    
-    // Auth & Partner States
-    const { currentUser, isPartner, loading: authLoading } = useAuth();
     const [showPartnerLogin, setShowPartnerLogin] = useState(false);
+    const { currentUser, isPartner, loading: authLoading } = useAuth();
+
+    // Modal States
     const [reportTarget, setReportTarget] = useState<{name: string, id: string} | null>(null);
     const [showPartnerRequest, setShowPartnerRequest] = useState(false);
 
@@ -64,13 +75,13 @@ const App = () => {
     const [visibleCount, setVisibleCount] = useState(10);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // Feature State
+    // Discovery & Data Flow
+    // [修改] 不再使用 services state 存 Firebase 資料，改用 liveStatus 存 Google Sheets 資料
+    const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({});
+    
     const [journeyItems, setJourneyItems] = useState<string[]>([]);
     const [compareItems, setCompareItems] = useState<string[]>([]);
     const [notifications, setNotifications] = useState<Array<{ id: string; type: 'opening_soon' | 'favorite' | 'weather' | 'info'; message: string; timestamp: number; resourceId?: string }>>([]);
-
-    // Data State (Hybrid Architecture)
-    const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({}); // 來自 Google Sheets
 
     const [savedIds, setSavedIds] = useState<string[]>(() => {
         const saved = localStorage.getItem('bridge_saved_resources');
@@ -85,13 +96,12 @@ const App = () => {
             return next;
         });
     };
-
     const handleShare = async () => {
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: 'Portsmouth Bridge',
-                    text: 'Find food, shelter, and community support in Portsmouth.',
+                    text: 'Find food, shelter, and community support in Portsmouth. Check out Portsmouth Bridge!',
                     url: window.location.href,
                 });
             } catch (err) {
@@ -99,7 +109,7 @@ const App = () => {
             }
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+            alert('Link copied to clipboard! Share it with your friends.');
         }
     };
 
@@ -117,6 +127,16 @@ const App = () => {
         date: 'today'
     });
 
+    // 🛡️ Route Guard
+    useEffect(() => {
+        if (!authLoading && !currentUser) {
+            const restrictedViews = ['partner-dashboard', 'analytics', 'data-migration'];
+            if (restrictedViews.includes(view)) {
+                setView('home');
+            }
+        }
+    }, [currentUser, authLoading, view]);
+
     // Font Size Effect
     useEffect(() => {
         const root = document.documentElement;
@@ -124,14 +144,13 @@ const App = () => {
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    // Initial Load
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
 
-        // [Google Sheets] 讀取即時狀態
+        // [核心修改] 讀取 Google Sheets CSV，完全取代 Firebase 讀取
         fetchLiveStatus().then(statusMap => {
             setLiveStatus(statusMap);
-            console.log("📊 Live Status Synced from Google Sheets");
+            console.log("📊 Google Sheets Live Status Synced");
         });
 
         if (navigator.geolocation) {
@@ -173,7 +192,7 @@ const App = () => {
             const now = new Date();
             const currentHour = now.getHours();
             const currentMinutes = now.getMinutes();
-            const newNotifications: typeof notifications = [];
+            const newNotifications: Array<{ id: string; type: 'opening_soon' | 'favorite' | 'weather' | 'info'; message: string; timestamp: number; resourceId?: string }> = [];
 
             savedIds.forEach(id => {
                 const resource = ALL_DATA.find(r => r.id === id);
@@ -202,6 +221,15 @@ const App = () => {
                     }
                 }
             });
+
+            if (currentHour >= 18 && now.getMonth() >= 10 && newNotifications.length === 0) {
+                newNotifications.push({
+                    id: `weather_${now.getTime()}`,
+                    type: 'weather',
+                    message: 'Cold evening ahead - Emergency shelter beds available tonight',
+                    timestamp: now.getTime()
+                });
+            }
 
             if (newNotifications.length > 0) {
                 setNotifications(prev => {
@@ -240,44 +268,42 @@ const App = () => {
     const handleSearch = (newFilters: any) => {
         setFilters(newFilters);
         if (newFilters.category !== 'all' && view === 'home') {
-            setView('list'); // 搜尋後切換到列表模式
+            setView('map');
         }
     };
 
-    // --- 核心邏輯：資料合併 & 模糊搜尋 ---
+    // --- [核心邏輯] 資料合併 & Fuse.js 模糊搜尋 ---
     const filteredData = useMemo(() => {
-        // 1. 合併靜態資料與 Google Sheets 即時狀態
+        // 1. 合併靜態資料 (ALL_DATA) 與 Google Sheets (liveStatus)
+        // 這樣卡片就會依照你想要的顯示即時 "Low Stock" 或 "Emergency"
         let mergedData = ALL_DATA.map(item => {
             const status = liveStatus[item.id];
             if (status) {
                 return { 
                     ...item, 
-                    // 如果有即時訊息，覆蓋原本的描述
                     description: status.message ? `[${status.status}] ${status.message}` : item.description,
-                    // 如果狀態緊急，標示為低庫存以提醒使用者
                     capacityLevel: status.urgency === 'High' || status.urgency === 'Critical' ? 'low' : 'high', 
                 };
             }
             return item;
         });
 
-        // 2. Fuse.js 模糊搜尋 (解決你提到的問題：打錯字也能找到)
+        // 2. Fuse.js 模糊搜尋 (取代原本的 includes 搜尋)
         if (searchQuery) {
             const fuse = new Fuse(mergedData, {
                 keys: [
-                    { name: 'name', weight: 0.4 },        // 名稱權重最高
-                    { name: 'tags', weight: 0.3 },        // 標籤其次
-                    { name: 'description', weight: 0.2 }, // 描述內文
-                    { name: 'address', weight: 0.1 }      // 地址
+                    { name: 'name', weight: 0.4 },
+                    { name: 'tags', weight: 0.3 },
+                    { name: 'description', weight: 0.2 },
+                    { name: 'category', weight: 0.1 }
                 ],
-                threshold: 0.3, // 容許度 (0.3 代表允許少量拼字錯誤)
+                threshold: 0.3, // 容許度
                 ignoreLocation: true
             });
-            // 將搜尋結果轉換回原本的格式
             mergedData = fuse.search(searchQuery).map(result => result.item);
         }
 
-        // 3. 執行一般過濾 (區域、分類、智慧標籤)
+        // 3. 過濾
         const data = mergedData.filter(item => {
             const matchesArea = filters.area === 'All' || item.area === filters.area;
             const matchesCategory = filters.category === 'all' || item.category === filters.category;
@@ -295,20 +321,17 @@ const App = () => {
             return matchesArea && matchesCategory && matchesOpenNow && matchesVerified && matchesNearMe;
         });
 
-        // 4. 排序結果 (緊急程度 > 營業中 > 距離)
+        // 4. 排序：優先顯示 Google Sheets 中標記為緊急的
         return data.sort((a, b) => {
-            // Live Status 緊急程度優先
             const urgencyA = liveStatus[a.id]?.urgency === 'High' ? 1 : 0;
             const urgencyB = liveStatus[b.id]?.urgency === 'High' ? 1 : 0;
             if (urgencyA !== urgencyB) return urgencyB - urgencyA;
 
-            // 營業狀態
             const statusA = checkStatus(a.schedule);
             const statusB = checkStatus(b.schedule);
             if (statusA.isOpen && !statusB.isOpen) return -1;
             if (!statusA.isOpen && statusB.isOpen) return 1;
             
-            // 距離
             if (userLocation) {
                 const distA = getDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
                 const distB = getDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
@@ -316,20 +339,44 @@ const App = () => {
             }
             return 0;
         });
-    }, [filters, userLocation, searchQuery, smartFilters, liveStatus]);
+    }, [filters, userLocation, searchQuery, smartFilters, liveStatus]); // 依賴 liveStatus
+
+    useEffect(() => {
+        if (searchQuery.length > 2) {
+            const timer = setTimeout(() => {
+                logSearchEvent(searchQuery, filteredData.length, filters.area, filters.category);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [searchQuery, filteredData.length, filters.area, filters.category]);
 
     const savedResources = useMemo(() => {
         return ALL_DATA.filter(item => savedIds.includes(item.id));
     }, [savedIds]);
 
-    // Helper for Suspense
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="text-center animate-pulse">
+                    <img src={logo} alt="Portsmouth Bridge" className="w-24 h-24 mx-auto mb-6" />
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tighter">Portsmouth Bridge</h1>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Connecting Community Support</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Wrap Suspense around Lazy Components
     const renderLazyView = (Component: any, props = {}) => (
         <Suspense fallback={<PageLoader />}>
             <Component {...props} />
         </Suspense>
     );
 
-    if (loading) return <PageLoader />;
     if (showPrint) return renderLazyView(PrintView, { data: ALL_DATA, onClose: () => setShowPrint(false) });
 
     return (
@@ -339,13 +386,12 @@ const App = () => {
                 .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
                 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
-                .fs-0 { font-size: 16px; } .fs-1 { font-size: 18px; } .fs-2 { font-size: 20px; }
+                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            {/* Scroll To Top */}
             {showScrollTop && (
                 <button
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    onClick={scrollToTop}
                     className="fixed bottom-24 right-5 z-[5000] p-4 bg-slate-900 text-white rounded-full shadow-2xl animate-fade-in-up hover:bg-black transition-all active:scale-90"
                     aria-label="Scroll to top"
                 >
@@ -353,7 +399,6 @@ const App = () => {
                 </button>
             )}
 
-            {/* Header */}
             <header className={`sticky top-0 z-50 ${stealthMode ? 'bg-slate-50 border-none' : 'bg-white/95 backdrop-blur-md border-b border-slate-100'} pt-4 pb-3 transition-all`}>
                 <div className="px-5 flex justify-between items-center max-w-lg mx-auto">
                     <div className="flex items-center gap-3">
@@ -366,28 +411,48 @@ const App = () => {
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        {/* Font Size Toggle Button */}
                         <button 
                             onClick={() => setFontSize(prev => (prev + 1) % 3)} 
                             className={`p-2 rounded-xl transition-all border-2 ${fontSize > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-600 border-slate-100 hover:bg-slate-200'}`} 
+                            title="Text Size"
                         >
                             <Icon name="type" size={20} />
                         </button>
-                        <button onClick={() => setStealthMode(!stealthMode)} className={`p-2 rounded-xl transition-all ${stealthMode ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}><Icon name="eye" size={20} /></button>
-                        <button onClick={() => setHighContrast(!highContrast)} className="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-colors"><Icon name="zap" size={20} /></button>
+                        
+                        <button onClick={() => setStealthMode(!stealthMode)} className={`p-2 rounded-xl transition-all ${stealthMode ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`} title="Stealth Mode"><Icon name="eye" size={20} /></button>
+                        <button onClick={() => setHighContrast(!highContrast)} className="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-colors" title="High Contrast"><Icon name="zap" size={20} /></button>
 
-                        {/* Partner Tools */}
                         {isPartner && (
-                            <button
-                                onClick={() => setView(view === 'partner-dashboard' ? 'home' : 'partner-dashboard')}
-                                className={`p-2 rounded-xl transition-all ${view === 'partner-dashboard' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-emerald-50 text-emerald-600'}`}
-                            >
-                                <Icon name="briefcase" size={20} />
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => setView(view === 'partner-dashboard' ? 'home' : 'partner-dashboard')}
+                                    className={`p-2 rounded-xl transition-all ${view === 'partner-dashboard' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-emerald-50 text-emerald-600'}`}
+                                    title="Agency Dashboard"
+                                >
+                                    <Icon name="briefcase" size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setView(view === 'analytics' ? 'home' : 'analytics')}
+                                    className={`p-2 rounded-xl transition-all ${view === 'analytics' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-600'}`}
+                                    title="Analytics Pulse"
+                                >
+                                    <Icon name="activity" size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setView(view === 'data-migration' ? 'home' : 'data-migration')}
+                                    className={`p-2 rounded-xl transition-all ${view === 'data-migration' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-600'}`}
+                                    title="Data Migration"
+                                >
+                                    <Icon name="database" size={20} />
+                                </button>
+                            </>
                         )}
 
                         <button
                             onClick={() => setShowPartnerLogin(true)}
                             className={`p-2 rounded-xl transition-all ${currentUser ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                            title="Partner Access"
                         >
                             <Icon name="users" size={20} />
                         </button>
@@ -399,27 +464,46 @@ const App = () => {
 
             <AIAssistant onIntent={handleSearch} currentArea={filters.area} />
 
-            {/* Main Content */}
             <div className={`px-5 mt-4 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.3]' : ''}`}>
-                
-                {/* View: Home */}
+
+                {/* --- [HOME VIEW] 保留你備份檔中的所有內容 --- */}
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
-                        {savedIds.length > 0 && <div className="mb-6"><ProgressTimeline savedCount={savedIds.length} /></div>}
+                        <CommunityBulletin onCTAClick={(id) => {
+                            if (id === '4') setView('map');
+                            else if (id === '1') setView('list');
+                        }} />
 
-                        {/* Search Bar */}
+                        {savedIds.length > 0 && (
+                            <div className="mb-6">
+                                <ProgressTimeline savedCount={savedIds.length} />
+                            </div>
+                        )}
+
                         <div className="mb-8 relative group">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Icon name="search" size={18} className="text-slate-400" /></div>
-                            <input 
-                                type="text" 
-                                value={searchQuery} 
-                                onChange={(e) => { setSearchQuery(e.target.value); if (view === 'home') setView('list'); }} 
-                                placeholder="Try 'fud bank' or 'help'..." 
-                                className="w-full py-4 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 outline-none text-sm font-bold text-slate-900 shadow-sm" 
-                            />
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Icon name="search" size={18} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        if (view === 'home') setView('list');
+                                    }}
+                                    placeholder="Search resources..."
+                                    className="flex-1 py-4 pl-12 pr-4 bg-white rounded-[24px] border-2 border-slate-100 focus:border-indigo-600 outline-none text-sm font-bold text-slate-900 transition-all shadow-sm"
+                                />
+                                <button
+                                    onClick={handleShare}
+                                    className="p-4 bg-white border-2 border-slate-100 rounded-[24px] text-indigo-600 hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center active:scale-95"
+                                >
+                                    <Icon name="share-2" size={20} />
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Categories */}
                         <div className="grid grid-cols-4 gap-3 mb-8">
                             {[
                                 { id: 'food', ...TAG_ICONS.food },
@@ -429,42 +513,244 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'all', label: 'More', icon: 'grid' }
+                                { id: 'faq', label: 'Common Q&A', icon: 'help-circle' }
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
-                                    onClick={() => handleSearch({ ...filters, category: cat.id || 'all' })}
+                                    onClick={() => {
+                                        if (cat.id === 'faq') setView('faq');
+                                        else handleSearch({ ...filters, category: cat.id || 'all' });
+                                    }}
                                     className="flex flex-col items-center gap-2 group"
                                 >
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-all group-active:scale-90 ${filters.category === cat.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 border-2 border-slate-50 group-hover:border-indigo-100'}`}>
                                         <Icon name={cat.icon} size={20} />
                                     </div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight truncate w-full px-1">{cat.label.replace(' Support', '')}</span>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight truncate w-full px-1">{cat.label.replace(' Support', '').replace(' Hub', '').replace(' Space', '')}</span>
                                 </button>
                             ))}
                         </div>
 
-                        {/* Crisis Wizard Trigger */}
-                        <button onClick={() => setShowWizard(true)} className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all active:scale-95 pr-2">
+                        <button
+                            onClick={() => setShowWizard(true)}
+                            className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all hover:scale-[1.02] active:scale-95 pr-2"
+                        >
                             <div className="flex items-center justify-between bg-white/10 rounded-[28px] p-4 border border-white/20">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white text-rose-600 rounded-full flex items-center justify-center animate-pulse"><Icon name="lifebuoy" size={20} /></div>
-                                    <div className="text-left"><h3 className="text-base font-black leading-none mb-1">Find Help Now</h3><p className="text-[9px] font-bold text-rose-100 uppercase tracking-widest">Wizard</p></div>
+                                    <div className="w-10 h-10 bg-white text-rose-600 rounded-full flex items-center justify-center animate-pulse shadow-sm">
+                                        <Icon name="lifebuoy" size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="text-base font-black leading-none mb-1">Find Help Now</h3>
+                                        <p className="text-[9px] font-bold text-rose-100 uppercase tracking-widest">Interactive Wizard</p>
+                                    </div>
                                 </div>
                                 <Icon name="chevron-right" size={20} className="mr-2 text-rose-100" />
                             </div>
                         </button>
 
-                        {/* Quick Plans */}
                         <div className="flex gap-3 mb-8 overflow-x-auto pb-4 scrollbar-hide snap-x px-1">
-                            <button onClick={() => setView('planner')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2"><Icon name="calendar" size={18} /><h4 className="text-xs font-black">My Journey</h4></button>
-                            <button onClick={() => setView('community-plan')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2"><Icon name="utensils" size={18} /><h4 className="text-xs font-black">Food Plan</h4></button>
-                            <button onClick={() => setView('safe-sleep-plan')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2"><Icon name="home" size={18} /><h4 className="text-xs font-black">Sleep Plan</h4></button>
+                            <button onClick={() => setView('planner')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-indigo-200 transition-all text-left group">
+                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Icon name="calendar" size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">My Journey</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{savedIds.length} Trusted Hubs</p>
+                                </div>
+                            </button>
+
+                            <button onClick={() => setView('community-plan')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-emerald-200 transition-all text-left group">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Icon name="utensils" size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">Food Plan</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Food & Pantries</p>
+                                </div>
+                            </button>
+
+                            <button onClick={() => setView('safe-sleep-plan')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-indigo-200 transition-all text-left group">
+                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Icon name="home" size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">Sleep Plan</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Housing Support</p>
+                                </div>
+                            </button>
+
+                            <button onClick={() => setView('warm-spaces-plan')} className="snap-start min-w-[140px] bg-white border border-slate-100 p-4 rounded-[24px] shadow-sm flex flex-col gap-2 hover:border-orange-200 transition-all text-left group">
+                                <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Icon name="flame" size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800">Warm Hubs</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Safe Warm Spaces</p>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div className="mb-10 p-6 bg-gradient-to-br from-amber-50 via-white to-orange-50 rounded-[32px] border-2 border-amber-100/50 shadow-md shadow-amber-200/20 relative overflow-hidden group transition-all hover:shadow-lg">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                            <h3 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                <Icon name="sparkles" size={14} className="animate-pulse" /> Community Growth Tip
+                            </h3>
+                            <div className="relative z-10">
+                                {(() => {
+                                    const tip = PROGRESS_TIPS[Math.floor(new Date().getDate()) % PROGRESS_TIPS.length];
+                                    return (
+                                        <>
+                                            <p className="text-sm font-black text-slate-900 mb-1">{tip.title}</p>
+                                            <p className="text-xs text-slate-600 font-medium leading-relaxed opacity-90">{tip.note}</p>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                            <div className="p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 transition-colors"></div>
+                                <h3 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
+                                    <Icon name="tag" size={14} /> Portsmouth Market Deals
+                                </h3>
+                                <div className="space-y-4 relative z-10">
+                                    {COMMUNITY_DEALS.map((deal: any) => (
+                                        <button
+                                            key={deal.id}
+                                            onClick={() => {
+                                                setMapFocus({ lat: deal.lat, lng: deal.lng, label: deal.store });
+                                                setView('map');
+                                            }}
+                                            className="border-l-4 border-emerald-500 pl-4 py-1 hover:bg-emerald-50 w-full text-left rounded-r-lg transition-all active:scale-[0.98]"
+                                        >
+                                            <p className="text-xs font-black text-slate-900">{deal.store}</p>
+                                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">{deal.deal} • {deal.time}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium">{deal.info}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-full -mr-12 -mt-12 transition-colors"></div>
+                                <h3 className="text-[10px] font-black text-rose-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
+                                    <Icon name="heart" size={14} /> City Gift Exchange
+                                </h3>
+                                <div className="space-y-4 relative z-10">
+                                    {GIFT_EXCHANGE.map((gift: any) => (
+                                        <button
+                                            key={gift.id}
+                                            onClick={() => {
+                                                setMapFocus({ lat: gift.lat, lng: gift.lng, label: gift.location });
+                                                setView('map');
+                                            }}
+                                            className="border-l-4 border-rose-500 pl-4 py-1 hover:bg-rose-50 w-full text-left rounded-r-lg transition-all active:scale-[0.98]"
+                                        >
+                                            <p className="text-xs font-black text-slate-900">{gift.item}</p>
+                                            <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wide">{gift.location} • {gift.date}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium">{gift.info}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
 
-                {/* View: List */}
+                {/* Other Views... */}
+                {view === 'faq' && <FAQSection onClose={() => setView('home')} />}
+                {view === 'community-plan' && (
+                    <div className="animate-fade-in-up">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Food Support</h2>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shared Meals & Community Pantries</p>
+                            </div>
+                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
+                        </div>
+                        {renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", subtitle: "Sustaining the community together", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                    </div>
+                )}
+                {view === 'safe-sleep-plan' && (
+                    <div className="animate-fade-in-up">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Safe Sleep</h2>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Housing & Emergency Night Support</p>
+                            </div>
+                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
+                        </div>
+                        {renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep & Housing", subtitle: "Support for finding a safe place", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                    </div>
+                )}
+                {view === 'warm-spaces-plan' && (
+                    <div className="animate-fade-in-up">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Warm Hubs</h2>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Spaces & Warmth</p>
+                            </div>
+                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
+                        </div>
+                        {renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces Calendar", subtitle: "Friendly places to stay warm", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                    </div>
+                )}
+                {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
+                {view === 'analytics' && (
+                    <div className="animate-fade-in-up">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Analytics</h2>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Demand Insights</p>
+                            </div>
+                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
+                        </div>
+                        {renderLazyView(PulseMap)}
+                    </div>
+                )}
+                {view === 'data-migration' && (
+                    <div className="animate-fade-in-up">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Data Migration</h2>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Firebase Sync Tools</p>
+                            </div>
+                            <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button>
+                        </div>
+                        {renderLazyView(DataMigration)}
+                    </div>
+                )}
+
+                {/* Modals */}
+                {showPartnerLogin && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+                        <div className="w-full max-w-md">
+                            <PartnerLogin 
+                                onClose={() => setShowPartnerLogin(false)}
+                                onRequestAccess={() => {
+                                    setShowPartnerLogin(false);
+                                    setShowPartnerRequest(true);
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Report Modals */}
+                <ReportModal 
+                    isOpen={!!reportTarget} 
+                    onClose={() => setReportTarget(null)} 
+                    resourceName={reportTarget?.name || ''}
+                    resourceId={reportTarget?.id || ''}
+                />
+                <PartnerRequestModal 
+                    isOpen={showPartnerRequest} 
+                    onClose={() => setShowPartnerRequest(false)} 
+                />
+
+                {/* List View with Report Interaction */}
                 {view === 'list' && (
                     <div className="animate-fade-in-up">
                         <div className="flex justify-between items-center mb-6">
@@ -473,30 +759,36 @@ const App = () => {
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Finding the right support</p>
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={() => setView('community-plan')} className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all"><Icon name="calendar" size={20} /></button>
-                                <button onClick={() => setView('map')} className="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all"><Icon name="mapPin" size={20} /></button>
+                                <button onClick={() => setView('community-plan')} className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all flex items-center gap-2"><Icon name="calendar" size={20} /></button>
+                                <button onClick={() => setView('map')} className="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"><Icon name="mapPin" size={20} /></button>
                                 <button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="home" size={20} /></button>
                             </div>
                         </div>
 
-                        {/* Search & Filters */}
+                        {/* Search and Filters */}
                         <div className="space-y-4 mb-8">
                             <div className="relative">
                                 <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Fuzzy search..." className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold" />
+                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search resources..." className="w-full py-4 pl-11 pr-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-indigo-600 outline-none text-xs font-bold" />
                                 {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600"><Icon name="x" size={14} /></button>}
                             </div>
                             <div className="flex gap-2 items-center">
                                 <button onClick={() => setSmartFilters({ ...smartFilters, openNow: !smartFilters.openNow })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.openNow ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><div className={`w-1.5 h-1.5 rounded-full ${smartFilters.openNow ? 'bg-white animate-pulse' : 'bg-emerald-500'}`}></div>Open Now</button>
                                 <button onClick={() => setSmartFilters({ ...smartFilters, verified: !smartFilters.verified })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.verified ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><Icon name="check_circle" size={10} /> Verified</button>
+                                <button onClick={() => setSmartFilters({ ...smartFilters, nearMe: !smartFilters.nearMe })} className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${smartFilters.nearMe ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}><Icon name="navigation" size={10} /> Near Me</button>
                             </div>
                             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                                 <button onClick={() => setFilters({ ...filters, area: 'All' })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === 'All' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'}`}>Whole City</button>
                                 {AREAS.map(area => (<button key={area} onClick={() => setFilters({ ...filters, area })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{area}</button>))}
                             </div>
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                                {['all', 'food', 'shelter', 'warmth', 'support', 'family', 'learning', 'skills', 'charity'].map(cat => (<button key={cat} onClick={() => setFilters({ ...filters, category: cat })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{cat === 'all' ? 'All Needs' : cat}</button>))}
+                            </div>
+                            <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide">
+                                {[{ label: 'No Referral', tag: 'no_referral', icon: 'check_circle' }, { label: 'Free', tag: 'free', icon: 'tag' }, { label: 'Membership', tag: 'membership', icon: 'id-card' }].map(f => (<button key={f.tag} onClick={() => setSearchQuery(searchQuery === f.tag ? '' : f.tag)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${searchQuery === f.tag ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}`}><Icon name={f.icon} size={12} />{f.label}</button>))}
+                            </div>
                         </div>
 
-                        {/* List Results */}
                         <div className="space-y-4 pb-24">
                             {filteredData.slice(0, visibleCount).map(item => (
                                 <ResourceCard
@@ -511,13 +803,14 @@ const App = () => {
                                     highContrast={highContrast}
                                     isPartner={isPartner}
                                     onTagClick={(tag) => setSearchQuery(tag)}
-                                    onReport={() => setReportTarget({ name: item.name, id: item.id })} // 觸發回報 Modal
+                                    onReport={() => setReportTarget({ name: item.name, id: item.id })}
                                 />
                             ))}
                         </div>
                         {visibleCount < filteredData.length && (
                             <div ref={(node) => { if (!node) return; const observer = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) { setVisibleCount(prev => Math.min(prev + 10, filteredData.length)); } }, { threshold: 0.1, rootMargin: '100px' }); observer.observe(node); return () => observer.disconnect(); }} className="h-20 flex items-center justify-center p-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading more resources...</div>
                         )}
+                        <div className="pb-32"></div>
                     </div>
                 )}
 
@@ -542,30 +835,21 @@ const App = () => {
                             onToggleSave: toggleSaved, 
                             stealthMode: stealthMode, 
                             externalFocus: mapFocus, 
-                            liveStatus: liveStatus, // 傳入 Google Sheets 即時狀態
+                            liveStatus: liveStatus, 
+                            isPartner: isPartner, 
                             onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
                         })}
                     </div>
                 )}
 
-                {/* Sub-Views (Rendered Lazily) */}
-                {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
+                {/* View: Planner */}
+                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Organizing your success</p></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200 transition-all"><Icon name="x" size={20} /></button></div>{savedIds.length > 0 && (<div className="space-y-4 mb-8"><div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">{AREAS.map((area: string) => (<button key={area} onClick={() => setFilters({ ...filters, area })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.area === area ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{area}</button>))}</div><div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">{['all', 'food', 'shelter', 'warmth', 'support', 'family', 'charity'].map(cat => (<button key={cat} onClick={() => setFilters({ ...filters, category: cat })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all whitespace-nowrap ${filters.category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>{cat === 'all' ? 'All Needs' : cat}</button>))}</div></div>)}{savedIds.length > 0 ? renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category }) : (<div className="py-20 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200 p-8 shadow-sm"><div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6"><Icon name="star" size={40} className="text-slate-200" /></div><h3 className="text-xl font-black text-slate-800 mb-2">No Pins Yet</h3><p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed mb-8">Add resources to "My Bridge" to build your personalized daily journey.</p><button onClick={() => setView('list')} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-[11px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:scale-[1.02] transition-all">Browse Resources</button></div>)}</div>}
                 
-                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
-                
-                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                
-                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                
-                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                {/* View: Compare */}
+                {view === 'compare' && <div className="animate-fade-in-up bg-slate-100 min-h-[90vh] rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-1"><div className="flex justify-between items-center px-6 py-6"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Smart Compare</h2><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Decision Support Engine</p></div><button onClick={() => setView('home')} className="p-3 bg-white text-slate-400 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"><Icon name="x" size={20} /></button></div>
+                {renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
+                </div>}
 
-                {view === 'compare' && (
-                    <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}>
-                        <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
-                            {renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Bottom Nav */}
@@ -577,41 +861,12 @@ const App = () => {
                 <button onClick={() => setShowCrisis(true)} className="text-rose-500 hover:text-rose-400 animate-pulse"><Icon name="lifebuoy" size={24} /></button>
             </div>
 
-            {/* Modals & Overlays */}
+            {/* Modals and Overlays */}
             <TipsModal isOpen={showTips} onClose={() => setShowTips(false)} />
             <CrisisModal isOpen={showCrisis} onClose={() => setShowCrisis(false)} />
             <PrivacyShield onAccept={() => console.log('Privacy accepted')} />
             <SmartNotifications notifications={notifications} onDismiss={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} onClearAll={() => setNotifications([])} onAction={(resourceId) => { const resource = ALL_DATA.find(r => r.id === resourceId); if (resource) { setMapFocus({ lat: resource.lat, lng: resource.lng, label: resource.name }); setView('map'); } }} />
             
-            {showPartnerLogin && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-md">
-                        <PartnerLogin 
-                            onClose={() => setShowPartnerLogin(false)}
-                            onRequestAccess={() => {
-                                setShowPartnerLogin(false);
-                                setShowPartnerRequest(true);
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Firebase Reports & Requests Modals */}
-            <ReportModal 
-                isOpen={!!reportTarget} 
-                onClose={() => setReportTarget(null)} 
-                resourceName={reportTarget?.name || ''}
-                resourceId={reportTarget?.id || ''}
-            />
-            <PartnerRequestModal 
-                isOpen={showPartnerRequest} 
-                onClose={() => setShowPartnerRequest(false)} 
-            />
-
-            {showWizard && renderLazyView(CrisisWizard, { userLocation: userLocation, onClose: () => setShowWizard(false), savedIds: savedIds, onToggleSave: toggleSaved })}
-            
-            {/* Journey FAB */}
             {(journeyItems.length > 0 || compareItems.length > 0) && (
                 <div className="fixed bottom-24 left-5 z-[50] flex flex-col gap-3">
                     {journeyItems.length > 0 && (<button onClick={() => setView('planner')} className="bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all active:scale-95 relative"><Icon name="mapPin" size={20} /><div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center"><span className="text-xs font-black">{journeyItems.length}</span></div></button>)}
@@ -620,6 +875,9 @@ const App = () => {
             )}
 
             {view === 'planner' && journeyItems.length > 0 && (<div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end" onClick={() => setView('home')}><div className="w-full max-w-lg mx-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>{renderLazyView(JourneyPlanner, { items: ALL_DATA.filter(r => journeyItems.includes(r.id)), userLocation: userLocation, onRemove: (id: string) => setJourneyItems(prev => prev.filter(i => i !== id)), onClear: () => { setJourneyItems([]); setView('home'); }, onNavigate: () => { if (journeyItems.length > 0) { const points = ALL_DATA.filter(r => journeyItems.includes(r.id)).map(r => `${r.lat},${r.lng}`).join('|'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${points.split('|').pop()}&waypoints=${points}`, '_blank'); } } })}</div></div>)}
+            
+            {/* [Restored] Crisis Wizard Modal */}
+            {showWizard && renderLazyView(CrisisWizard, { userLocation: userLocation, onClose: () => setShowWizard(false), savedIds: savedIds, onToggleSave: (id: string) => { if (savedIds.includes(id)) { setSavedIds(prev => prev.filter(i => i !== id)); } else { setSavedIds(prev => [...prev, id]); playSuccessSound(); } } })}
         </div>
     );
 };
