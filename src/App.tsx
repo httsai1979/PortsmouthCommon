@@ -819,6 +819,8 @@ const App = () => {
                             externalFocus: mapFocus, 
                             liveStatus: liveStatus, 
                             isPartner: isPartner, 
+                            // [關鍵] 這裡加入了 onReport，讓地圖元件可以呼叫回報視窗
+                            onReport: (item: any) => setReportTarget({ name: item.name, id: item.id }),
                             onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
                         })}
                     </div>
