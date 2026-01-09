@@ -29,6 +29,7 @@ import PartnerLogin from './components/PartnerLogin';
 const SimpleMap = lazy(() => import('./components/SimpleMap'));
 const JourneyPlanner = lazy(() => import('./components/JourneyPlanner'));
 const SmartCompare = lazy(() => import('./components/SmartCompare'));
+// UnifiedSchedule & PrintView are loaded via Suspense to prevent blocking
 const UnifiedSchedule = lazy(() => import('./components/UnifiedSchedule'));
 const AreaScheduleView = lazy(() => import('./components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 const CrisisWizard = lazy(() => import('./components/CrisisWizard'));
@@ -44,7 +45,7 @@ const PageLoader = () => (
     </div>
 );
 
-// [FIX] Move static styles outside component to prevent layout thrashing
+// Static Styles (Moved out to prevent re-calc)
 const APP_STYLES = `
     .app-container { max-width: 500px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); position: relative; padding-bottom: 140px; }
     .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -83,8 +84,9 @@ const App = () => {
     const [visibleCount, setVisibleCount] = useState(10);
     const [showScrollTop, setShowScrollTop] = useState(false);
     
-    // [FIX] Stable ref for intersection observer
+    // [FIX] Stable Refs
     const loadMoreRef = useRef<HTMLDivElement>(null);
+    const topSentinelRef = useRef<HTMLDivElement>(null); // New ref for detecting top of page
 
     // [Hybrid Data State]
     const [sheetStatus, setSheetStatus] = useState<Record<string, LiveStatus>>({});
@@ -169,7 +171,7 @@ const App = () => {
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    // Initial Load & Polling
+    // [TASK 1 & 3] Google Sheets Polling + Offline Cache
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
         
@@ -224,26 +226,15 @@ const App = () => {
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
 
-        // [FIX] Throttled Scroll Listener
-        let ticking = false;
-        const handleScroll = () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const shouldShow = window.scrollY > 300;
-                    setShowScrollTop(prev => prev !== shouldShow ? shouldShow : prev);
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
-        window.addEventListener('scroll', handleScroll);
+        // [CRITICAL FIX] REMOVED Scroll Listener
+        // Replaced with IntersectionObserver below for "Scroll Top Button"
 
         return () => {
             clearInterval(intervalId);
             unsubscribeFirebase();
             window.removeEventListener('online', handleStatus);
             window.removeEventListener('offline', handleStatus);
-            window.removeEventListener('scroll', handleScroll);
+            // window.removeEventListener('scroll', handleScroll); // Removed
         };
     }, []);
 
@@ -271,7 +262,21 @@ const App = () => {
         return () => observer.disconnect();
     }, [view, searchQuery, filters, smartFilters]);
 
-    // [UPDATED] FAQ Navigation Handler
+    // [NEW FIX] Intersection Observer for "Scroll to Top" button
+    // This replaces the heavy scroll listener entirely.
+    useEffect(() => {
+        if (!topSentinelRef.current) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            // If the sentinel is NOT intersecting (i.e., scrolled out of view), show button
+            setShowScrollTop(!entries[0].isIntersecting);
+        }, { threshold: 0 });
+
+        observer.observe(topSentinelRef.current);
+        return () => observer.disconnect();
+    }, [view]); // Re-attach when view changes
+
+    // FAQ Navigation Handler
     const handleFAQNavigate = (action: string) => {
         if (action === 'planner') { setView('planner'); return; }
         if (action === 'map') { setView('map'); return; }
@@ -423,6 +428,9 @@ const App = () => {
     return (
         <div className={`app-container min-h-screen font-sans text-slate-900 selection:bg-indigo-200 selection:text-indigo-900 ${highContrast ? 'high-contrast' : ''}`}>
             
+            {/* [CRITICAL FIX] Sentinel element for Scroll-to-Top detection without scroll listener */}
+            <div ref={topSentinelRef} className="absolute top-0 left-0 w-full h-1 bg-transparent pointer-events-none" />
+
             {showScrollTop && (
                 <button
                     onClick={scrollToTop}
@@ -445,7 +453,6 @@ const App = () => {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {/* Font Size Toggle Button */}
                         <button 
                             onClick={() => setFontSize(prev => (prev + 1) % 3)} 
                             className={`p-2 rounded-xl transition-all border-2 ${fontSize > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-600 border-slate-100 hover:bg-slate-200'}`} 
@@ -502,12 +509,11 @@ const App = () => {
 
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
-                        {/* [UPDATE] New Content Logic for Sliding Cards */}
                         <CommunityBulletin onCTAClick={(id) => {
                             if (id === '1') { setMapFilter('open'); setView('map'); }
                             else if (id === '2') { setFilters({ ...filters, category: 'food' }); setView('map'); }
                             else if (id === '3') { setFilters({ ...filters, category: 'warmth' }); setView('map'); }
-                            else if (id === '4') { setView('faq'); } // Go to Guide
+                            else if (id === '4') { setView('faq'); }
                         }} />
 
                         {savedIds.length > 0 && (
@@ -567,7 +573,6 @@ const App = () => {
                             ))}
                         </div>
 
-                        {/* Find Help Now -> Find Support */}
                         <button
                             onClick={() => setShowWizard(true)}
                             className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all hover:scale-[1.02] active:scale-95 pr-2"
@@ -700,6 +705,7 @@ const App = () => {
                     <FAQSection onClose={() => setView('home')} onNavigate={handleFAQNavigate} />
                 )}
                 
+                {/* [CRITICAL FIX] Use Suspense directly instead of renderLazyView function to prevent remounting/crashing */}
                 {view === 'community-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="food" title="Weekly Food Support" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
                 {view === 'safe-sleep-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="shelter" title="Safe Sleep" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
                 {view === 'warm-spaces-plan' && <Suspense fallback={<PageLoader />}><UnifiedSchedule category="warmth" title="Warm Spaces" data={ALL_DATA} onNavigate={(id) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }} onSave={toggleSaved} savedIds={savedIds} /></Suspense>}
