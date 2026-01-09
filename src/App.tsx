@@ -11,6 +11,7 @@ import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
 import Icon from './components/Icon';
 import ResourceCard from './components/ResourceCard';
 import { TipsModal, CrisisModal, ReportModal, PartnerRequestModal, TutorialModal } from './components/Modals';
+// [注意] FAQSection 是同步引入的，不需要 Lazy Load
 import FAQSection from './components/FAQSection';
 import CommunityBulletin from './components/CommunityBulletin';
 import AIAssistant from './components/AIAssistant';
@@ -106,7 +107,7 @@ const App = () => {
             try {
                 await navigator.share({
                     title: 'Portsmouth Bridge',
-                    text: 'Find food, shelter, and community support in Portsmouth. Check out Portsmouth Bridge!',
+                    text: 'Find food, shelter, and community support in Portsmouth.',
                     url: window.location.href,
                 });
             } catch (err) {
@@ -153,6 +154,7 @@ const App = () => {
     useEffect(() => {
         setTimeout(() => setLoading(false), 800);
         
+        // Check for Tutorial
         const seenTutorial = localStorage.getItem('seen_tutorial');
         if (!seenTutorial) {
             setShowTutorial(true);
@@ -236,9 +238,8 @@ const App = () => {
         setVisibleCount(10);
     }, [filters, searchQuery, smartFilters]);
 
-    // [核心更新] 智能 FAQ 導航處理器 - 支援新的 FAQ 行動指令
+    // [UPDATED] FAQ Navigation Handler
     const handleFAQNavigate = (action: string) => {
-        // 1. 功能導航 (Planner, Map, List)
         if (action === 'planner') {
             setView('planner');
             return;
@@ -251,22 +252,16 @@ const App = () => {
             setView('list');
             return;
         }
-
-        // 2. 類別篩選 (新增 shelter, family 等支援)
         if (['food', 'support', 'warmth', 'shelter', 'family'].includes(action)) {
             setFilters({ ...filters, category: action });
-            setView('map'); // 切換到地圖模式顯示結果
+            setView('map');
             return;
         }
-
-        // 3. 特殊標籤篩選
         if (action === 'no_referral') {
             setSearchQuery('no_referral');
             setView('list');
             return;
         }
-
-        // 4. 重置/顯示全部
         if (action === 'all') {
             setFilters({ area: 'All', category: 'all', date: 'today' });
             setSearchQuery('');
@@ -467,7 +462,6 @@ const App = () => {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {/* Font Size Toggle Button */}
                         <button 
                             onClick={() => setFontSize(prev => (prev + 1) % 3)} 
                             className={`p-2 rounded-xl transition-all border-2 ${fontSize > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-600 border-slate-100 hover:bg-slate-200'}`} 
@@ -522,7 +516,6 @@ const App = () => {
 
             <div className={`px-5 mt-4 relative z-20 transition-all ${stealthMode ? 'opacity-90 grayscale-[0.3]' : ''}`}>
 
-                {/* --- [HOME VIEW] 保留你備份檔中的所有內容 --- */}
                 {view === 'home' && (
                     <div className="animate-fade-in-up">
                         <CommunityBulletin onCTAClick={(id) => {
@@ -569,7 +562,7 @@ const App = () => {
                                 { id: 'family', ...TAG_ICONS.family },
                                 { id: 'skills', ...TAG_ICONS.skills },
                                 { id: 'charity', ...TAG_ICONS.charity },
-                                { id: 'faq', label: 'Guide', icon: 'help-circle' } // [UPDATE] Changed label to 'Guide'
+                                { id: 'faq', label: 'Guide', icon: 'help-circle' } // [修正] Help -> Guide
                             ].map(cat => (
                                 <button
                                     key={cat.id || cat.label}
@@ -587,6 +580,7 @@ const App = () => {
                             ))}
                         </div>
 
+                        {/* [修正] Find Help Now -> Find Support */}
                         <button
                             onClick={() => setShowWizard(true)}
                             className="w-full mb-8 bg-rose-500 text-white p-1 rounded-[32px] shadow-xl shadow-rose-200 group transition-all hover:scale-[1.02] active:scale-95 pr-2"
@@ -715,12 +709,14 @@ const App = () => {
                     </div>
                 )}
 
-                {/* [UPDATE] FAQ View rendered with new handler */}
-                {view === 'faq' && renderLazyView(FAQSection, { onClose: () => setView('home'), onNavigate: handleFAQNavigate })}
+                {/* [關鍵修正] 直接渲染 FAQSection，解決滑動當機問題 */}
+                {view === 'faq' && (
+                    <FAQSection onClose={() => setView('home')} onNavigate={handleFAQNavigate} />
+                )}
                 
-                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
+                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds })}
+                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds })}
+                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds })}
                 {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
                 {view === 'analytics' && renderLazyView(PulseMap)}
                 {view === 'data-migration' && renderLazyView(DataMigration)}
@@ -818,25 +814,6 @@ const App = () => {
                             onReport: (item: any) => setReportTarget({ name: item.name, id: item.id }),
                             onCategoryChange: (cat: string) => { setFilters(prev => ({ ...prev, category: cat, area: 'All' })); setSearchQuery(''); } 
                         })}
-                    </div>
-                )}
-
-                {/* Sub-Views (Rendered Lazily) */}
-                {view === 'partner-dashboard' && renderLazyView(PartnerDashboard)}
-                
-                {view === 'planner' && <div className="animate-fade-in-up"><div className="mb-6 flex items-center justify-between"><div><h2 className="text-2xl font-black text-slate-900 tracking-tight">Journey Planner</h2></div><button onClick={() => setView('home')} className="p-3 bg-slate-100 rounded-2xl"><Icon name="x" size={20} /></button></div>{renderLazyView(AreaScheduleView, { data: savedResources, area: filters.area, category: filters.category })}</div>}
-                
-                {view === 'community-plan' && renderLazyView(UnifiedSchedule, { category: "food", title: "Weekly Food Support", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                
-                {view === 'safe-sleep-plan' && renderLazyView(UnifiedSchedule, { category: "shelter", title: "Safe Sleep", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-                
-                {view === 'warm-spaces-plan' && renderLazyView(UnifiedSchedule, { category: "warmth", title: "Warm Spaces", data: ALL_DATA, onNavigate: (id: string) => { const item = ALL_DATA.find(i => i.id === id); if (item) { setMapFocus({ lat: item.lat, lng: item.lng, label: item.name, id: item.id }); setView('map'); } }, onSave: toggleSaved, savedIds: savedIds })}
-
-                {view === 'compare' && (
-                    <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setView('home')}>
-                        <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
-                            {renderLazyView(SmartCompare, { items: ALL_DATA.filter(i => compareItems.includes(i.id)), userLocation: userLocation, onRemove: toggleCompareItem, onNavigate: (id: string) => { const resource = ALL_DATA.find(r => r.id === id); if (resource) { window.open(`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`, '_blank'); } }, onCall: (phone: string) => window.open(`tel:${phone}`) })}
-                        </div>
                     </div>
                 )}
             </div>
