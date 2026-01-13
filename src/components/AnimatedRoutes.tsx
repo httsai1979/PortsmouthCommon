@@ -1,10 +1,8 @@
-import { useMemo } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
 // --- STORES & CONTEXTS ---
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+
 import { useAppStore } from '../store/useAppStore';
 
 // --- COMPONENTS ---
@@ -24,25 +22,12 @@ import MyJourneyPage from '../pages/MyJourneyPage';
 
 const AnimatedRoutes = () => {
     const location = useLocation();
-    const { isPartner } = useAuth();
-    const { data: dynamicData } = useData();
     const {
-        setModal, setReportTarget, connectResult
+        setModal, connectResult
     } = useAppStore();
 
-    // Derived Status Mapping
-    const liveStatus = useMemo(() => {
-        const statuses: Record<string, any> = {};
-        dynamicData.forEach(item => {
-            statuses[item.id] = {
-                id: item.id,
-                status: item.liveStatus.isOpen ? 'Open' : 'Closed',
-                urgency: item.liveStatus.capacity === 'Full' ? 'High' : 'Normal',
-                lastUpdated: item.liveStatus.lastUpdated
-            };
-        });
-        return statuses;
-    }, [dynamicData]);
+    // Derived Status Mapping was unused, removed.
+
 
     return (
         <AnimatePresence mode="wait">
@@ -54,11 +39,7 @@ const AnimatedRoutes = () => {
                 } />
                 <Route path="/list" element={
                     <PageTransition>
-                        <ResourceList
-                            data={dynamicData}
-                            isPartner={isPartner}
-                            onReport={setReportTarget}
-                        />
+                        <ResourceList />
                     </PageTransition>
                 } />
                 <Route path="/map" element={
@@ -87,12 +68,12 @@ const AnimatedRoutes = () => {
                 } />
                 <Route path="/plan/:category" element={
                     <PageTransition>
-                        <PlanPage data={dynamicData} />
+                        <PlanPage />
                     </PageTransition>
                 } />
                 <Route path="/planner" element={
                     <PageTransition>
-                        <MyJourneyPage data={dynamicData} />
+                        <MyJourneyPage />
                     </PageTransition>
                 } />
 

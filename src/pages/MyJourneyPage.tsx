@@ -2,17 +2,15 @@ import { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { useAppStore } from '../store/useAppStore';
-import { ServiceDocument } from '../types/schema';
+
 
 const AreaScheduleView = lazy(() => import('../components/Schedule').then(module => ({ default: module.AreaScheduleView })));
 
-interface MyJourneyPageProps {
-    data: ServiceDocument[];
-}
 
-const MyJourneyPage = ({ data }: MyJourneyPageProps) => {
+
+const MyJourneyPage = () => {
     const navigate = useNavigate();
-    const { savedIds } = useAppStore();
+    const { data, savedIds } = useAppStore();
 
     const savedResources = data.filter(item => savedIds.includes(item.id));
 

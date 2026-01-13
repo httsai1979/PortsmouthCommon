@@ -1,7 +1,8 @@
 import { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import { useData } from './contexts/DataContext';
+// import { useData } from './contexts/DataContext'; // Removed
+import { useDataSync } from './hooks/useDataSync';
 import { useAppStore } from './store/useAppStore';
 
 // --- COMPONENTS ---
@@ -25,8 +26,14 @@ const PageLoader = () => (
 
 const App = () => {
     // --- GLOBAL STORES ---
+    useDataSync(); // Activate Data Sync
+
     const { loading: authLoading } = useAuth();
-    const { data: dynamicData, loading: dataLoading } = useData();
+    const {
+        data: dynamicData,
+        loading: dataLoading
+    } = useAppStore();
+
     const {
         highContrast, fontSize, savedIds, userLocation,
         notifications, setUserLocation, toggleSavedId,
@@ -61,7 +68,9 @@ const App = () => {
         root.classList.add(`fs-${fontSize}`);
     }, [fontSize]);
 
-    if (authLoading || dataLoading) return <PageLoader />;
+    if (authLoading) return <PageLoader />; // dataLoading handled by store/components gracefully? or block? 
+    // Usually we block if no data at all. Store init sets data: [] and loading: true.
+    if (dataLoading && dynamicData.length === 0) return <PageLoader />;
 
     return (
         <Router>

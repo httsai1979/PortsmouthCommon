@@ -3,15 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
 import { useFilteredData } from '../hooks/useFilteredData';
 import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+
 
 const SimpleMap = lazy(() => import('../components/SimpleMap'));
 
 const MapExplorer = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { isPartner } = useAuth();
-    const { data } = useData();
-    const { savedIds, stealthMode, toggleSavedId, userLocation, setReportTarget } = useAppStore();
+    const { data, savedIds, stealthMode, toggleSavedId, userLocation, setReportTarget } = useAppStore();
 
     // Derived Status Mapping (consistent with AnimatedRoutes)
     const liveStatus = useMemo(() => {

@@ -2,18 +2,14 @@ import { Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { useAppStore } from '../store/useAppStore';
-import { ServiceDocument } from '../types/schema';
+
 
 const UnifiedSchedule = lazy(() => import('../components/UnifiedSchedule'));
 
-interface PlanPageProps {
-    data: ServiceDocument[];
-}
-
-const PlanPage = ({ data }: PlanPageProps) => {
+const PlanPage = () => {
     const { category } = useParams<{ category: string }>();
     const navigate = useNavigate();
-    const { savedIds, toggleSavedId } = useAppStore();
+    const { data, savedIds, toggleSavedId } = useAppStore();
 
     const config: Record<string, { title: string, color: string, icon: string }> = {
         food: { title: 'Weekly Food Support', color: 'emerald', icon: 'utensils' },

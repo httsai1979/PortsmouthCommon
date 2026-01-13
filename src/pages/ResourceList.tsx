@@ -4,19 +4,16 @@ import Icon from '../components/Icon';
 import ResourceCard from '../components/ResourceCard';
 import { AREAS } from '../data';
 import { useAppStore } from '../store/useAppStore';
-import { ServiceDocument } from '../types/schema';
+
 import { useFilteredData } from '../hooks/useFilteredData';
 
-interface ResourceListProps {
-    data: ServiceDocument[];
-    isPartner: boolean;
-    onReport: (item: any) => void;
-}
+import { useAuth } from '../contexts/AuthContext';
 
-const ResourceList = ({ data, isPartner, onReport }: ResourceListProps) => {
+const ResourceList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { savedIds, toggleSavedId, highContrast, userLocation } = useAppStore();
+    const { data, savedIds, toggleSavedId, highContrast, userLocation, setReportTarget } = useAppStore();
+    const { isPartner } = useAuth();
 
     const [visibleCount, setVisibleCount] = useState(10);
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -166,7 +163,7 @@ const ResourceList = ({ data, isPartner, onReport }: ResourceListProps) => {
                         highContrast={highContrast}
                         isPartner={isPartner}
                         onTagClick={(tag) => updateFilters({ q: tag })}
-                        onReport={() => onReport(item)}
+                        onReport={() => setReportTarget(item)}
                     />
                 ))}
             </div>
