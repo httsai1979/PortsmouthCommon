@@ -17,7 +17,9 @@ const PartnerDashboard = () => {
         address: '',
         phone: '',
         description: '',
-        website: ''
+        website: '',
+        tags: [] as string[],
+        schedule: {} as Record<number, string>
     });
 
     useEffect(() => {
@@ -62,7 +64,9 @@ const PartnerDashboard = () => {
             address: service.location.address,
             phone: service.phone || '',
             description: service.description,
-            website: service.website || ''
+            website: service.website || '',
+            tags: service.tags || [],
+            schedule: service.schedule || {}
         });
     };
 
@@ -78,8 +82,11 @@ const PartnerDashboard = () => {
                 phone: editForm.phone,
                 description: editForm.description,
                 website: editForm.website,
-                lastEditedBy: currentUser.email,
-                lastEditedAt: serverTimestamp()
+                tags: editForm.tags,
+                schedule: editForm.schedule,
+                lastEditedBy: currentUser.uid, // Use UID for absolute identification
+                lastEditedAt: serverTimestamp(),
+                'liveStatus.lastUpdated': new Date().toISOString()
             };
 
             await updateDoc(serviceRef, updates);
@@ -135,88 +142,98 @@ const PartnerDashboard = () => {
             ) : (
                 // Show control cards if data exists
                 <div className="grid gap-6">
-                    {filteredServices.map(service => (
-                        <div key={service.id} className="bg-white rounded-[40px] p-8 shadow-xl shadow-slate-200/50 border border-slate-50 overflow-hidden relative">
+                    {filteredServices.map(service => {
+                        const lastEditDate = (service as any).lastEditedAt?.toDate?.() || new Date(service.liveStatus.lastUpdated);
+                        const isStale = (Date.now() - lastEditDate.getTime()) > (30 * 24 * 60 * 60 * 1000);
 
-                            {/* Loading Overlay */}
-                            {updating === service.id && (
-                                <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
-                                    <div className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-widest">
-                                        <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                                        Updating...
+                        return (
+                            <div key={service.id} className={`bg-white rounded-[40px] p-8 shadow-xl shadow-slate-200/50 border-2 overflow-hidden relative ${isStale ? 'border-amber-200 ring-4 ring-amber-50' : 'border-slate-50'}`}>
+                                {isStale && (
+                                    <div className="absolute top-0 left-0 right-0 bg-amber-400 py-1.5 px-8 text-center">
+                                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-900">⚠️ Stale Record: Please verify details for 2026 accuracy</p>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Card Header & Status */}
-                            <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
-                                <div>
-                                    <h3 className="text-2xl font-black text-slate-900 leading-tight mb-2">{service.name}</h3>
-                                    <div className="flex items-center gap-3">
-                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${service.liveStatus.isOpen ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                            {service.liveStatus.isOpen ? 'Open' : 'Closed'}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-slate-300 uppercase">Updated: {new Date(service.liveStatus.lastUpdated).toLocaleTimeString()}</span>
+                                {/* Loading Overlay */}
+                                {updating === service.id && (
+                                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
+                                        <div className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-widest">
+                                            <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                            Updating...
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Card Header & Status */}
+                                <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
+                                    <div>
+                                        <h3 className="text-2xl font-black text-slate-900 leading-tight mb-2">{service.name}</h3>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${service.liveStatus.isOpen ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                                {service.liveStatus.isOpen ? 'Open' : 'Closed'}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-slate-300 uppercase">Updated: {new Date(service.liveStatus.lastUpdated).toLocaleTimeString()}</span>
+                                            <button
+                                                onClick={() => handleEditClick(service)}
+                                                className="px-3 py-1 bg-slate-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-wider hover:bg-slate-100 transition-colors"
+                                            >
+                                                Edit Details
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Status Buttons */}
+                                    <div className="flex gap-2">
                                         <button
-                                            onClick={() => handleEditClick(service)}
-                                            className="px-3 py-1 bg-slate-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-wider hover:bg-slate-100 transition-colors"
+                                            onClick={() => updateStatus(service.id, { 'liveStatus.isOpen': true })}
+                                            className={`flex-1 md:flex-none px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${service.liveStatus.isOpen ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}
                                         >
-                                            Edit Details
+                                            Open
+                                        </button>
+                                        <button
+                                            onClick={() => updateStatus(service.id, { 'liveStatus.isOpen': false })}
+                                            className={`flex-1 md:flex-none px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!service.liveStatus.isOpen ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+                                        >
+                                            Close
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Status Buttons */}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => updateStatus(service.id, { 'liveStatus.isOpen': true })}
-                                        className={`flex-1 md:flex-none px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${service.liveStatus.isOpen ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}
-                                    >
-                                        Open
-                                    </button>
-                                    <button
-                                        onClick={() => updateStatus(service.id, { 'liveStatus.isOpen': false })}
-                                        className={`flex-1 md:flex-none px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!service.liveStatus.isOpen ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
-                                    >
-                                        Close
-                                    </button>
+                                {/* Capacity Controls */}
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Live Capacity / Stock Level</label>
+                                    <div className="flex gap-2">
+                                        {(['High', 'Medium', 'Low', 'Full'] as const).map(lev => (
+                                            <button
+                                                key={lev}
+                                                onClick={() => updateStatus(service.id, { 'liveStatus.capacity': lev })}
+                                                className={`flex-1 py-4 rounded-2xl text-[9px] font-black uppercase tracking-tighter transition-all border-2 ${service.liveStatus.capacity === lev ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-50 text-slate-400'}`}
+                                            >
+                                                {lev === 'High' ? 'Good' : lev === 'Medium' ? 'Medium' : lev === 'Low' ? 'Low' : 'Full'}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Capacity Controls */}
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Live Capacity / Stock Level</label>
-                                <div className="flex gap-2">
-                                    {(['High', 'Medium', 'Low', 'Full'] as const).map(lev => (
-                                        <button
-                                            key={lev}
-                                            onClick={() => updateStatus(service.id, { 'liveStatus.capacity': lev })}
-                                            className={`flex-1 py-4 rounded-2xl text-[9px] font-black uppercase tracking-tighter transition-all border-2 ${service.liveStatus.capacity === lev ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-50 text-slate-400'}`}
-                                        >
-                                            {lev === 'High' ? 'Good' : lev === 'Medium' ? 'Medium' : lev === 'Low' ? 'Low' : 'Full'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Broadcast Section */}
-                            <div className="mt-8 space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Emergency Broadcast</label>
-                                <div className="flex gap-3">
-                                    <input
-                                        type="text"
-                                        defaultValue={service.liveStatus.message || ''}
-                                        placeholder="e.g. Urgent: Blankets needed..."
-                                        onBlur={(e) => updateStatus(service.id, { 'liveStatus.message': e.target.value })}
-                                        className="flex-1 p-5 bg-slate-50 border-2 border-slate-50 rounded-[24px] outline-none focus:border-indigo-600 focus:bg-white transition-all text-sm font-bold"
-                                    />
-                                    <div className="p-5 bg-indigo-50 text-indigo-600 rounded-[24px] flex items-center justify-center">
-                                        <Icon name="zap" size={20} />
+                                {/* Broadcast Section */}
+                                <div className="mt-8 space-y-4">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Emergency Broadcast</label>
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            defaultValue={service.liveStatus.message || ''}
+                                            placeholder="e.g. Urgent: Blankets needed..."
+                                            onBlur={(e) => updateStatus(service.id, { 'liveStatus.message': e.target.value })}
+                                            className="flex-1 p-5 bg-slate-50 border-2 border-slate-50 rounded-[24px] outline-none focus:border-indigo-600 focus:bg-white transition-all text-sm font-bold"
+                                        />
+                                        <div className="p-5 bg-indigo-50 text-indigo-600 rounded-[24px] flex items-center justify-center">
+                                            <Icon name="zap" size={20} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -274,11 +291,37 @@ const PartnerDashboard = () => {
                             <div className="space-y-1">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Public Description</label>
                                 <textarea
-                                    rows={4}
+                                    rows={3}
                                     className="w-full px-5 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none text-sm font-bold transition-all"
                                     value={editForm.description}
                                     onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                                 />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tags (Comma separated)</label>
+                                <input
+                                    className="w-full px-5 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none text-sm font-bold transition-all"
+                                    value={editForm.tags.join(', ')}
+                                    onChange={e => setEditForm({ ...editForm, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t !== '') })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Weekly Schedule</label>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                                        <div key={day} className="flex items-center gap-3">
+                                            <span className="w-8 text-[10px] font-bold text-slate-400 uppercase">{day}</span>
+                                            <input
+                                                className="flex-1 px-4 py-2 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none text-xs font-bold transition-all"
+                                                value={editForm.schedule[i] || ''}
+                                                onChange={e => setEditForm({ ...editForm, schedule: { ...editForm.schedule, [i]: e.target.value } })}
+                                                placeholder="e.g. 10:00-14:00 or Closed"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="pt-4 flex gap-3">

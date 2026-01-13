@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import Icon from './Icon';
 import { calculateConnectBenefits, type ConnectInput, type ConnectResult } from '../services/ConnectLogic';
-import { PolicyParameters } from '../data/policy_config';
+import { PolicyConfig } from '../config/policy_2026';
 
 interface ConnectCalculatorProps {
     onComplete: (result: ConnectResult, input: ConnectInput) => void;
     onClose: () => void;
     initialData?: ConnectInput | null;
-    policy: PolicyParameters;
+    policy: PolicyConfig;
 }
 
 const ConnectCalculator = ({ onComplete, onClose, initialData, policy }: ConnectCalculatorProps) => {

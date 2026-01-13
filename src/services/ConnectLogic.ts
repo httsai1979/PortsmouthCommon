@@ -39,13 +39,13 @@ export interface ConnectResult {
     recommendations: Recommendation[];
 }
 
-import { PolicyParameters, DEFAULT_POLICY_CONFIG, Band } from '../data/policy_config';
+import { PolicyConfig, DEFAULT_POLICY_CONFIG, Band } from '../config/policy_2026';
 
 /**
  * Portsmouth Connect Logic Engine - 2026 Core Parameters
- * Decoupled from static values to allow for remote configuration.
+ * Configuration-driven to allow for remote updates without redeploy.
  */
-export const calculateConnectBenefits = (input: ConnectInput, policy: PolicyParameters = DEFAULT_POLICY_CONFIG): ConnectResult => {
+export const calculateConnectBenefits = (input: ConnectInput, policy: PolicyConfig = DEFAULT_POLICY_CONFIG): ConnectResult => {
     const results: ConnectResult = {
         monthlyShortfall: 0,
         unclaimedValue: 0,

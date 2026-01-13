@@ -3,7 +3,7 @@ export interface Band {
     discount: number;
 }
 
-export interface PolicyParameters {
+export interface PolicyConfig {
     ucStandardAllowanceSingle25Plus: number;
     ucStandardAllowanceCouple25Plus: number;
     ucChildElement: number;
@@ -34,7 +34,7 @@ export interface PolicyParameters {
     fsmEarningsThresholdAnnual: number;
 }
 
-export const DEFAULT_POLICY_CONFIG: PolicyParameters = {
+export const DEFAULT_POLICY_CONFIG: PolicyConfig = {
     ucStandardAllowanceSingle25Plus: 400.14,
     ucStandardAllowanceCouple25Plus: 628.10,
     ucChildElement: 292.81,
@@ -87,3 +87,5 @@ export const DEFAULT_POLICY_CONFIG: PolicyParameters = {
     southernWaterMonthlySaving: 28,
     fsmEarningsThresholdAnnual: 7400
 };
+
+export default DEFAULT_POLICY_CONFIG;

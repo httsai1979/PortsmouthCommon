@@ -16,7 +16,7 @@ interface LoopItem {
     timestamp: Timestamp | null;
 }
 
-const BANNED_WORDS = ['scam', 'crypto', 'investment', 'money', 'payment', 'piss', 'shit', 'fuck', 'bastard', 'crap'];
+const BANNED_WORDS = ['scam', 'crypto', 'investment', 'money', 'payment', 'cash', 'piss', 'shit', 'fuck', 'bastard', 'crap', 'nigger', 'faggot'];
 
 const PompeyLoop = () => {
     const { currentUser } = useAuth();
@@ -39,7 +39,7 @@ const PompeyLoop = () => {
         const q = query(collection(db, 'community_posts'), orderBy('timestamp', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const now = Date.now();
-            const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+            const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
 
             const items = snapshot.docs
                 .map(doc => ({
@@ -47,10 +47,10 @@ const PompeyLoop = () => {
                     ...doc.data()
                 })) as LoopItem[];
 
-            // Auto-Expiry Logic: Only show posts from the last 7 days
+            // Auto-Expiry Logic: Only show posts from the last 14 days
             const validItems = items.filter(item => {
                 if (!item.timestamp) return true; // Assume true for fresh server-side timestamps
-                return (now - item.timestamp.toMillis()) < sevenDaysMs;
+                return (now - item.timestamp.toMillis()) < fourteenDaysMs;
             });
 
             setPosts(validItems);
@@ -193,9 +193,9 @@ const PompeyLoop = () => {
                                 ) : (
                                     <button
                                         onClick={() => toggleContact(item.id)}
-                                        className="flex items-center gap-2 py-2 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
+                                        className="flex items-center gap-2 py-2 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all text-center"
                                     >
-                                        Connect
+                                        Click to Reveal Contact
                                     </button>
                                 )}
                             </div>

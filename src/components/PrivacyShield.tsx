@@ -102,7 +102,7 @@ const PrivacyShield = ({ onAccept }: PrivacyShieldProps) => {
                         onClick={handleNuclearDelete}
                         className="w-full py-4 border-2 border-rose-100 text-rose-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all flex items-center justify-center gap-2"
                     >
-                        <Icon name="lifebuoy" size={14} /> Kill Switch: Forget This Device
+                        <Icon name="lifebuoy" size={14} /> Nuke: Delete All Local Data
                     </button>
                 </div>
 

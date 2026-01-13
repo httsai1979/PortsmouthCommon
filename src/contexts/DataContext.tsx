@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { ServiceDocument } from '../types/schema';
 
 interface DataContextType {
@@ -27,73 +27,82 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let isMounted = true;
 
-        const loadInitialData = async () => {
+        const initializeData = async () => {
             try {
-                // 1. Try Cache for instant start
-                const cached = localStorage.getItem('bridge_data_cache');
+                // 1. Fallback: Load from Local Storage for instant (offline) start
+                const cached = localStorage.getItem('bridge_cache');
                 if (cached && isMounted) {
                     try {
                         const parsed = JSON.parse(cached);
                         setData(parsed.data);
-                        setLastUpdated(parsed.timestamp);
+                        setLastUpdated(parsed.lastUpdated);
                         setLoading(false);
                     } catch (e) {
-                        console.warn('Failed to parse cache', e);
+                        console.warn('Cache corrupted, ignored.');
                     }
                 }
 
-                // 2. Fetch data.json (Static Core)
+                // 2. Fetch Static Core (JSON)
                 const response = await fetch('/data.json');
-                if (response.ok) {
-                    const jsonData: ServiceDocument[] = await response.json();
-                    if (isMounted) {
-                        setData(jsonData);
-                        setLoading(false);
-                    }
-                } else {
-                    console.error('Failed to fetch data.json');
-                    if (!cached) setError('Offline and no cached data found.');
+                if (!response.ok) throw new Error('Failed to fetch static core.');
+
+                const staticCore = await response.json();
+                const staticData: ServiceDocument[] = staticCore.data;
+                const staticTimestamp = staticCore.generatedAt;
+
+                if (isMounted) {
+                    setData(staticData);
+                    setLastUpdated(staticTimestamp);
+                    setLoading(false);
                 }
 
-                // 3. Live Merge (Anti-Gravity Firestore Logic)
-                const unsubscribe = onSnapshot(collection(db, 'services'), (snapshot) => {
+                // 3. Asynchronously Check Firestore for newer updates (Hybrid Patching)
+                // We only fetch docs that were updated AFTER our JSON was generated
+                const servicesRef = collection(db, 'services');
+                const q = query(
+                    servicesRef,
+                    where('liveStatus.lastUpdated', '>', staticTimestamp)
+                );
+
+                const unsubscribe = onSnapshot(q, (snapshot) => {
                     if (!isMounted) return;
 
-                    const firestoreData = snapshot.docs.map(doc => ({
+                    const patches = snapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data()
                     } as ServiceDocument));
 
-                    setData(prevData => {
-                        const merged = [...prevData];
-                        firestoreData.forEach(fsItem => {
-                            const index = merged.findIndex(item => item.id === fsItem.id);
-                            if (index !== -1) {
-                                // Overwrite JSON with Firestore updates
-                                merged[index] = { ...merged[index], ...fsItem };
-                            } else {
-                                // Add new items that might only exist in Firestore
-                                merged.push(fsItem);
-                            }
+                    if (patches.length > 0) {
+                        setData(prevData => {
+                            const updatedData = [...prevData];
+                            patches.forEach(patch => {
+                                const index = updatedData.findIndex(item => item.id === patch.id);
+                                if (index !== -1) {
+                                    updatedData[index] = { ...updatedData[index], ...patch };
+                                } else {
+                                    updatedData.push(patch);
+                                }
+                            });
+
+                            // Update Cache
+                            const now = new Date().toISOString();
+                            localStorage.setItem('bridge_cache', JSON.stringify({
+                                data: updatedData,
+                                lastUpdated: now
+                            }));
+                            setLastUpdated(now);
+
+                            return updatedData;
                         });
-
-                        const timestamp = new Date().toISOString();
-                        setLastUpdated(timestamp);
-
-                        // Persistent Cache
-                        localStorage.setItem('bridge_data_cache', JSON.stringify({
-                            data: merged,
-                            timestamp
-                        }));
-
-                        return merged;
-                    });
+                    }
+                }, (err) => {
+                    console.warn('Firestore Patching Error (likely permissions):', err);
                 });
 
                 return unsubscribe;
 
             } catch (err: any) {
-                console.error('Data provider error:', err);
+                console.error('Hybrid Data Layer Error:', err);
                 if (isMounted) {
                     setError(err.message);
                     setLoading(false);
@@ -101,7 +110,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
 
-        const unsubscribePromise = loadInitialData();
+        const unsubscribePromise = initializeData();
 
         return () => {
             isMounted = false;

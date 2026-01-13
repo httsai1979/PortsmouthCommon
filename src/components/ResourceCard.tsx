@@ -1,8 +1,12 @@
-import { useState, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Icon from './Icon';
 import { checkStatus } from '../utils';
 import type { Resource } from '../data';
 import { TAG_ICONS } from '../data';
+import { db } from '../lib/firebase';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import { ServiceDocument } from '../types/schema';
 
 interface ResourceCardProps {
     item: Resource;
@@ -31,7 +35,25 @@ const ResourceCard = memo(({
     onReport,
     isPartner
 }: ResourceCardProps) => {
+    const { currentUser } = useAuth();
     const [expanded, setExpanded] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editForm, setEditForm] = useState({
+        description: item.description,
+        phone: item.phone || '',
+        tags: item.tags || [],
+        schedule: item.schedule || {}
+    });
+
+    useEffect(() => {
+        setEditForm({
+            description: item.description,
+            phone: item.phone || '',
+            tags: item.tags || [],
+            schedule: item.schedule || {}
+        });
+    }, [item]);
 
     // 使用統一的狀態檢查工具
     const status = checkStatus(item.schedule);
@@ -71,7 +93,16 @@ const ResourceCard = memo(({
                     </div>
                 )}
 
-                {isSaved && (
+                {isPartner && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                        className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur-md text-indigo-600 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1 hover:bg-white transition-all ring-1 ring-black/5"
+                    >
+                        <Icon name="edit" size={12} /> Partner Edit
+                    </button>
+                )}
+
+                {!isPartner && isSaved && (
                     <div className="absolute top-4 left-4 bg-indigo-600 text-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1">
                         <Icon name="star" size={12} /> Pinned
                     </div>
@@ -252,6 +283,108 @@ const ResourceCard = memo(({
                     </div>
                 )}
             </div>
+
+            {/* Partner Direct-Edit Modal */}
+            {isEditing && (
+                <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setIsEditing(false)}>
+                    <div className="bg-white w-full max-w-lg rounded-[40px] p-8 shadow-2xl relative animate-scale-in" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 transition-colors"
+                        >
+                            <Icon name="x" size={24} />
+                        </button>
+
+                        <h3 className="text-2xl font-black uppercase tracking-tight mb-2">Direct CMS Edit</h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Editing: {item.name}</p>
+
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Public Description</label>
+                                <textarea
+                                    rows={4}
+                                    className="w-full px-5 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none text-sm font-bold transition-all"
+                                    value={editForm.description}
+                                    onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone</label>
+                                    <input
+                                        className="w-full px-5 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none text-sm font-bold transition-all"
+                                        value={editForm.phone}
+                                        onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tags (CSV)</label>
+                                    <input
+                                        className="w-full px-5 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 focus:bg-white outline-none text-sm font-bold transition-all"
+                                        value={editForm.tags.join(', ')}
+                                        onChange={e => setEditForm({ ...editForm, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t !== '') })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Weekly Schedule</label>
+                                <div className="grid grid-cols-1 gap-1">
+                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                                        <div key={day} className="flex items-center gap-2">
+                                            <span className="w-8 text-[9px] font-bold text-slate-400 uppercase">{day}</span>
+                                            <input
+                                                className="flex-1 px-3 py-1.5 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none text-[11px] font-bold transition-all"
+                                                value={editForm.schedule[i] || ''}
+                                                onChange={e => setEditForm({ ...editForm, schedule: { ...editForm.schedule, [i]: e.target.value } })}
+                                                placeholder="e.g. 10:00-14:00"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                                <button
+                                    onClick={() => setIsEditing(false)}
+                                    className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-[0.98] transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!currentUser) return;
+                                        setIsSaving(true);
+                                        try {
+                                            const serviceRef = doc(db, 'services', item.id);
+                                            await updateDoc(serviceRef, {
+                                                description: editForm.description,
+                                                phone: editForm.phone,
+                                                tags: editForm.tags,
+                                                schedule: editForm.schedule,
+                                                lastEditedBy: currentUser.uid,
+                                                lastEditedAt: serverTimestamp(),
+                                                'liveStatus.lastUpdated': new Date().toISOString()
+                                            });
+                                            setIsEditing(false);
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert('Failed to save changes.');
+                                        } finally {
+                                            setIsSaving(false);
+                                        }
+                                    }}
+                                    disabled={isSaving}
+                                    className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                                >
+                                    {isSaving ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 });

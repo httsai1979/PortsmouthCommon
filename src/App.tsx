@@ -5,7 +5,7 @@ import { db } from './lib/firebase';
 import { AREAS, TAG_ICONS, COMMUNITY_DEALS, GIFT_EXCHANGE, PROGRESS_TIPS, MAP_BOUNDS } from './data';
 import { checkStatus, playSuccessSound, getDistance } from './utils';
 import { fetchLiveStatus, type LiveStatus } from './services/LiveStatusService';
-import { DEFAULT_POLICY_CONFIG, type PolicyParameters } from './data/policy_config';
+import { DEFAULT_POLICY_CONFIG, type PolicyConfig } from './config/policy_2026';
 
 // --- COMPONENTS ---
 import Icon from './components/Icon';
@@ -122,7 +122,7 @@ const App = () => {
         } catch { return null; }
     });
 
-    const [policyConfig, setPolicyConfig] = useState<PolicyParameters>(DEFAULT_POLICY_CONFIG);
+    const [policyConfig, setPolicyConfig] = useState<PolicyConfig>(DEFAULT_POLICY_CONFIG);
 
     // --- REFS ---
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -157,17 +157,19 @@ const App = () => {
         window.addEventListener('online', handleStatus);
         window.addEventListener('offline', handleStatus);
 
-        // Remote Policy Fetching (Decoupling)
+        // Configuration-Driven Policy Fetching (Remote GitHub Sync)
         const fetchRemotePolicy = async () => {
             try {
-                // Placeholder for future remote configuration endpoint
-                // const res = await fetch('https://raw.githubusercontent.com/httsai1979/PortsmouthBridge/main/policy_config.json');
-                // if (res.ok) {
-                //     const remotePolicy = await res.json();
-                //     setPolicyConfig(remotePolicy);
-                // }
+                // This URL would be points to a JSON version of src/config/policy_2026.ts
+                const REMOTE_POLICY_URL = 'https://raw.githubusercontent.com/httsai1979/PortsmouthCommon/main/src/config/policy_remote.json';
+                const res = await fetch(REMOTE_POLICY_URL);
+                if (res.ok) {
+                    const remotePolicy = await res.json();
+                    setPolicyConfig(remotePolicy);
+                    console.log('✅ Remote policy config loaded successfully.');
+                }
             } catch (error) {
-                console.warn('Could not fetch remote policy, using defaults.', error);
+                console.warn('⚠️ Could not fetch remote policy, using local policy_2026 constants.', error);
             }
         };
         fetchRemotePolicy();
