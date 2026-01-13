@@ -174,7 +174,7 @@ const ConnectDashboard = ({ result, onReset, onClose }: ConnectDashboardProps) =
                     >
                         Reset Calculator
                     </button>
-                    <p className="text-[8px] text-center text-slate-300 font-bold uppercase mt-2">Data is processed locally & not stored on any server.</p>
+                    <p className="text-[8px] text-center text-slate-300 font-bold uppercase mt-2">Data is processed via secure UK serverless logic & not permanently stored.</p>
                 </div>
             </div>
         </div>

@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { auth, db } from '../lib/firebase';
+import { auth } from '../lib/firebase';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 
 interface AuthContextType {
     currentUser: User | null;
@@ -21,28 +20,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setCurrentUser(user);
 
             if (user) {
-                // WHITELIST CHECK FIRST - Before any Firestore calls
-                // This ensures test accounts work even if Firestore has connection issues
-                const isWhitelisted =
-                    user.email === 'test@test.org' ||
-                    user.email?.endsWith('@sustainsage-group.com') ||
-                    user.email?.endsWith('@portsmouthbridge.org');
+                try {
+                    // [PHASE 1] Custom Claims RBAC Implementation
+                    // We check the ID token for the 'role' field set by Cloud Functions
+                    const tokenResult = await user.getIdTokenResult(true); // Force refresh to pick up new claims
+                    const role = tokenResult.claims.role;
 
-                if (isWhitelisted) {
-                    console.log('✅ Partner access granted via whitelist:', user.email);
-                    setIsPartner(true);
-                } else {
-                    // Only check Firestore if not in whitelist
-                    try {
-                        const partnerDoc = await getDoc(doc(db, 'partners', user.uid));
-                        setIsPartner(partnerDoc.exists());
-                        if (partnerDoc.exists()) {
-                            console.log('✅ Partner access granted via Firestore');
-                        }
-                    } catch (error) {
-                        console.warn('Could not verify partner status from Firestore:', error);
+                    if (role === 'partner') {
+                        console.log('✅ Partner access verified via Custom Claims');
+                        setIsPartner(true);
+                    } else {
                         setIsPartner(false);
                     }
+                } catch (error) {
+                    console.warn('Failed to fetch custom claims:', error);
+                    setIsPartner(false);
                 }
             } else {
                 setIsPartner(false);

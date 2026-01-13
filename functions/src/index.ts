@@ -308,14 +308,15 @@ export const calculateBenefits = functions.https.onCall(async (data: ConnectInpu
 // --- TRIGGER: moderatePost ---
 const BANNED_WORDS = ['scam', 'crypto', 'investment', 'money', 'payment', 'cash', 'piss', 'shit', 'fuck', 'bastard', 'crap', 'nigger', 'faggot'];
 
+// Triggered on BOTH creation and updates to ensure ongoing safety
 export const moderatePost = functions.firestore
     .document('community_posts/{postId}')
-    .onCreate(async (snapshot: functions.firestore.QueryDocumentSnapshot, context: functions.EventContext) => {
-        const post = snapshot.data();
-        if (!post) return;
+    .onWrite(async (change: functions.Change<functions.firestore.DocumentSnapshot>, context: functions.EventContext) => {
+        const newValue = change.after.exists ? change.after.data() : null;
+        if (!newValue) return; // Post deleted
 
-        const title = post.title.toLowerCase();
-        const description = post.description.toLowerCase();
+        const title = (newValue.title || '').toLowerCase();
+        const description = (newValue.description || '').toLowerCase();
 
         const hasBannedWord = BANNED_WORDS.some(word =>
             title.includes(word) || description.includes(word)
@@ -323,7 +324,7 @@ export const moderatePost = functions.firestore
 
         if (hasBannedWord) {
             console.log(`Moderating post ${context.params.postId}: Banned words detected.`);
-            await snapshot.ref.update({
+            await change.after.ref.update({
                 status: 'flagged',
                 moderatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 moderationReason: 'Automated keyword match'
@@ -340,23 +341,45 @@ export const moderatePost = functions.firestore
         }
     });
 
+// --- TRIGGER: syncUserClaims ---
+// This function ensures that when a partner document is created/updated, the user's custom claims are set
+// This fulfills the "Iron Dome" requirement for RBAC using request.auth.token.role
+export const syncUserClaims = functions.firestore
+    .document('partners/{userId}')
+    .onWrite(async (change: functions.Change<functions.firestore.DocumentSnapshot>, context: functions.EventContext) => {
+        const userId = context.params.userId;
+        const exists = change.after.exists;
+
+        try {
+            if (exists) {
+                // Set custom claim for partner
+                await admin.auth().setCustomUserClaims(userId, { role: 'partner' });
+                console.log(`✅ Custom claim 'partner' set for user: ${userId}`);
+            } else {
+                // Remote claim if partner deleted
+                await admin.auth().setCustomUserClaims(userId, null);
+                console.log(`❌ Custom claims removed for user: ${userId}`);
+            }
+        } catch (error) {
+            console.error(`Error syncing claims for user ${userId}:`, error);
+        }
+    });
+
 // --- HOOK: auditPartnerWrites ---
 // Generic auditor for critical collections
 export const auditPartnerWrites = functions.firestore
     .document('{collection}/{docId}')
     .onWrite(async (change: functions.Change<functions.firestore.DocumentSnapshot>, context: functions.EventContext) => {
         const { collection, docId } = context.params;
-        const criticalCollections = ['services', 'system_config'];
+        const criticalCollections = ['services', 'system_config', 'partners'];
 
         if (!criticalCollections.includes(collection)) return;
-
-        const auth = context.auth; // Note: context.auth is only available for callable functions. 
-        // For background triggers, we need to check the event's metadata or assume it's set in the rule.
-        // However, we can use the `data` to see if `lastEditedBy` was set by the client as required in Phase 1.
 
         const newValue = change.after.exists ? change.after.data() : null;
         const oldValue = change.before.exists ? change.before.data() : null;
 
+        // Note: For background triggers, we rely on the client or other functions 
+        // to have set metadata like lastEditedBy if we want to attribute the change.
         if (newValue && newValue.lastEditedBy) {
             await db.collection('audit_logs').add({
                 type: 'data_change',

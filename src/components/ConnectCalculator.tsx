@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import Icon from './Icon';
-import { type ConnectInput, type ConnectResult } from '../services/ConnectLogic';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../lib/firebase';
+import { type ConnectInput, type ConnectResult, calculateConnectBenefits } from '../services/ConnectLogic';
 
 interface ConnectCalculatorProps {
     onComplete: (result: ConnectResult, input: ConnectInput) => void;
@@ -35,12 +33,11 @@ const ConnectCalculator = ({ onComplete, onClose, initialData }: ConnectCalculat
     const handleSubmit = async () => {
         setIsCalculating(true);
         try {
-            const calculateBenefits = httpsCallable<ConnectInput, ConnectResult>(functions, 'calculateBenefits');
-            const result = await calculateBenefits(formData);
-            onComplete(result.data, formData);
+            const result = await calculateConnectBenefits(formData);
+            onComplete(result, formData);
         } catch (error) {
             console.error("Calculation failed:", error);
-            alert("Calculation failed. Please try again later.");
+            alert(error instanceof Error ? error.message : "Calculation failed. Please try again later.");
         } finally {
             setIsCalculating(false);
         }
