@@ -44,10 +44,10 @@ const ResourceCard = memo(({
                     <img src={item.entranceMeta.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 ) : (
                     <div className={`w-full h-full bg-gradient-to-br ${item.category === 'food' ? 'from-emerald-400 to-teal-600' :
-                            item.category === 'shelter' ? 'from-indigo-400 to-purple-600' :
-                                item.category === 'warmth' ? 'from-orange-400 to-red-500' :
-                                    item.category === 'family' ? 'from-pink-400 to-rose-500' :
-                                        'from-slate-400 to-slate-600'
+                        item.category === 'shelter' ? 'from-indigo-400 to-purple-600' :
+                            item.category === 'warmth' ? 'from-orange-400 to-red-500' :
+                                item.category === 'family' ? 'from-pink-400 to-rose-500' :
+                                    'from-slate-400 to-slate-600'
                         } opacity-90`}>
                         <div className="absolute inset-0 flex items-center justify-center opacity-20">
                             <Icon name={item.category === 'food' ? 'utensils' : 'mapPin'} size={64} />
@@ -60,8 +60,8 @@ const ResourceCard = memo(({
                 {item.capacityLevel && (
                     <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
                         <div className={`flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md border border-white/20 shadow-lg ${item.capacityLevel === 'high' ? 'bg-emerald-500/90 text-white' :
-                                item.capacityLevel === 'medium' ? 'bg-amber-400/90 text-slate-900' :
-                                    'bg-rose-500/90 text-white animate-pulse'
+                            item.capacityLevel === 'medium' ? 'bg-amber-400/90 text-slate-900' :
+                                'bg-rose-500/90 text-white animate-pulse'
                             }`}>
                             <div className="w-2 h-2 rounded-full bg-current"></div>
                             <span className="text-[10px] font-black uppercase tracking-widest leading-none">
@@ -166,15 +166,58 @@ const ResourceCard = memo(({
                 </div>
 
                 {expanded && (
-                    <div className="mt-6 pt-6 border-t border-slate-100 animate-fade-in">
-                        <div className="flex justify-between items-center mb-4">
-                            <p className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Details & Feedback</p>
+                    <div className="mt-6 pt-6 border-t border-slate-100 animate-fade-in space-y-6">
+                        {/* Access Guide */}
+                        <div className="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 blur-xl"></div>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-white/50 flex items-center gap-2">
+                                <Icon name="shield" size={12} className="text-indigo-400" /> Access Guide
+                            </h4>
+
+                            <div className="space-y-4 relative z-10">
+                                <div className="flex gap-4">
+                                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                                        <Icon name={item.eligibility === 'referral' ? "file-text" : "check-circle"} size={16} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-black uppercase tracking-wide">Requirement: {(item.eligibility || 'open').toUpperCase()}</p>
+                                        <p className="text-[11px] text-white/60 font-medium leading-relaxed">
+                                            {item.eligibility === 'referral'
+                                                ? "You need a voucher or a referral from HIVE Portsmouth, Citizens Advice, or a school worker."
+                                                : "Direct access available. No referral needed, just show up during opening hours."}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {item.entranceMeta?.idRequired && (
+                                    <div className="flex gap-4 p-3 bg-white/5 rounded-2xl border border-white/10">
+                                        <Icon name="user-check" size={16} className="text-amber-400 shrink-0 mt-0.5" />
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">ID Required</p>
+                                            <p className="text-[10px] text-white/50 font-medium leading-tight">Please bring a proof of address or a photo ID if possible.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {item.eligibility === 'referral' && (
+                                    <button
+                                        onClick={() => window.open('https://www.hiveportsmouth.org.uk/contact-us', '_blank')}
+                                        className="w-full py-3 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all"
+                                    >
+                                        Get Referral Help (HIVE)
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center px-1">
+                            <p className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Opening Schedule</p>
                             {onReport && (
                                 <button
                                     onClick={onReport}
                                     className="text-[10px] font-bold text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors"
                                 >
-                                    <Icon name="alert" size={12} />
+                                    <Icon name="alert-triangle" size={12} />
                                     {isPartner ? 'Update Status' : 'Report Issue'}
                                 </button>
                             )}
@@ -182,7 +225,7 @@ const ResourceCard = memo(({
 
                         <div className="space-y-1">
                             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
-                                <div key={d} className={`flex justify-between py-1.5 border-b border-slate-50 last:border-0 text-[10px] ${i === new Date().getDay() ? 'font-black text-indigo-600' : 'text-slate-500 font-medium'}`}>
+                                <div key={d} className={`flex justify-between py-1.5 border-b border-slate-50 last:border-0 text-[10px] px-1 ${i === new Date().getDay() ? 'font-black text-indigo-600 bg-indigo-50/50 rounded-lg' : 'text-slate-500 font-medium'}`}>
                                     <span>{d}</span><span>{item.schedule[i] || 'Closed'}</span>
                                 </div>
                             ))}

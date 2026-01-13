@@ -143,23 +143,41 @@ const ConnectCalculator = ({ onComplete, onClose }: ConnectCalculatorProps) => {
                                 <p className="text-[9px] text-slate-400 font-bold uppercase">Estimated annual: £{formData.netMonthlyIncome * 12}</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3">
-                                <button
-                                    onClick={() => setFormData({ ...formData, isSouthernWater: !formData.isSouthernWater })}
-                                    className={`p-4 border-2 rounded-2xl text-left transition-all ${formData.isSouthernWater ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <span className={`text-[10px] font-black uppercase ${formData.isSouthernWater ? 'text-blue-600' : 'text-slate-400'}`}>Southern Water Customer?</span>
-                                        {formData.isSouthernWater && <Icon name="check" size={16} className="text-blue-600" />}
-                                    </div>
-                                </button>
+                            <div className="grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => setFormData({ ...formData, hasUC: !formData.hasUC })}
                                     className={`p-4 border-2 rounded-2xl text-left transition-all ${formData.hasUC ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100'}`}
                                 >
-                                    <div className="flex justify-between items-center">
-                                        <span className={`text-[10px] font-black uppercase ${formData.hasUC ? 'text-emerald-600' : 'text-slate-400'}`}>Already on Universal Credit?</span>
-                                        {formData.hasUC && <Icon name="check" size={16} className="text-emerald-600" />}
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`text-[8px] font-black uppercase ${formData.hasUC ? 'text-emerald-600' : 'text-slate-400'}`}>On UC?</span>
+                                        <Icon name={formData.hasUC ? "check-circle" : "circle"} size={14} className={formData.hasUC ? "text-emerald-600" : "text-slate-300"} />
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setFormData({ ...formData, isSouthernWater: !formData.isSouthernWater })}
+                                    className={`p-4 border-2 rounded-2xl text-left transition-all ${formData.isSouthernWater ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`text-[8px] font-black uppercase ${formData.isSouthernWater ? 'text-blue-600' : 'text-slate-400'}`}>Water?</span>
+                                        <Icon name={formData.isSouthernWater ? "droplet" : "circle"} size={14} className={formData.isSouthernWater ? "text-blue-600" : "text-slate-300"} />
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setFormData({ ...formData, isEnergyDebt: !formData.isEnergyDebt })}
+                                    className={`p-4 border-2 rounded-2xl text-left transition-all ${formData.isEnergyDebt ? 'border-orange-600 bg-orange-50' : 'border-slate-100'}`}
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`text-[8px] font-black uppercase ${formData.isEnergyDebt ? 'text-orange-600' : 'text-slate-400'}`}>Energy Debt?</span>
+                                        <Icon name={formData.isEnergyDebt ? "zap" : "circle"} size={14} className={formData.isEnergyDebt ? "text-orange-600" : "text-slate-300"} />
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setFormData({ ...formData, isPregnant: !formData.isPregnant })}
+                                    className={`p-4 border-2 rounded-2xl text-left transition-all ${formData.isPregnant ? 'border-rose-600 bg-rose-50' : 'border-slate-100'}`}
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`text-[8px] font-black uppercase ${formData.isPregnant ? 'text-rose-600' : 'text-slate-400'}`}>Pregnant?</span>
+                                        <Icon name={formData.isPregnant ? "heart" : "circle"} size={14} className={formData.isPregnant ? "text-rose-600" : "text-slate-300"} />
                                     </div>
                                 </button>
                             </div>
