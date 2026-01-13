@@ -5,8 +5,11 @@ import { ALL_DATA } from '../data';
 import type { ServiceDocument } from '../types/schema';
 import { useAuth } from '../contexts/AuthContext';
 
+// Hardcoded verified Admin UIDs for sensitive data operations
+const VERIFIED_ADMIN_UIDS = ['3mC8w2S9pZ0', 'ADMIN_V1_MASTER'];
+
 const DataMigration = () => {
-    const { isPartner } = useAuth();
+    const { isPartner, currentUser } = useAuth();
     const [migrating, setMigrating] = useState(false);
     const [log, setLog] = useState<string[]>([]);
     const [firestoreCount, setFirestoreCount] = useState<number | null>(null);
@@ -30,6 +33,13 @@ const DataMigration = () => {
 
     const migrateData = async () => {
         if (migrating) return;
+
+        // Security Check: Only specific verified UIDs can execute migration
+        if (!currentUser || !VERIFIED_ADMIN_UIDS.includes(currentUser.uid)) {
+            alert('CRITICAL ACCESS DENIED: Your account is verified as a partner, but does not have Master Migration privileges. Please contact the Portsmouth Bridge Admin.');
+            addLog('⚠️ Security Alert: Unauthorised migration attempt blocked.');
+            return;
+        }
 
         const confirmed = window.confirm(
             `Are you ready to sanitise and upload ${ALL_DATA.length} records? This will overwrite existing cloud data.`
@@ -72,11 +82,11 @@ const DataMigration = () => {
                     },
                     liveStatus: {
                         isOpen: true,
-                        capacity: (resource.capacityLevel === 'low' || resource.capacityLevel === 'medium' || resource.capacityLevel === 'high' || resource.capacityLevel === 'full')
+                        capacity: (resource.capacityLevel && (resource.capacityLevel === 'low' || resource.capacityLevel === 'medium' || resource.capacityLevel === 'high'))
                             ? (resource.capacityLevel.charAt(0).toUpperCase() + resource.capacityLevel.slice(1)) as any
                             : 'Medium',
                         lastUpdated: new Date().toISOString(),
-                        message: resource.status?.message ?? ""
+                        message: (resource as any).status?.message ?? ""
                     },
                     b2bData: {
                         internalPhone: resource.phone || 'N/A',
@@ -85,7 +95,7 @@ const DataMigration = () => {
                     description: resource.description || 'No description provided.',
                     tags: resource.tags || [],
                     phone: resource.phone ?? null,
-                    website: resource.website ?? "",
+                    website: (resource as any).website ?? "",
                     schedule: resource.schedule || {},
                     trustScore: resource.trustScore ?? 0
                 };

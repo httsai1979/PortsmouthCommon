@@ -16,6 +16,44 @@ const PrivacyShield = ({ onAccept }: PrivacyShieldProps) => {
         onAccept();
     };
 
+    const handleNuclearDelete = async () => {
+        const confirmed = window.confirm(
+            "CRITICAL ACTION: This will erase all local data, cached maps, and offline information from this device. You will need to re-download data when you next use the app. Continue?"
+        );
+
+        if (!confirmed) return;
+
+        // 1. Clear Local Storage
+        localStorage.clear();
+
+        // 2. Clear Session Storage
+        sessionStorage.clear();
+
+        // 3. Delete IndexedDB (Firebase/Firestore use these)
+        if (window.indexedDB) {
+            const databases = ['firestore/[portsmouthbridge]/[default]', 'firebase-heartbeat-database', 'firebase-installations-database'];
+            databases.forEach(dbName => {
+                try {
+                    window.indexedDB.deleteDatabase(dbName);
+                } catch (e) {
+                    console.warn(`Could not delete IndexedDB: ${dbName}`, e);
+                }
+            });
+        }
+
+        // 4. Unregister Service Workers
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
+        }
+
+        // 5. Force Reload
+        alert("All local data has been purged. The app will now reload.");
+        window.location.reload();
+    };
+
     if (!isVisible) return null;
 
     return (
@@ -56,9 +94,16 @@ const PrivacyShield = ({ onAccept }: PrivacyShieldProps) => {
 
                     <section className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
                         <p className="text-xs text-slate-500">
-                            By using Portsmouth Bridge, you agree to our 100% anonymous, local-first privacy policy. You can clear all cached data anytime in the settings.
+                            By using Portsmouth Bridge, you agree to our 100% anonymous, local-first privacy policy. You can clear all cached data anytime using the 'Forget Me' tool.
                         </p>
                     </section>
+
+                    <button
+                        onClick={handleNuclearDelete}
+                        className="w-full py-4 border-2 border-rose-100 text-rose-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all flex items-center justify-center gap-2"
+                    >
+                        <Icon name="lifebuoy" size={14} /> Kill Switch: Forget This Device
+                    </button>
                 </div>
 
                 <div className="p-8 border-t border-slate-100 bg-white">

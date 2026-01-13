@@ -80,6 +80,7 @@ const App = () => {
     const [showPartnerLogin, setShowPartnerLogin] = useState(false);
     const [showTutorial, setShowTutorial] = useState(false);
     const [showPartnerRequest, setShowPartnerRequest] = useState(false);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
 
     // Interaction
     const [reportTarget, setReportTarget] = useState<{ name: string, id: string } | null>(null);
@@ -141,6 +142,9 @@ const App = () => {
     useEffect(() => {
         const seenTutorial = localStorage.getItem('seen_tutorial');
         if (!seenTutorial) setShowTutorial(true);
+
+        const seenDisclaimer = localStorage.getItem('seen_disclaimer');
+        if (!seenDisclaimer) setShowDisclaimer(true);
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -698,6 +702,25 @@ const App = () => {
                     localStorage.setItem('seen_tutorial', 'true');
                 }}
             />
+
+            {showDisclaimer && (
+                <div className="fixed bottom-24 left-4 right-4 z-[90] bg-slate-900 text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-4 animate-fade-in-up border border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-500 rounded-2xl flex items-center justify-center shrink-0">
+                            <Icon name="shield" size={20} />
+                        </div>
+                        <p className="text-[10px] font-bold leading-tight uppercase tracking-tight">
+                            We store data on your device to work offline. No personal tracking.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => { setShowDisclaimer(false); localStorage.setItem('seen_disclaimer', 'true'); }}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                    >
+                        Got it
+                    </button>
+                </div>
+            )}
 
             {showWizard && <Suspense fallback={<PageLoader />}><CrisisWizard data={filteredData} userLocation={userLocation} onClose={() => setShowWizard(false)} savedIds={savedIds} onToggleSave={toggleSaved} /></Suspense>}
 
