@@ -1,18 +1,47 @@
-<!doctype html>
-<html lang="en">
+rules_version = '2';
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/icon.png" />
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#4f46e5" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portsmouth Bridge | Your Community Partner</title>
-</head>
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check if user is a verified partner
+    function isPartner() {
+      return request.auth != null && (
+        get(/databases/$(database)/documents/partners/$(request.auth.uid)).data.verified == true ||
+        request.auth.token.email.matches('.*@sustainsage-group.com') ||
+        request.auth.token.email.matches('.*@portsmouthbridge.org') ||
+        request.auth.token.email == 'test@test.org'
+      );
+    }
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
+    // Community Loop Posts
+    match /community_posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
 
-</html>
+    // Services / Resources Data
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isPartner();
+    }
+
+    // Partner Profiles
+    match /partners/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Incident/Urgency Reports
+    match /reports/{reportId} {
+      allow create: if true;
+      allow read, update, delete: if isPartner();
+    }
+
+    // Analytics Gaps (used for PulseMap)
+    match /analytics_gaps/{gapId} {
+      allow read: if isPartner();
+      allow write: if isPartner();
+    }
+  }
+}

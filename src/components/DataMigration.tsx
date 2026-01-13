@@ -17,7 +17,7 @@ const DataMigration = () => {
 
     const checkFirestoreStatus = async () => {
         try {
-            addLog('📡 Connecting to database...');
+            addLog('📡 Connecting to the database...');
             const snapshot = await getDocs(collection(db, 'services'));
             setFirestoreCount(snapshot.size);
             addLog(`✅ Connection successful! Found ${snapshot.size} active records.`);
@@ -32,7 +32,7 @@ const DataMigration = () => {
         if (migrating) return;
 
         const confirmed = window.confirm(
-            `Ready to sanitise and upload ${ALL_DATA.length} records? This will overwrite existing cloud data.`
+            `Are you ready to sanitise and upload ${ALL_DATA.length} records? This will overwrite existing cloud data.`
         );
 
         if (!confirmed) return;
@@ -48,117 +48,122 @@ const DataMigration = () => {
         for (let i = 0; i < ALL_DATA.length; i++) {
             const resource = ALL_DATA[i];
 
-            // 🛠️ 關鍵修正：使用 ?? null 處理所有可能為 undefined 的欄位
-            // Firebase 不接受 undefined，必須轉為 null
-            const docData: ServiceDocument = {
-                id: resource.id,
-                name: resource.name,
-                category: (['food', 'shelter', 'warmth', 'support', 'family'].includes(resource.category)
-                    ? resource.category
-                    : 'support') as any,
-                location: {
-                    lat: resource.lat,
-                    lng: resource.lng,
-                    address: resource.address,
-                    area: resource.area,
-                },
-                thresholdInfo: {
-                    idRequired: resource.entranceMeta?.idRequired ?? false,
-                    queueStatus: resource.entranceMeta?.queueStatus
-                        ? (resource.entranceMeta.queueStatus.charAt(0).toUpperCase() + resource.entranceMeta.queueStatus.slice(1)) as any
-                        : 'Empty',
-                    // [FIX] 這裡加上 ?? null
-                    entrancePhotoUrl: resource.entranceMeta?.imageUrl ?? null
-                },
-                liveStatus: {
-                    isOpen: true,
-                    // [FIX] 確保 capacityLevel 有值
-                    capacity: (resource.capacityLevel === 'low' || resource.capacityLevel === 'medium') 
-                        ? (resource.capacityLevel.charAt(0).toUpperCase() + resource.capacityLevel.slice(1)) as any 
-                        : 'High',
-                    lastUpdated: new Date().toISOString(),
-                    message: ""
-                },
-                b2bData: {
-                    // [FIX] 電話如果是 undefined，改為 'N/A'
-                    internalPhone: resource.phone || 'N/A',
-                    partnerNotes: "System migrated from V1 static dataset."
-                },
-                description: resource.description,
-                tags: resource.tags || [],
-                // [FIX] 這裡加上 ?? null
-                phone: resource.phone ?? null,
-                schedule: resource.schedule || {},
-                // [FIX] 這裡加上 ?? 0
-                trustScore: resource.trustScore ?? 0
-            };
-
+            // Mapping raw data to the structured ServiceDocument schema
+            // Ensuring all optional or missing fields have safe default values for Firestore
             try {
+                const docData: ServiceDocument = {
+                    id: resource.id,
+                    name: resource.name || 'Unnamed Resource',
+                    category: (['food', 'shelter', 'warmth', 'support', 'family'].includes(resource.category)
+                        ? resource.category
+                        : 'support') as any,
+                    location: {
+                        lat: resource.lat ?? 50.8000,
+                        lng: resource.lng ?? -1.0800,
+                        address: resource.address || 'Address not listed',
+                        area: resource.area || 'Portsmouth',
+                    },
+                    thresholdInfo: {
+                        idRequired: resource.entranceMeta?.idRequired ?? false,
+                        queueStatus: resource.entranceMeta?.queueStatus
+                            ? (resource.entranceMeta.queueStatus.charAt(0).toUpperCase() + resource.entranceMeta.queueStatus.slice(1)) as any
+                            : 'Empty',
+                        entrancePhotoUrl: resource.entranceMeta?.imageUrl ?? null
+                    },
+                    liveStatus: {
+                        isOpen: true,
+                        capacity: (resource.capacityLevel === 'low' || resource.capacityLevel === 'medium' || resource.capacityLevel === 'high' || resource.capacityLevel === 'full')
+                            ? (resource.capacityLevel.charAt(0).toUpperCase() + resource.capacityLevel.slice(1)) as any
+                            : 'Medium',
+                        lastUpdated: new Date().toISOString(),
+                        message: resource.status?.message ?? ""
+                    },
+                    b2bData: {
+                        internalPhone: resource.phone || 'N/A',
+                        partnerNotes: "System migrated from central static dataset."
+                    },
+                    description: resource.description || 'No description provided.',
+                    tags: resource.tags || [],
+                    phone: resource.phone ?? null,
+                    website: resource.website ?? "",
+                    schedule: resource.schedule || {},
+                    trustScore: resource.trustScore ?? 0
+                };
+
                 await setDoc(doc(servicesCollection, resource.id), docData);
                 success++;
-                addLog(`✓ Uploaded: ${resource.name}`);
+                addLog(`✓ Sanitised & Uploaded: ${resource.name}`);
             } catch (error: any) {
                 failed++;
-                console.error(`Error uploading ${resource.name}:`, error);
-                // 顯示更詳細的錯誤訊息以便除錯
-                addLog(`❌ Failed: ${resource.name} - ${error.message}`);
+                console.error(`Record failure - ${resource.id}:`, error);
+                addLog(`❌ Failed record: ${resource.name} - ${error.message}`);
             }
         }
 
-        addLog(`🏁 Task Complete! Success: ${success}, Failed: ${failed}`);
+        addLog(`🏁 Migration complete! Success: ${success}, Failed: ${failed}`);
         setMigrating(false);
         await checkFirestoreStatus();
     };
 
-    if (!isPartner) return <div className="p-10 text-center">Access Denied</div>;
+    if (!isPartner) {
+        return (
+            <div className="p-10 text-center">
+                <h2 className="text-xl font-black text-slate-900 uppercase">Access Restricted</h2>
+                <p className="text-xs text-slate-400 font-bold mt-2">Only verified partners can manage data migration.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-2xl mx-auto p-6 space-y-6 pb-32 animate-fade-in-up">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-black text-slate-900">Data Migration Centre</h2>
+                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Data Migration Centre</h2>
             </div>
 
-            <div className="bg-white rounded-[32px] p-6 shadow-lg border border-slate-100">
-                <div className="flex gap-4 mb-6">
-                    <div className="flex-1 p-4 bg-slate-50 rounded-2xl text-center">
-                        <p className="text-[10px] font-black text-slate-400 uppercase">Local Data</p>
-                        <p className="text-3xl font-black text-slate-900">{ALL_DATA.length}</p>
+            <div className="bg-white rounded-[40px] p-8 shadow-2xl shadow-slate-200 border border-slate-100">
+                <div className="flex gap-4 mb-8">
+                    <div className="flex-1 p-6 bg-slate-50 rounded-3xl text-center">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Local Files</p>
+                        <p className="text-4xl font-black text-slate-900 mt-1">{ALL_DATA.length}</p>
                     </div>
-                    <div className="flex-1 p-4 bg-slate-50 rounded-2xl text-center">
-                        <p className="text-[10px] font-black text-slate-400 uppercase">Cloud Data</p>
-                        <p className={`text-3xl font-black ${firestoreCount === 0 ? 'text-rose-500' : 'text-indigo-600'}`}>
+                    <div className="flex-1 p-6 bg-slate-50 rounded-3xl text-center">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cloud Database</p>
+                        <p className={`text-4xl font-black mt-1 ${firestoreCount === 0 ? 'text-rose-500' : 'text-indigo-600'}`}>
                             {firestoreCount === null ? '?' : firestoreCount}
                         </p>
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                     <button
                         onClick={checkFirestoreStatus}
-                        className="w-full py-3 bg-white border-2 border-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
+                        className="w-full py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
                     >
                         Check Connection
                     </button>
-                    
+
                     <button
                         onClick={migrateData}
                         disabled={migrating}
-                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-xs font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-xl shadow-indigo-200"
+                        className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-xl shadow-indigo-200 active:scale-[0.98]"
                     >
-                        {migrating ? 'Fixing & Uploading...' : 'Start Migration (Retry)'}
+                        {migrating ? 'Processing Records...' : 'Initialise Migration'}
                     </button>
+                    <p className="text-[10px] text-center text-slate-400 font-bold italic px-4">
+                        Warning: This will synchronise local data with the cloud. Existing entries with matching IDs will be overwritten.
+                    </p>
                 </div>
             </div>
 
-            <div className="bg-slate-900 rounded-[32px] p-6 shadow-lg border border-slate-800">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase">System Logs</h3>
-                    <button onClick={() => setLog([])} className="text-xs text-slate-500 hover:text-white">Clear</button>
+            <div className="bg-slate-900 rounded-[40px] p-8 shadow-2xl border border-slate-800">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xs font-black text-indigo-400 uppercase tracking-widest">Operation Logs</h3>
+                    <button onClick={() => setLog([])} className="text-[10px] font-bold text-slate-500 hover:text-white uppercase tracking-tighter">Clear Console</button>
                 </div>
-                <div className="bg-slate-800/50 rounded-xl p-4 h-64 overflow-y-auto font-mono text-[10px] text-slate-300 space-y-1">
-                    {log.length === 0 && <span className="text-slate-600 italic">Waiting to start...</span>}
+                <div className="bg-slate-800/40 rounded-2xl p-6 h-72 overflow-y-auto font-mono text-[10px] text-slate-300 space-y-2 border border-slate-800/50">
+                    {log.length === 0 && <span className="text-slate-600 italic">No operations recorded...</span>}
                     {log.map((line, i) => (
-                        <div key={i} className={line.includes('❌') ? 'text-rose-400' : line.includes('✓') ? 'text-emerald-400' : ''}>
+                        <div key={i} className={line.includes('❌') ? 'text-rose-400' : line.includes('✓') ? 'text-emerald-400 font-bold' : ''}>
                             {line}
                         </div>
                     ))}
